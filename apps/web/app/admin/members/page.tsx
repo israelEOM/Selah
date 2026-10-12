@@ -1,0 +1,1 @@
+export default function Members(){return <main className="shell py-12"><p className="eyebrow">Administración</p><h1 className="mt-2 text-5xl">Miembros</h1><p className="card mt-8 text-ink/65">La gestión de invitaciones se habilita por la API administrativa durante la siguiente iteración de identidad.</p></main>}
