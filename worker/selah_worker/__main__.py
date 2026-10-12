@@ -47,35 +47,48 @@ def next_job(job: dict) -> dict | None:
     }
 
 
+def _process(db, job: dict) -> None:
+    log.info("Job %s (%s) started", job["id"], job["step"])
+    update = {"finished_at": datetime.now(timezone.utc).isoformat()}
+    try:
+        handler = HANDLERS.get(job["step"])
+        if handler is None:
+            raise RuntimeError(f"Step '{job['step']}' is not implemented yet.")
+        result = handler(job)
+        usage = {k: result[k] for k in ("model", "prompt_version", "input_tokens", "output_tokens") if k in result}
+        update |= {"status": "succeeded", "result": result} | usage
+    except Exception as exc:  # the admin sees the message and can retry
+        log.exception("Job %s failed", job["id"])
+        update |= {"status": "failed", "error": str(exc)[:2000]}
+    db.table("jobs").update(update).eq("id", job["id"]).execute()
+    follow_up = next_job(job) if update["status"] == "succeeded" else None
+    if follow_up:
+        db.table("jobs").insert(follow_up).execute()
+
+
 def run() -> None:
     db = client()
+    # There is one worker, so a job still marked running was cut off by a previous stop.
+    db.table("jobs").update({
+        "status": "failed", "error": "El worker se detuvo durante este paso. Reintenta.",
+        "finished_at": datetime.now(timezone.utc).isoformat(),
+    }).eq("status", "running").execute()
     log.info("Worker started; polling every %ss", settings.poll_seconds)
     while True:
-        jobs = db.rpc("claim_job").execute().data
-        if not jobs:
-            time.sleep(settings.poll_seconds)
-            continue
-        job = jobs[0]
-        log.info("Job %s (%s) started", job["id"], job["step"])
-        update = {"finished_at": datetime.now(timezone.utc).isoformat()}
         try:
-            handler = HANDLERS.get(job["step"])
-            if handler is None:
-                raise RuntimeError(f"Step '{job['step']}' is not implemented yet.")
-            result = handler(job)
-            usage = {k: result[k] for k in ("model", "prompt_version", "input_tokens", "output_tokens") if k in result}
-            update |= {"status": "succeeded", "result": result} | usage
-        except Exception as exc:  # the admin sees the message and can retry
-            log.exception("Job %s failed", job["id"])
-            update |= {"status": "failed", "error": str(exc)[:2000]}
-        db.table("jobs").update(update).eq("id", job["id"]).execute()
-        follow_up = next_job(job) if update["status"] == "succeeded" else None
-        if follow_up:
-            db.table("jobs").insert(follow_up).execute()
+            jobs = db.rpc("claim_job").execute().data
+            if jobs:
+                _process(db, jobs[0])
+                continue
+        except Exception:  # a dropped connection must not stop the worker
+            log.exception("Connection problem; retrying shortly")
+            time.sleep(10)
+        time.sleep(settings.poll_seconds)
 
 
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    logging.getLogger("httpx").setLevel(logging.WARNING)  # one line per poll is noise
     args = sys.argv[1:]
     if args == ["run"]:
         run()
