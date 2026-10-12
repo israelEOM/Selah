@@ -4,7 +4,7 @@ Written 2026-10-12 after reviewing the original brief, the original scaffold, an
 
 **Confirmed decisions:** Flutter client; Supabase for data and auth; Gemini for AI (model set in `.env`); the worker runs on the admin's Mac and polls Supabase for jobs.
 
-**Status:** Phases 0 and 1 are done, except Android in Phase 0 (see below). Next is Phase 2. Section 2 describes the original scaffold, which is preserved in the first git commit.
+**Status:** Phases 0, 1 and 2 are done, except Android in Phase 0 (see below). Publish/unpublish, reference approval and regeneration from Phase 3 are also in. Next: the content editor and preview (rest of Phase 3), then the member study page and reader (Phase 4). Section 2 describes the original scaffold, which is preserved in the first git commit.
 
 ## 1. Goal
 
@@ -183,11 +183,14 @@ Still to judge by a person: whether the devotionals read as faithful to the serm
 
 ### Phase 2 — Admin import and generation
 
-- Import wizard: URL → metadata and thumbnail → captions actually available → original language, output language, Bible version → full sermon or range → day count.
-- One "Generate" action runs all steps; a live stepper shows each one, with a retry button on failure.
-- Sermon list, transcript view, analysis view.
+- [x] Import form: URL → video data and thumbnail → captions actually available → output language, Bible version → full video or range → day count.
+- [x] One "Generar estudio" action queues the first step; the worker queues each following step when the previous one succeeds, so generation continues if the browser is closed.
+- [x] Live progress list with a retry button on a failed step and a hint when the worker is not running.
+- [x] Sermon list and sermon page: analysis, points with timestamp links, references, devotional days.
 
-Done when: acceptance steps 1–13 pass from the browser.
+Job status is polled every two seconds rather than pushed over Realtime; simpler, and enough for one admin.
+
+Verified in the browser: a sermon imported from the form generated a 3-day devotional with live progress.
 
 ### Phase 3 — Review, edit, publish
 

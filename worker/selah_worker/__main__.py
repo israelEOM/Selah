@@ -36,6 +36,17 @@ def check() -> None:
     print(f"Connected to Supabase. Church: {row.data['church_name']}")
 
 
+def next_job(job: dict) -> dict | None:
+    """A job may carry a chain of later steps; each one is queued when the previous succeeds."""
+    chain = job["payload"].get("chain") or []
+    if not chain:
+        return None
+    return {
+        "sermon_id": job["sermon_id"], "created_by": job.get("created_by"), "step": chain[0]["step"],
+        "payload": (chain[0].get("payload") or {}) | {"chain": chain[1:]},
+    }
+
+
 def run() -> None:
     db = client()
     log.info("Worker started; polling every %ss", settings.poll_seconds)
@@ -58,6 +69,9 @@ def run() -> None:
             log.exception("Job %s failed", job["id"])
             update |= {"status": "failed", "error": str(exc)[:2000]}
         db.table("jobs").update(update).eq("id", job["id"]).execute()
+        follow_up = next_job(job) if update["status"] == "succeeded" else None
+        if follow_up:
+            db.table("jobs").insert(follow_up).execute()
 
 
 def main() -> None:

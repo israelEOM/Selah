@@ -19,6 +19,16 @@ cd app
 flutter run -d chrome --dart-define-from-file=config/beta.json
 ```
 
+Or build once and serve the result (deep links work, nothing is cached):
+
+```sh
+cd app
+flutter build web --release --dart-define-from-file=config/beta.json
+python3 tool/serve.py 3100
+```
+
+Importing a sermon needs the worker running (see below); reading published studies does not.
+
 `config/beta.json` holds the Supabase URL and the publishable key, which are safe to ship in the client.
 
 ## Run the worker

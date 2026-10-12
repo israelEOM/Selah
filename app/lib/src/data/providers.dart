@@ -30,3 +30,21 @@ final sermonsProvider = FutureProvider<List<SermonRow>>((ref) {
   ref.watch(userIdProvider);
   return ref.watch(repositoryProvider).sermons();
 });
+
+final sermonDetailProvider = FutureProvider.autoDispose
+    .family<SermonDetail, String>((ref, id) => ref.watch(repositoryProvider).sermonDetail(id));
+
+/// Latest job per step, refreshed every two seconds while the page is open.
+final sermonJobsProvider = StreamProvider.autoDispose.family<Map<String, Job>, String>((ref, sermonId) async* {
+  final repo = ref.watch(repositoryProvider);
+  while (true) {
+    yield await repo.latestJobs(sermonId);
+    await Future<void>.delayed(const Duration(seconds: 2));
+  }
+});
+
+final churchSettingsProvider =
+    FutureProvider<Map<String, dynamic>>((ref) => ref.watch(repositoryProvider).churchSettings());
+
+final bibleVersionsProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) => ref.watch(repositoryProvider).bibleVersions());

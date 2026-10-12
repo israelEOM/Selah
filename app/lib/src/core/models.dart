@@ -56,3 +56,49 @@ class SermonRow {
   final String? thumbnailUrl;
   final String? studyStatus;
 }
+
+class Job {
+  const Job({required this.id, required this.step, required this.status, required this.payload, this.result, this.error, required this.createdAt});
+
+  factory Job.fromJson(Map<String, dynamic> json) => Job(
+        id: json['id'] as String,
+        step: json['step'] as String,
+        status: json['status'] as String,
+        payload: (json['payload'] as Map<String, dynamic>?) ?? const {},
+        result: json['result'] as Map<String, dynamic>?,
+        error: json['error'] as String?,
+        createdAt: DateTime.parse(json['created_at'] as String),
+      );
+
+  final String id;
+  final String step;
+  final String status;
+  final Map<String, dynamic> payload;
+  final Map<String, dynamic>? result;
+  final String? error;
+  final DateTime createdAt;
+
+  bool get isActive => status == 'queued' || status == 'running';
+}
+
+/// Everything the admin sermon page shows. Generated content stays as JSON maps because
+/// its shape is owned by the worker's schemas.
+class SermonDetail {
+  const SermonDetail({
+    required this.sermon,
+    required this.hasTranscript,
+    this.analysis,
+    this.references = const [],
+    this.study,
+    this.days = const [],
+  });
+
+  final Map<String, dynamic> sermon;
+  final bool hasTranscript;
+  final Map<String, dynamic>? analysis;
+  final List<Map<String, dynamic>> references;
+  final Map<String, dynamic>? study;
+  final List<Map<String, dynamic>> days;
+
+  String get videoId => sermon['youtube_video_id'] as String;
+}

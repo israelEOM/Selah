@@ -4,7 +4,7 @@
     {
       "name": "selah-web",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "3100", "--directory", "app/build/web"],
+      "runtimeArgs": ["app/tool/serve.py", "3100"],
       "port": 3100
     }
   ]
