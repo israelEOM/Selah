@@ -1,0 +1,9 @@
+supabase>=2.20
+httpx>=0.28
+pydantic>=2.11
+pydantic-settings>=2.9
+youtube-transcript-api>=1.2
+isodate>=0.7
+google-genai>=1.0
+pytest>=8.3
+pytest-asyncio>=0.26

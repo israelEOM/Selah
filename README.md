@@ -1,48 +1,52 @@
 # Selah — La Palabra que permanece
 
-Selah convierte predicaciones de YouTube en estudios bíblicos y devocionales revisables por la iglesia. La aplicación conserva el vínculo con el transcript y sus marcas de tiempo; la IA no sustituye la revisión editorial ni reconstruye texto bíblico protegido.
+Selah turns a church's YouTube sermons into devotional studies that an admin reviews and publishes, and that members read on the web, iOS and Android.
 
-## Qué incluye este MVP
+The plan and current status are in [docs/MVP_PLAN.md](docs/MVP_PLAN.md).
 
-- Importación de URLs `youtube.com/watch`, `youtube.com/live` y `youtu.be`, con metadatos públicos y selección explícita del intervalo.
-- Recuperación asíncrona de subtítulos con `youtube-transcript-api`; alternativa manual para TXT/SRT/VTT. TXT sin tiempos informa que se desactivan enlaces por momento.
-- Pipeline Celery: transcript → análisis estructurado de OpenAI → extracción y comprobación sintáctica de referencias → resumen → devocional de 1, 3, 5 o 7 días.
-- Modelos Pydantic de salida, prompts versionados, trazabilidad de modelo/tokens/trabajo y protección contra trabajos duplicados en curso.
-- Integración bíblica inicial sin API: Selah valida el formato de la referencia y abre RVR1960 en un lector externo. No busca, copia, almacena ni redistribuye el texto bíblico.
-- Login con contraseña cifrada, cookie HttpOnly/JWT, autorización de administrador en servidor, estudios pendientes de aprobación, progreso y notas privadas persistentes.
-- Interfaz móvil en español con la identidad Selah: verde profundo, crema y dorado suave.
+| Piece | Where |
+|---|---|
+| Flutter app (Riverpod + go_router), all data access through `lib/src/data/repository.dart` | `app/` |
+| Schema, row-level security, seed data | `supabase/migrations/` |
+| Python worker: YouTube captions, AI pipeline, job polling | `worker/` |
 
-## Puesta en marcha
+Members read published studies without an account. Admins sign in. The worker runs on the admin's Mac, polls the `jobs` table and writes results back with the service role; it has no public address.
 
-1. Copia `.env.example` a `.env` y reemplaza contraseñas y claves. Para crear el primer administrador configura `BOOTSTRAP_ADMIN_EMAIL` y `BOOTSTRAP_ADMIN_PASSWORD` antes del primer arranque.
-2. Ejecuta `docker compose up --build`.
-3. Opcional pero recomendado en producción: `docker compose exec api alembic upgrade head`.
-4. Abre [http://localhost:3000](http://localhost:3000), inicia sesión y entra en **Administrar**.
+## Run the app
 
-La documentación OpenAPI está disponible en [http://localhost:8000/docs](http://localhost:8000/docs).
+```sh
+cd app
+flutter run -d chrome --dart-define-from-file=config/beta.json
+```
 
-## Variables relevantes
+`config/beta.json` holds the Supabase URL and the publishable key, which are safe to ship in the client.
 
-| Variable | Propósito |
-| --- | --- |
-| `OPENAI_API_KEY` / `OPENAI_MODEL` | Respuestas estructuradas de OpenAI; `gpt-4.1` por defecto. Evalúa modelos más recientes con sermones reales antes de cambiar el valor. |
-| `BIBLE_EXTERNAL_READER_BASE_URL` | Lector externo al que Selah enlaza las referencias RVR1960. El valor predeterminado es BibleGateway. |
-| `YOUTUBE_API_KEY` | Opcional, para duración/fecha oficiales y validación completa del intervalo. Sin ella se usan metadatos públicos y el administrador debe confirmar el límite final. |
-| `DATABASE_URL`, `REDIS_URL` | Persistencia PostgreSQL y cola Celery. |
-| `API_SECRET_KEY`, `CORS_ORIGINS` | Seguridad de sesión y origen del cliente. |
+## Run the worker
 
-## Referencias bíblicas y licencia
+Requires Python 3.12+. Copy `.env.example` to `.env` and fill in the Supabase secret key and the Gemini key. `.env` is git-ignored; never commit it.
 
-Durante el MVP, RVR1960 se usa solamente como una referencia de traducción: la aplicación muestra la cita y abre el texto en un lector externo. No se almacena el texto bíblico ni se pide a la IA que lo reconstruya. Las citas breves, si se añaden editorialmente, deben respetar los límites y la atribución de Sociedades Bíblicas Unidas. Una futura integración de texto completo deberá pasar revisión de licencia antes de habilitarse.
+```sh
+cd worker
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+.venv/bin/python -m selah_worker check    # verifies the Supabase connection
+.venv/bin/python -m selah_worker run      # polls for jobs
+```
 
-## Pruebas
+## First admin
 
-Con dependencias de API instaladas: `cd apps/api && pytest`.
+Create an account in the app (Iniciar sesión → No tengo cuenta), confirm the email, then:
 
-Las pruebas automáticas no llaman a YouTube, OpenAI ni API.Bible. Para probar proveedores reales, configura las credenciales y usa un video propio con subtítulos disponibles. No hay descarga de audio ni Whisper en este MVP.
+```sh
+cd worker && .venv/bin/python -m selah_worker make-admin you@example.com
+```
 
-## Operación y despliegue
+## Database changes
 
-Usa PostgreSQL administrado y Redis duradero en producción, aplica Alembic antes de desplegar código y realiza copias de seguridad regulares de PostgreSQL. Mantén las claves en un gestor de secretos. Configure HTTPS antes de cambiar `secure=False` de la cookie de desarrollo a `secure=True`; la protección CSRF debe acompañar cualquier autenticación basada exclusivamente en cookies en un dominio separado.
+Add a new file under `supabase/migrations/` and apply it with `npx supabase db push`. The Supabase CLI needs Node 20+.
 
-El contenido generado se guarda como borrador: solo `POST /studies/{id}/publish` por un administrador lo expone a miembros. Revise las referencias con estado `REVIEW_REQUIRED`, las citas y las aplicaciones antes de publicar.
+## Tests
+
+```sh
+cd worker && .venv/bin/python -m pytest
+cd app && flutter test
+```

@@ -1,6 +1,0 @@
-"use client";
-import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api";
-type Study={id:number;slug:string;title:string;summary?:{executive_summary?:string};sermon:{thumbnail_url?:string;speaker?:string;channel_name?:string}};
-export default function Library(){const {data=[],isLoading,error}=useQuery({queryKey:["studies"],queryFn:()=>api<Study[]>("/studies")});return <main className="shell py-12"><p className="eyebrow">Biblioteca</p><h1 className="mt-2 text-5xl">Sigue profundizando.</h1><div className="mt-9 grid gap-5 md:grid-cols-2 lg:grid-cols-3">{isLoading&&[1,2,3].map(i=><div key={i} className="h-72 animate-pulse rounded-2xl bg-sage"/>)}{error&&<p>{error.message}</p>}{data.map(study=><Link href={`/studies/${study.slug}`} key={study.id} className="card group overflow-hidden p-0"><div className="h-40 bg-sage" style={{backgroundImage:`url(${study.sermon.thumbnail_url})`,backgroundSize:"cover",backgroundPosition:"center"}}/><div className="p-5"><p className="eyebrow">{study.sermon.speaker||study.sermon.channel_name||"Selah"}</p><h2 className="mt-2 text-2xl group-hover:text-[#8d743e]">{study.title}</h2><p className="mt-3 line-clamp-3 text-sm leading-6 text-ink/65">{study.summary?.executive_summary}</p></div></Link>)}</div></main>}

@@ -1,0 +1,114 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../../../l10n/app_localizations.dart';
+import '../../app/theme.dart';
+import '../../data/providers.dart';
+
+class LoginPage extends ConsumerStatefulWidget {
+  const LoginPage({super.key});
+
+  @override
+  ConsumerState<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends ConsumerState<LoginPage> {
+  final _form = GlobalKey<FormState>();
+  final _email = TextEditingController();
+  final _password = TextEditingController();
+  bool _creating = false;
+  bool _busy = false;
+  String? _message;
+
+  @override
+  void dispose() {
+    _email.dispose();
+    _password.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!_form.currentState!.validate()) return;
+    final l = AppLocalizations.of(context)!;
+    final repo = ref.read(repositoryProvider);
+    setState(() {
+      _busy = true;
+      _message = null;
+    });
+    try {
+      if (_creating) {
+        final needsConfirmation = await repo.signUp(_email.text.trim(), _password.text);
+        if (needsConfirmation) {
+          setState(() {
+            _message = l.confirmEmailSent;
+            _creating = false;
+          });
+          return;
+        }
+      } else {
+        await repo.signIn(_email.text.trim(), _password.text);
+      }
+      if (mounted) context.go('/admin');
+    } on AuthException catch (e) {
+      setState(() => _message = e.code == 'invalid_credentials' ? l.invalidCredentials : e.message);
+    } catch (_) {
+      setState(() => _message = l.genericError);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final text = Theme.of(context).textTheme;
+    return Scaffold(
+      appBar: AppBar(),
+      body: PageBody(maxWidth: 440, children: [
+        Eyebrow('Selah'),
+        const SizedBox(height: 8),
+        Text(_creating ? l.createAccount : l.signIn, style: text.headlineMedium),
+        const SizedBox(height: 24),
+        Form(
+          key: _form,
+          child: AutofillGroup(
+            child: Column(children: [
+              TextFormField(
+                controller: _email,
+                keyboardType: TextInputType.emailAddress,
+                autofillHints: const [AutofillHints.email],
+                decoration: InputDecoration(labelText: l.email),
+                validator: (v) => (v == null || !v.contains('@')) ? l.email : null,
+              ),
+              const SizedBox(height: 14),
+              TextFormField(
+                controller: _password,
+                obscureText: true,
+                autofillHints: [_creating ? AutofillHints.newPassword : AutofillHints.password],
+                decoration: InputDecoration(labelText: l.password, helperText: _creating ? l.passwordHint : null),
+                validator: (v) => (v == null || v.length < 8) ? l.passwordHint : null,
+                onFieldSubmitted: (_) => _submit(),
+              ),
+            ]),
+          ),
+        ),
+        if (_message != null) ...[
+          const SizedBox(height: 14),
+          Text(_message!, style: text.bodyMedium),
+        ],
+        const SizedBox(height: 22),
+        FilledButton(
+          onPressed: _busy ? null : _submit,
+          child: Text(_creating ? l.createAccount : l.signIn),
+        ),
+        const SizedBox(height: 8),
+        TextButton(
+          onPressed: _busy ? null : () => setState(() => _creating = !_creating),
+          child: Text(_creating ? l.haveAccount : l.needAccount),
+        ),
+      ]),
+    );
+  }
+}

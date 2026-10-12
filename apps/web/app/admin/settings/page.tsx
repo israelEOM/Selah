@@ -1,1 +1,0 @@
-export default function Settings(){return <main className="shell py-12"><p className="eyebrow">Administración</p><h1 className="mt-2 text-5xl">Configuración de la iglesia</h1><p className="card mt-8 text-ink/65">Los valores predeterminados de idioma, traducción RVR1960 y duración se persisten en la configuración de iglesia.</p></main>}

@@ -1,14 +1,18 @@
 # Selah — Improved MVP Plan (web, iOS, Android)
 
-Written 2026-10-12 after reviewing the original brief, the current repository, and the NeoSkin project.
+Written 2026-10-12 after reviewing the original brief, the original scaffold, and the NeoSkin project.
+
+**Confirmed decisions:** Flutter client; Supabase for data and auth; Gemini for AI (model set in `.env`); the worker runs on the admin's Mac and polls Supabase for jobs.
+
+**Status:** Phase 0 is done except Android (see Phase 0 below). Section 2 describes the original scaffold, which is preserved in the first git commit.
 
 ## 1. Goal
 
 One church admin pastes a YouTube sermon URL and, after review, publishes a devotional study that members read on the web, on iPhone and on Android. The 21-step acceptance scenario from the original brief (§29) still defines "done", with one addition: steps 17–21 must pass on all three platforms.
 
-## 2. What exists today
+## 2. What the original scaffold contained
 
-The repository is a first-pass scaffold (about 1,000 lines) of Next.js + FastAPI + Celery + Redis + Postgres. It has never been run end to end: there is no git history, `OPENAI_API_KEY` is empty, and no Selah containers exist.
+The repository was a first-pass scaffold (about 1,000 lines) of Next.js + FastAPI + Celery + Redis + Postgres. It had never been run end to end.
 
 ### Worth keeping
 
@@ -50,19 +54,20 @@ Costs to accept:
 - Flutter web gives no link previews or SEO by itself. Members will share study links in WhatsApp, so Phase 5 adds a small Cloudflare Pages Function that returns Open Graph tags (title, thumbnail) for `/studies/*`.
 - NeoSkin has no `android/` folder yet, so Android is new ground: signing, Play Console and device testing are included in Phase 5.
 
-### 3.2 Supabase for data and auth, plus a small Python worker (recommended)
+### 3.2 Supabase for data and auth, plus a small Python worker (confirmed)
 
 | Concern | Original brief | This plan |
 |---|---|---|
 | Database | Postgres + SQLAlchemy + Alembic | Supabase Postgres + SQL migrations |
 | Auth and roles | Custom bcrypt/JWT | Supabase Auth + row-level security |
 | CRUD API | FastAPI routes | Direct Supabase access from the app, guarded by RLS |
-| Pipeline (YouTube, AI) | FastAPI + Celery + Redis | One Python FastAPI worker, jobs stored in a Postgres table |
+| Pipeline (YouTube, AI) | FastAPI + Celery + Redis | One Python worker that polls a jobs table in Postgres |
+| AI provider | OpenAI | Gemini, behind one small interface so it can be swapped |
 | Live job status | Polling | Supabase Realtime on the jobs table |
 
 Why: it removes Redis, Celery, custom auth and most of `routes.py`, which are the weakest parts of the scaffold, and it matches what you already run for NeoSkin. Python stays where it earns its place: `youtube-transcript-api` and the AI pipeline.
 
-The alternative is to keep FastAPI + Postgres for everything and point Flutter at it. That preserves more of the existing code but means writing auth, password reset, RLS-equivalent checks and hosting a database yourself. **This is the one decision I need you to confirm before implementation starts.**
+The worker has no HTTP API. The admin app inserts a row in `jobs`; the worker claims it, runs the step and writes the result back. It therefore needs no public address and runs on the admin's Mac. Jobs wait in the queue while the Mac is off; members are unaffected because reading only touches Supabase.
 
 ### 3.3 Members read without an account
 
@@ -76,9 +81,9 @@ Sermon points, subpoints and reflection questions stay as validated JSON inside 
 
 `youtube-transcript-api` works from a home connection and is frequently blocked from datacenter IPs. The brief does not mention this, and it decides where the worker can run. The plan:
 
-- The worker accepts an optional proxy setting (the library supports rotating residential proxies).
+- For the pilot the worker runs on the admin's Mac, on a home connection, which is the case that works.
+- The worker accepts an optional proxy setting (`YOUTUBE_PROXY_URL`) for a later move to a cloud host.
 - Manual SRT/VTT upload stays as the fallback in the admin UI.
-- Phase 1 tests caption retrieval from the intended host before anything else is built on it.
 
 ## 4. Target architecture
 
@@ -88,10 +93,10 @@ Flutter app (web · iOS · Android)
    │  admin CRUD, edits, publish (RLS: admin only) ─▶│   Supabase   │
    │  live job status (Realtime)                    ◀│ Postgres/Auth│
    │                                                 └──────▲───────┘
-   │  import / generate / regenerate (admin JWT)            │ service role
-   └────────────────────────────────────────────▶ Python worker (FastAPI)
+   │  inserts job rows (admin only)                         │ service role, polling
+   └───────────────────────────────────────────────  Python worker (admin's Mac)
                                                     ├─ YouTube metadata + captions
-                                                    ├─ OpenAI structured outputs
+                                                    ├─ Gemini structured outputs
                                                     └─ Bible reference parser
 ```
 
@@ -150,18 +155,20 @@ Each phase ends with something you can verify.
 
 ### Phase 0 — Foundations
 
-- `git init`, first commit of the current state, then restructure to the layout in §4.
-- Create the Supabase project; write migrations, RLS policies and seed data.
-- Create the Flutter app with web, iOS and Android targets; port the theme tokens and Spanish copy.
+- [x] `git init`, first commit of the scaffold, then restructure to the layout in §4.
+- [x] Migrations, RLS policies and seed data applied to the hosted Selah project.
+- [x] Flutter app with web, iOS and Android targets; theme tokens and Spanish copy ported.
+- [x] Worker skeleton: polling loop, `check` and `make-admin` commands.
+- [ ] Android: the Android toolchain is not installed on this Mac, so the Android target is created but has never been built.
+- [ ] First admin: create the account in the app, then run `make-admin`.
 
-Done when: the app shell runs on Chrome, the iOS Simulator and an Android emulator, and an admin can sign in.
+Verified: the shell loads published studies from Supabase in Chrome and in the iOS Simulator; an anonymous caller cannot insert jobs or claim them.
 
 ### Phase 1 — Real pipeline, no UI
 
 - Port `youtube.py`, `transcripts.py`, `bible.py`; update `youtube-transcript-api`; record real `is_generated`.
 - Implement windowing, the three AI steps, quote check and reference parser.
 - A command-line run takes a real sermon URL and writes transcript, analysis, references, summary and a 5-day devotional to Supabase.
-- Test caption retrieval from the intended worker host.
 
 Done when: one real Spanish sermon from the church produces a devotional you consider faithful, and every timestamp link lands on the right moment.
 
@@ -203,11 +210,10 @@ Done when: the full acceptance scenario passes on web, an iPhone and an Android 
 
 | Item | Needed for |
 |---|---|
-| Confirm §3.2 (Supabase + worker) or choose FastAPI-only | Phase 0 |
-| OpenAI API key | Phase 1 |
-| Supabase project (new, or an organisation to create it in) | Phase 0 |
+| Gemini API key in `.env` (`GEMINI_API_KEY`) | Phase 1 |
 | Two or three real sermon URLs from the church, with Spanish captions | Phase 1 |
-| Where the worker should run (your machine for the pilot, or a cloud host) | Phase 1 |
+| Your admin account created in the app, so it can be promoted | Phase 2 |
+| Android Studio installed (for the Android SDK) | Phase 5, or earlier to test on Android |
 | Apple Developer and Google Play accounts, bundle id | Phase 5 |
 
 ## 8. Still out of scope
