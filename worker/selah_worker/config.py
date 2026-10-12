@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     supabase_url: str = ""
     supabase_secret_key: str = ""
     gemini_api_key: str = ""
-    gemini_model: str = "gemini-3.5-flash-lite"
+    gemini_model: str = "gemini-3.5-flash"
     youtube_proxy_url: str = ""
     youtube_api_key: str = ""
     # Selah links to an external reader rather than storing licensed Bible text.

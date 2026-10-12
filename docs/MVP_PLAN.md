@@ -4,7 +4,7 @@ Written 2026-10-12 after reviewing the original brief, the original scaffold, an
 
 **Confirmed decisions:** Flutter client; Supabase for data and auth; Gemini for AI (model set in `.env`); the worker runs on the admin's Mac and polls Supabase for jobs.
 
-**Status:** Phase 0 is done except Android (see Phase 0 below). Section 2 describes the original scaffold, which is preserved in the first git commit.
+**Status:** Phases 0 and 1 are done, except Android in Phase 0 (see below). Next is Phase 2. Section 2 describes the original scaffold, which is preserved in the first git commit.
 
 ## 1. Goal
 
@@ -160,17 +160,26 @@ Each phase ends with something you can verify.
 - [x] Flutter app with web, iOS and Android targets; theme tokens and Spanish copy ported.
 - [x] Worker skeleton: polling loop, `check` and `make-admin` commands.
 - [ ] Android: the Android toolchain is not installed on this Mac, so the Android target is created but has never been built.
-- [ ] First admin: create the account in the app, then run `make-admin`.
+- [x] First admin account created and promoted with `make-admin`.
 
 Verified: the shell loads published studies from Supabase in Chrome and in the iOS Simulator; an anonymous caller cannot insert jobs or claim them.
 
 ### Phase 1 — Real pipeline, no UI
 
-- Port `youtube.py`, `transcripts.py`, `bible.py`; update `youtube-transcript-api`; record real `is_generated`.
-- Implement windowing, the three AI steps, quote check and reference parser.
-- A command-line run takes a real sermon URL and writes transcript, analysis, references, summary and a 5-day devotional to Supabase.
+- [x] YouTube metadata, caption listing and retrieval, with the real auto-generated flag and an optional proxy.
+- [x] Windowing, the three AI steps, quote check and reference parser (Spanish, Portuguese, English book names).
+- [x] `python -m selah_worker pipeline <url>` writes transcript, analysis, references, summary and a 5-day devotional to Supabase.
+- [x] The same steps run through the job queue (`python -m selah_worker run`).
 
-Done when: one real Spanish sermon from the church produces a devotional you consider faithful, and every timestamp link lands on the right moment.
+Results on three real sermons (96-minute services from the church's channel, Spanish auto-captions):
+
+- Each run takes under a minute and uses about 35k input and 7k output tokens.
+- The analysis finds where the preaching starts and ends inside the service, so the admin does not have to set the range by hand; references read before the sermon are excluded.
+- No quote or reference was rejected by the grounding checks in these runs.
+- `gemini-3.5-flash` is the default. `gemini-3.5-flash-lite` wrote reflections of about 200 words against the 300 requested and missed verse ranges.
+- Caption tracks listed by YouTube include auto-translated ones (Arabic, English, Portuguese), all flagged auto-generated. The import form must default to the church's language rather than the first track.
+
+Still to judge by a person: whether the devotionals read as faithful to the sermon, and whether each "watch this part" link lands on the right moment. Quote and reference timestamps come from matching the transcript; day and point ranges come from the model's cited lines.
 
 ### Phase 2 — Admin import and generation
 

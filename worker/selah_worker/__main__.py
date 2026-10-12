@@ -1,6 +1,7 @@
 """Selah worker.
 
     python -m selah_worker run                 poll Supabase for jobs
+    python -m selah_worker pipeline <url> [days]  run every step for one sermon now
     python -m selah_worker make-admin <email>  give an existing account the admin role
     python -m selah_worker check               verify the Supabase connection
 """
@@ -11,12 +12,9 @@ from datetime import datetime, timezone
 
 from selah_worker.config import settings
 from selah_worker.db import client
+from selah_worker.pipeline import HANDLERS, run_all
 
 log = logging.getLogger("selah")
-
-# Step name -> handler(job) -> result dict. Filled in as pipeline steps are implemented.
-HANDLERS: dict = {}
-
 
 def make_admin(email: str) -> None:
     db = client()
@@ -53,7 +51,9 @@ def run() -> None:
             handler = HANDLERS.get(job["step"])
             if handler is None:
                 raise RuntimeError(f"Step '{job['step']}' is not implemented yet.")
-            update |= {"status": "succeeded", "result": handler(job)}
+            result = handler(job)
+            usage = {k: result[k] for k in ("model", "prompt_version", "input_tokens", "output_tokens") if k in result}
+            update |= {"status": "succeeded", "result": result} | usage
         except Exception as exc:  # the admin sees the message and can retry
             log.exception("Job %s failed", job["id"])
             update |= {"status": "failed", "error": str(exc)[:2000]}
@@ -67,6 +67,8 @@ def main() -> None:
         run()
     elif len(args) == 2 and args[0] == "make-admin":
         make_admin(args[1])
+    elif len(args) in (2, 3) and args[0] == "pipeline":
+        run_all(args[1], days=int(args[2]) if len(args) == 3 else 5)
     elif args == ["check"]:
         check()
     else:
