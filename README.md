@@ -31,6 +31,18 @@ Importing a sermon needs the worker running (see below); reading published studi
 
 `config/beta.json` holds the Supabase URL and the publishable key, which are safe to ship in the client.
 
+## Live app
+
+https://selah-226.pages.dev (Cloudflare Pages project `selah`). To publish a new version:
+
+```sh
+cd app
+flutter build web --release --dart-define-from-file=config/beta.json
+npx --yes wrangler pages deploy build/web --project-name selah --branch main
+```
+
+Wrangler needs Node 20+ (`PATH=/usr/local/n/versions/node/22.21.0/bin:$PATH`). The Supabase auth site address points to this URL, so confirmation emails open the live app.
+
 ## Run the worker
 
 Requires Python 3.12+. Copy `.env.example` to `.env` and fill in the Supabase secret key and the Gemini key. `.env` is git-ignored; never commit it.
