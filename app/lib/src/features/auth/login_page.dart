@@ -35,6 +35,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     super.initState();
     final error = oauthErrorFrom(widget.landing ?? Uri.base);
     if (error != null) _oauthError = error.cancelled;
+    // Covers email sign-in, the return from Google, and someone who opens this page already signed in.
+    ref.listenManual(userIdProvider, fireImmediately: true, (_, next) async {
+      if (next.value == null) return;
+      final admin = await ref.read(isAdminProvider.future);
+      if (mounted) GoRouter.of(context).go(admin ? '/admin' : '/');
+    });
   }
 
   /// True for a cancelled Google sign-in, false for any other provider error, null for none.
@@ -104,13 +110,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final text = Theme.of(context).textTheme;
-    // Covers both email sign-in and the return from Google.
-    ref.listen(userIdProvider, (_, next) async {
-      if (next.value == null) return;
-      final router = GoRouter.of(context);
-      final admin = await ref.read(isAdminProvider.future);
-      if (mounted) router.go(admin ? '/admin' : '/');
-    });
     return Scaffold(
       appBar: AppBar(),
       body: PageBody(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:selah/l10n/app_localizations.dart';
 import 'package:selah/src/data/providers.dart';
 import 'package:selah/src/data/repository.dart';
@@ -76,4 +77,40 @@ void main() {
     await _pump(tester, userAgent: 'Mozilla/5.0 (iPhone) Instagram 300.0');
     expect(find.text('Para entrar con Google, abre esta página en Safari o Chrome.'), findsOneWidget);
   });
+
+  for (final (admin, destination) in [(false, 'HOME'), (true, 'ADMIN')]) {
+    testWidgets('someone already signed in is sent to ${destination.toLowerCase()}', (tester) async {
+      final router = GoRouter(routes: [
+        // Home reads the signed-in user first, as the real home page does.
+        GoRoute(
+          path: '/',
+          builder: (_, _) => Consumer(builder: (_, ref, _) => Text('HOME ${ref.watch(userIdProvider).value}')),
+        ),
+        GoRoute(path: '/admin', builder: (_, _) => const Text('ADMIN')),
+        GoRoute(
+          path: '/login',
+          builder: (_, _) => LoginPage(landing: Uri.parse('https://selah-226.pages.dev/login'), userAgent: ''),
+        ),
+      ]);
+      await tester.pumpWidget(ProviderScope(
+        overrides: [
+          repositoryProvider.overrideWithValue(_FakeRepository()),
+          userIdProvider.overrideWith((ref) => Stream.value('user-1')),
+          isAdminProvider.overrideWith((ref) async => admin),
+        ],
+        child: MaterialApp.router(
+          routerConfig: router,
+          locale: const Locale('es'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
+      ));
+      await tester.pumpAndSettle();
+      expect(find.text('HOME user-1'), findsOneWidget);
+      router.push('/login');
+      await tester.pumpAndSettle();
+      expect(find.text('Continuar con Google'), findsNothing);
+      expect(find.textContaining(destination), findsOneWidget);
+    });
+  }
 }

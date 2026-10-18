@@ -16,14 +16,17 @@ class HomePage extends ConsumerWidget {
     final text = Theme.of(context).textTheme;
     final studies = ref.watch(publishedStudiesProvider);
     final isAdmin = ref.watch(isAdminProvider).value ?? false;
+    final signedIn = ref.watch(userIdProvider).value != null;
     return Scaffold(
       appBar: AppBar(
         title: Text('Selah.', style: text.headlineMedium),
         actions: [
-          TextButton(
-            onPressed: () => context.push(isAdmin ? '/admin' : '/login'),
-            child: Text(isAdmin ? l.admin : l.signIn),
-          ),
+          if (isAdmin)
+            TextButton(onPressed: () => context.push('/admin'), child: Text(l.admin))
+          else if (signedIn)
+            TextButton(onPressed: () => ref.read(repositoryProvider).signOut(), child: Text(l.signOut))
+          else
+            TextButton(onPressed: () => context.push('/login'), child: Text(l.signIn)),
           const SizedBox(width: 8),
         ],
       ),
