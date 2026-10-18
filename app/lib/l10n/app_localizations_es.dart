@@ -287,4 +287,22 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get notGeneratedYet => 'Todavía no se ha generado.';
+
+  @override
+  String get continueWithGoogle => 'Continuar con Google';
+
+  @override
+  String get orWithEmail => 'o con tu correo';
+
+  @override
+  String get oauthCancelled =>
+      'No se completó el inicio de sesión. Inténtalo de nuevo.';
+
+  @override
+  String get oauthFailed =>
+      'No fue posible iniciar sesión con esa cuenta. Inténtalo de nuevo o usa tu correo.';
+
+  @override
+  String get embeddedBrowserHint =>
+      'Para entrar con Google, abre esta página en Safari o Chrome.';
 }

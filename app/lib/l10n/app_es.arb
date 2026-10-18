@@ -110,5 +110,10 @@
   "questions": "Para reflexionar",
   "prayer": "Oración",
   "keyTakeaways": "Para recordar",
-  "notGeneratedYet": "Todavía no se ha generado."
+  "notGeneratedYet": "Todavía no se ha generado.",
+  "continueWithGoogle": "Continuar con Google",
+  "orWithEmail": "o con tu correo",
+  "oauthCancelled": "No se completó el inicio de sesión. Inténtalo de nuevo.",
+  "oauthFailed": "No fue posible iniciar sesión con esa cuenta. Inténtalo de nuevo o usa tu correo.",
+  "embeddedBrowserHint": "Para entrar con Google, abre esta página en Safari o Chrome."
 }

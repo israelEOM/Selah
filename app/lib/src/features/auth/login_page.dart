@@ -5,10 +5,17 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../app/theme.dart';
+import '../../core/auth_redirect.dart';
+import '../../core/user_agent.dart';
 import '../../data/providers.dart';
+import 'google_button.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
-  const LoginPage({super.key});
+  /// [landing] and [userAgent] default to the real page; tests pass their own.
+  const LoginPage({super.key, this.landing, this.userAgent});
+
+  final Uri? landing;
+  final String? userAgent;
 
   @override
   ConsumerState<LoginPage> createState() => _LoginPageState();
@@ -21,6 +28,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   bool _creating = false;
   bool _busy = false;
   String? _message;
+  late final bool _embedded = isEmbeddedBrowser(widget.userAgent ?? currentUserAgent());
+
+  @override
+  void initState() {
+    super.initState();
+    final error = oauthErrorFrom(widget.landing ?? Uri.base);
+    if (error != null) _oauthError = error.cancelled;
+  }
+
+  /// True for a cancelled Google sign-in, false for any other provider error, null for none.
+  bool? _oauthError;
 
   @override
   void dispose() {
@@ -50,7 +68,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       } else {
         await repo.signIn(_email.text.trim(), _password.text);
       }
-      if (mounted) context.go('/admin');
+      // Navigation happens in the userIdProvider listener in build.
     } on AuthException catch (e) {
       setState(() => _message = e.code == 'invalid_credentials' ? l.invalidCredentials : e.message);
     } catch (_) {
@@ -60,55 +78,104 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     }
   }
 
+  Future<void> _signInWithGoogle() async {
+    final l = AppLocalizations.of(context)!;
+    setState(() {
+      _busy = true;
+      _message = null;
+      _oauthError = null;
+    });
+    try {
+      // On the web the page leaves for Google, so _busy stays set.
+      await ref
+          .read(repositoryProvider)
+          .signInWithProvider(OAuthProvider.google, redirectTo: oauthReturnUrl(widget.landing ?? Uri.base));
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _busy = false;
+          _message = l.genericError;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final text = Theme.of(context).textTheme;
+    // Covers both email sign-in and the return from Google.
+    ref.listen(userIdProvider, (_, next) async {
+      if (next.value == null) return;
+      final router = GoRouter.of(context);
+      final admin = await ref.read(isAdminProvider.future);
+      if (mounted) router.go(admin ? '/admin' : '/');
+    });
     return Scaffold(
       appBar: AppBar(),
-      body: PageBody(maxWidth: 440, children: [
-        Eyebrow('Selah'),
-        const SizedBox(height: 8),
-        Text(_creating ? l.createAccount : l.signIn, style: text.headlineMedium),
-        const SizedBox(height: 24),
-        Form(
-          key: _form,
-          child: AutofillGroup(
-            child: Column(children: [
-              TextFormField(
-                controller: _email,
-                keyboardType: TextInputType.emailAddress,
-                autofillHints: const [AutofillHints.email],
-                decoration: InputDecoration(labelText: l.email),
-                validator: (v) => (v == null || !v.contains('@')) ? l.email : null,
+      body: PageBody(
+        maxWidth: 440,
+        children: [
+          Eyebrow('Selah'),
+          const SizedBox(height: 8),
+          Text(_creating ? l.createAccount : l.signIn, style: text.headlineMedium),
+          const SizedBox(height: 24),
+          if (_embedded) ...[Text(l.embeddedBrowserHint, style: text.bodyMedium), const SizedBox(height: 12)],
+          if (_oauthError != null) ...[
+            Text(
+              _oauthError! ? l.oauthCancelled : l.oauthFailed,
+              style: text.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.error),
+            ),
+            const SizedBox(height: 12),
+          ],
+          GoogleButton(onPressed: _busy ? null : _signInWithGoogle),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              const Expanded(child: Divider()),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Text(l.orWithEmail, style: text.bodyMedium),
               ),
-              const SizedBox(height: 14),
-              TextFormField(
-                controller: _password,
-                obscureText: true,
-                autofillHints: [_creating ? AutofillHints.newPassword : AutofillHints.password],
-                decoration: InputDecoration(labelText: l.password, helperText: _creating ? l.passwordHint : null),
-                validator: (v) => (v == null || v.length < 8) ? l.passwordHint : null,
-                onFieldSubmitted: (_) => _submit(),
-              ),
-            ]),
+              const Expanded(child: Divider()),
+            ],
           ),
-        ),
-        if (_message != null) ...[
-          const SizedBox(height: 14),
-          Text(_message!, style: text.bodyMedium),
+          const SizedBox(height: 20),
+          Form(
+            key: _form,
+            child: AutofillGroup(
+              child: Column(
+                children: [
+                  TextFormField(
+                    controller: _email,
+                    keyboardType: TextInputType.emailAddress,
+                    autofillHints: const [AutofillHints.email],
+                    decoration: InputDecoration(labelText: l.email),
+                    validator: (v) => (v == null || !v.contains('@')) ? l.email : null,
+                  ),
+                  const SizedBox(height: 14),
+                  TextFormField(
+                    controller: _password,
+                    obscureText: true,
+                    autofillHints: [_creating ? AutofillHints.newPassword : AutofillHints.password],
+                    decoration: InputDecoration(labelText: l.password, helperText: _creating ? l.passwordHint : null),
+                    validator: (v) => (v == null || v.length < 8) ? l.passwordHint : null,
+                    onFieldSubmitted: (_) => _submit(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (_message != null) ...[const SizedBox(height: 14), Text(_message!, style: text.bodyMedium)],
+          const SizedBox(height: 22),
+          FilledButton(onPressed: _busy ? null : _submit, child: Text(_creating ? l.createAccount : l.signIn)),
+          const SizedBox(height: 8),
+          TextButton(
+            onPressed: _busy ? null : () => setState(() => _creating = !_creating),
+            child: Text(_creating ? l.haveAccount : l.needAccount),
+          ),
         ],
-        const SizedBox(height: 22),
-        FilledButton(
-          onPressed: _busy ? null : _submit,
-          child: Text(_creating ? l.createAccount : l.signIn),
-        ),
-        const SizedBox(height: 8),
-        TextButton(
-          onPressed: _busy ? null : () => setState(() => _creating = !_creating),
-          child: Text(_creating ? l.haveAccount : l.needAccount),
-        ),
-      ]),
+      ),
     );
   }
 }

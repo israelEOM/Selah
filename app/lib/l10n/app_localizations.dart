@@ -591,6 +591,36 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Todavía no se ha generado.'**
   String get notGeneratedYet;
+
+  /// No description provided for @continueWithGoogle.
+  ///
+  /// In es, this message translates to:
+  /// **'Continuar con Google'**
+  String get continueWithGoogle;
+
+  /// No description provided for @orWithEmail.
+  ///
+  /// In es, this message translates to:
+  /// **'o con tu correo'**
+  String get orWithEmail;
+
+  /// No description provided for @oauthCancelled.
+  ///
+  /// In es, this message translates to:
+  /// **'No se completó el inicio de sesión. Inténtalo de nuevo.'**
+  String get oauthCancelled;
+
+  /// No description provided for @oauthFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No fue posible iniciar sesión con esa cuenta. Inténtalo de nuevo o usa tu correo.'**
+  String get oauthFailed;
+
+  /// No description provided for @embeddedBrowserHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Para entrar con Google, abre esta página en Safari o Chrome.'**
+  String get embeddedBrowserHint;
 }
 
 class _AppLocalizationsDelegate
