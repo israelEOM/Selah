@@ -32,41 +32,49 @@ class HomePage extends ConsumerWidget {
       ),
       body: RefreshIndicator(
         onRefresh: () => ref.refresh(publishedStudiesProvider.future),
-        child: PageBody(children: [
-          const SizedBox(height: 16),
-          Eyebrow(l.heroEyebrow),
-          const SizedBox(height: 12),
-          Text('${l.tagline}.', style: text.displaySmall),
-          const SizedBox(height: 12),
-          Text(l.heroBody, style: text.bodyLarge),
-          const SizedBox(height: 36),
-          ...studies.when(
-            loading: () => [const Center(child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator()))],
-            error: (_, _) => [
-              Text(l.loadError, style: text.bodyMedium),
-              const SizedBox(height: 12),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: OutlinedButton(
-                    onPressed: () => ref.invalidate(publishedStudiesProvider), child: Text(l.retry)),
-              ),
-            ],
-            data: (items) => items.isEmpty
-                ? [Text(l.noStudiesYet, style: text.bodyMedium)]
-                : [
-                    Eyebrow(l.devotionalOfTheWeek),
-                    const SizedBox(height: 12),
-                    _StudyTile(items.first, featured: true),
-                    if (items.length > 1) ...[
-                      const SizedBox(height: 36),
-                      Eyebrow(l.recentStudies),
+        child: PageBody(
+          children: [
+            const SizedBox(height: 16),
+            Eyebrow(l.heroEyebrow),
+            const SizedBox(height: 12),
+            Text('${l.tagline}.', style: text.displaySmall),
+            const SizedBox(height: 12),
+            Text(l.heroBody, style: text.bodyLarge),
+            const SizedBox(height: 36),
+            ...studies.when(
+              loading: () => [
+                const Center(
+                  child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator()),
+                ),
+              ],
+              error: (_, _) => [
+                Text(l.loadError, style: text.bodyMedium),
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: OutlinedButton(
+                    onPressed: () => ref.invalidate(publishedStudiesProvider),
+                    child: Text(l.retry),
+                  ),
+                ),
+              ],
+              data: (items) => items.isEmpty
+                  ? [Text(l.noStudiesYet, style: text.bodyMedium)]
+                  : [
+                      Eyebrow(l.devotionalOfTheWeek),
                       const SizedBox(height: 12),
-                      for (final study in items.skip(1))
-                        Padding(padding: const EdgeInsets.only(bottom: 12), child: _StudyTile(study)),
+                      _StudyTile(items.first, featured: true),
+                      if (items.length > 1) ...[
+                        const SizedBox(height: 36),
+                        Eyebrow(l.recentStudies),
+                        const SizedBox(height: 12),
+                        for (final study in items.skip(1))
+                          Padding(padding: const EdgeInsets.only(bottom: 12), child: _StudyTile(study)),
+                      ],
                     ],
-                  ],
-          ),
-        ]),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -84,27 +92,41 @@ class _StudyTile extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     return Card(
       clipBehavior: Clip.antiAlias,
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        if (study.thumbnailUrl != null)
-          AspectRatio(
-            aspectRatio: featured ? 16 / 9 : 21 / 9,
-            child: Image.network(study.thumbnailUrl!,
-                fit: BoxFit.cover, errorBuilder: (_, _, _) => const ColoredBox(color: SelahColors.sage)),
-          ),
-        Padding(
-          padding: const EdgeInsets.all(18),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(study.title, style: featured ? text.headlineSmall : text.titleLarge),
-            const SizedBox(height: 6),
-            Text([if (study.preacher != null) study.preacher!, l.daysCount(study.numberOfDays)].join(' · '),
-                style: text.bodyMedium),
-            if (featured && study.centralMessage != null) ...[
-              const SizedBox(height: 10),
-              Text(study.centralMessage!, style: text.bodyMedium, maxLines: 3, overflow: TextOverflow.ellipsis),
-            ],
-          ]),
+      child: InkWell(
+        onTap: () => context.push('/studies/${study.slug}'),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (study.thumbnailUrl != null)
+              AspectRatio(
+                aspectRatio: featured ? 16 / 9 : 21 / 9,
+                child: Image.network(
+                  study.thumbnailUrl!,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) => const ColoredBox(color: SelahColors.sage),
+                ),
+              ),
+            Padding(
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(study.title, style: featured ? text.headlineSmall : text.titleLarge),
+                  const SizedBox(height: 6),
+                  Text(
+                    [if (study.preacher != null) study.preacher!, l.daysCount(study.numberOfDays)].join(' · '),
+                    style: text.bodyMedium,
+                  ),
+                  if (featured && study.centralMessage != null) ...[
+                    const SizedBox(height: 10),
+                    Text(study.centralMessage!, style: text.bodyMedium, maxLines: 3, overflow: TextOverflow.ellipsis),
+                  ],
+                ],
+              ),
+            ),
+          ],
         ),
-      ]),
+      ),
     );
   }
 }

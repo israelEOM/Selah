@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/models.dart';
@@ -48,3 +49,19 @@ final churchSettingsProvider =
 
 final bibleVersionsProvider =
     FutureProvider<List<Map<String, dynamic>>>((ref) => ref.watch(repositoryProvider).bibleVersions());
+
+final studyProvider = FutureProvider.autoDispose
+    .family<PublicStudy?, String>((ref, slug) => ref.watch(repositoryProvider).studyBySlug(slug));
+
+/// Day numbers read on this device. Members have no account, so progress stays local.
+final readDaysProvider = FutureProvider.autoDispose.family<Set<int>, String>((ref, studyId) async {
+  final prefs = await SharedPreferences.getInstance();
+  return (prefs.getStringList('read:$studyId') ?? const []).map(int.parse).toSet();
+});
+
+Future<void> markDayRead(WidgetRef ref, String studyId, int day) async {
+  final prefs = await SharedPreferences.getInstance();
+  final days = {...?prefs.getStringList('read:$studyId'), '$day'}.toList()..sort();
+  await prefs.setStringList('read:$studyId', days);
+  ref.invalidate(readDaysProvider(studyId));
+}

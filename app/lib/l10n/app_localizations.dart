@@ -621,6 +621,90 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Para entrar con Google, abre esta página en Safari o Chrome.'**
   String get embeddedBrowserHint;
+
+  /// No description provided for @dayOfTotal.
+  ///
+  /// In es, this message translates to:
+  /// **'Día {number} de {total}'**
+  String dayOfTotal(int number, int total);
+
+  /// No description provided for @previousDay.
+  ///
+  /// In es, this message translates to:
+  /// **'Día anterior'**
+  String get previousDay;
+
+  /// No description provided for @nextDay.
+  ///
+  /// In es, this message translates to:
+  /// **'Día siguiente'**
+  String get nextDay;
+
+  /// No description provided for @devotionalPath.
+  ///
+  /// In es, this message translates to:
+  /// **'Camino devocional'**
+  String get devotionalPath;
+
+  /// No description provided for @sermonSummary.
+  ///
+  /// In es, this message translates to:
+  /// **'Resumen de la predicación'**
+  String get sermonSummary;
+
+  /// No description provided for @readReference.
+  ///
+  /// In es, this message translates to:
+  /// **'Leer {reference} ({version})'**
+  String readReference(String reference, String version);
+
+  /// No description provided for @externalReaderNote.
+  ///
+  /// In es, this message translates to:
+  /// **'La lectura se abre en un lector externo; Selah no guarda el texto bíblico.'**
+  String get externalReaderNote;
+
+  /// No description provided for @prayerNote.
+  ///
+  /// In es, this message translates to:
+  /// **'Oración sugerida a partir del estudio; no es una cita del predicador.'**
+  String get prayerNote;
+
+  /// No description provided for @markRead.
+  ///
+  /// In es, this message translates to:
+  /// **'Marcar como leído'**
+  String get markRead;
+
+  /// No description provided for @markedRead.
+  ///
+  /// In es, this message translates to:
+  /// **'Leído'**
+  String get markedRead;
+
+  /// No description provided for @studyNotFound.
+  ///
+  /// In es, this message translates to:
+  /// **'Este estudio no está disponible.'**
+  String get studyNotFound;
+
+  /// No description provided for @backToStudy.
+  ///
+  /// In es, this message translates to:
+  /// **'Volver al estudio'**
+  String get backToStudy;
+
+  /// No description provided for @watchThisPart.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver esta parte de la predicación'**
+  String get watchThisPart;
+
+  /// No description provided for @aiNotice.
+  ///
+  /// In es, this message translates to:
+  /// **'Resumen y devocional preparados con ayuda de IA a partir de la predicación, y revisados por la iglesia. La predicación y la Escritura son la fuente.'**
+  String get aiNotice;
 }
 
 class _AppLocalizationsDelegate

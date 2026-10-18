@@ -7,11 +7,21 @@ import '../features/admin/import_page.dart';
 import '../features/admin/sermon_page.dart';
 import '../features/auth/login_page.dart';
 import '../features/home/home_page.dart';
+import '../features/study/reader_page.dart';
+import '../features/study/study_page.dart';
 import 'theme.dart';
 
 final _router = GoRouter(
   routes: [
     GoRoute(path: '/', builder: (_, _) => const HomePage()),
+    GoRoute(path: '/studies/:slug', builder: (_, state) => StudyPage(slug: state.pathParameters['slug']!)),
+    GoRoute(
+      path: '/studies/:slug/day/:number',
+      builder: (_, state) => ReaderPage(
+        slug: state.pathParameters['slug']!,
+        dayNumber: int.tryParse(state.pathParameters['number']!) ?? 0,
+      ),
+    ),
     GoRoute(path: '/login', builder: (_, _) => const LoginPage()),
     GoRoute(path: '/admin', builder: (_, _) => const AdminHomePage()),
     GoRoute(path: '/admin/sermons/new', builder: (_, _) => const ImportPage()),

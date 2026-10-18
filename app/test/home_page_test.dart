@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+import 'package:selah/src/core/models.dart';
 import 'package:selah/l10n/app_localizations.dart';
 import 'package:selah/src/data/providers.dart';
 import 'package:selah/src/features/home/home_page.dart';
@@ -37,5 +39,31 @@ void main() {
   testWidgets('an admin sees the admin link', (tester) async {
     await _pump(tester, userId: 'user-1', admin: true);
     expect(find.text('Administrar'), findsOneWidget);
+  });
+
+  testWidgets('tapping a study opens it', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (_, _) => const HomePage()),
+      GoRoute(path: '/studies/:slug', builder: (_, s) => Text('STUDY ${s.pathParameters['slug']}')),
+    ]);
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        userIdProvider.overrideWith((ref) => Stream.value(null)),
+        isAdminProvider.overrideWith((ref) async => false),
+        publishedStudiesProvider.overrideWith((ref) async => const [
+              StudyCard(id: '1', slug: 'retiro-espiritual', title: 'La necesidad del retiro espiritual', numberOfDays: 3),
+            ]),
+      ],
+      child: MaterialApp.router(
+        routerConfig: router,
+        locale: const Locale('es'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+      ),
+    ));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('La necesidad del retiro espiritual'));
+    await tester.pumpAndSettle();
+    expect(find.text('STUDY retiro-espiritual'), findsOneWidget);
   });
 }

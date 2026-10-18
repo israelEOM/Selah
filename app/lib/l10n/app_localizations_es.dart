@@ -305,4 +305,53 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get embeddedBrowserHint =>
       'Para entrar con Google, abre esta página en Safari o Chrome.';
+
+  @override
+  String dayOfTotal(int number, int total) {
+    return 'Día $number de $total';
+  }
+
+  @override
+  String get previousDay => 'Día anterior';
+
+  @override
+  String get nextDay => 'Día siguiente';
+
+  @override
+  String get devotionalPath => 'Camino devocional';
+
+  @override
+  String get sermonSummary => 'Resumen de la predicación';
+
+  @override
+  String readReference(String reference, String version) {
+    return 'Leer $reference ($version)';
+  }
+
+  @override
+  String get externalReaderNote =>
+      'La lectura se abre en un lector externo; Selah no guarda el texto bíblico.';
+
+  @override
+  String get prayerNote =>
+      'Oración sugerida a partir del estudio; no es una cita del predicador.';
+
+  @override
+  String get markRead => 'Marcar como leído';
+
+  @override
+  String get markedRead => 'Leído';
+
+  @override
+  String get studyNotFound => 'Este estudio no está disponible.';
+
+  @override
+  String get backToStudy => 'Volver al estudio';
+
+  @override
+  String get watchThisPart => 'Ver esta parte de la predicación';
+
+  @override
+  String get aiNotice =>
+      'Resumen y devocional preparados con ayuda de IA a partir de la predicación, y revisados por la iglesia. La predicación y la Escritura son la fuente.';
 }

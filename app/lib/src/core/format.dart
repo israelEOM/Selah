@@ -21,3 +21,7 @@ int? parseClock(String text) {
 
 Uri youtubeAt(String videoId, num? seconds) => Uri.parse(
     'https://www.youtube.com/watch?v=$videoId${seconds == null ? '' : '&t=${seconds.floor()}s'}');
+
+/// Selah never stores Bible text; readings open in an external reader.
+Uri bibleReaderUrl(String reference, String versionCode) => Uri.https(
+    'www.biblegateway.com', '/passage/', {'search': reference, 'version': versionCode});

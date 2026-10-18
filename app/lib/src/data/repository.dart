@@ -18,6 +18,18 @@ class SelahRepository {
     return rows.map(StudyCard.fromJson).toList();
   }
 
+  /// A published study with its sermon and days, or null when there is none to show.
+  Future<PublicStudy?> studyBySlug(String slug) async {
+    final row = await _client
+        .from('studies')
+        .select('id, slug, title, number_of_days, bible_version_code, summary, central_message, published_at, '
+            'sermons(youtube_video_id, title, preacher, channel, thumbnail_url, sermon_date), devotional_days(*)')
+        .eq('slug', slug)
+        .eq('status', 'published')
+        .maybeSingle();
+    return row == null ? null : PublicStudy.fromJson(row);
+  }
+
   Future<bool> isAdmin(String userId) async {
     final row = await _client.from('profiles').select('role').eq('id', userId).maybeSingle();
     return row?['role'] == 'admin';

@@ -4,7 +4,7 @@ Written 2026-10-12 after reviewing the original brief, the original scaffold, an
 
 **Confirmed decisions:** Flutter client; Supabase for data and auth; Gemini for AI (model set in `.env`); the worker runs on the admin's Mac and polls Supabase for jobs.
 
-**Status:** Phases 0, 1 and 2 are done, except Android in Phase 0 (see below). Publish/unpublish, reference approval and regeneration from Phase 3 are also in. Next: the content editor and preview (rest of Phase 3), then the member study page and reader (Phase 4). Section 2 describes the original scaffold, which is preserved in the first git commit.
+**Status:** Phases 0, 1, 2 and 4 are done, except Android in Phase 0. Phase 3 has publish/unpublish, reference approval and regeneration, but not the content editor or preview yet. Google sign-in for the web is live (Apple deferred).
 
 ## 1. Goal
 

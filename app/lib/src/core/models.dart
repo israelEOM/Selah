@@ -102,3 +102,110 @@ class SermonDetail {
 
   String get videoId => sermon['youtube_video_id'] as String;
 }
+
+/// A published study as members see it.
+class PublicStudy {
+  const PublicStudy({
+    required this.id,
+    required this.slug,
+    required this.title,
+    required this.numberOfDays,
+    required this.bibleVersionCode,
+    required this.summary,
+    required this.sermon,
+    required this.days,
+    this.centralMessage,
+    this.publishedAt,
+  });
+
+  factory PublicStudy.fromJson(Map<String, dynamic> json) {
+    final days = List<Map<String, dynamic>>.from(json['devotional_days'] as List? ?? const [])
+        .map(DevotionalDay.fromJson)
+        .toList()
+      ..sort((a, b) => a.number.compareTo(b.number));
+    return PublicStudy(
+      id: json['id'] as String,
+      slug: json['slug'] as String,
+      title: json['title'] as String,
+      numberOfDays: json['number_of_days'] as int,
+      bibleVersionCode: json['bible_version_code'] as String,
+      summary: (json['summary'] as Map<String, dynamic>?) ?? const {},
+      sermon: SermonInfo.fromJson(json['sermons'] as Map<String, dynamic>),
+      days: days,
+      centralMessage: json['central_message'] as String?,
+      publishedAt: DateTime.tryParse(json['published_at'] as String? ?? ''),
+    );
+  }
+
+  final String id;
+  final String slug;
+  final String title;
+  final int numberOfDays;
+  final String bibleVersionCode;
+
+  /// Shape owned by the worker: introduction, main_passage, points, conclusion, key_takeaways.
+  final Map<String, dynamic> summary;
+  final SermonInfo sermon;
+  final List<DevotionalDay> days;
+  final String? centralMessage;
+  final DateTime? publishedAt;
+}
+
+class SermonInfo {
+  const SermonInfo({required this.videoId, this.title, this.preacher, this.channel, this.thumbnailUrl, this.sermonDate});
+
+  factory SermonInfo.fromJson(Map<String, dynamic> json) => SermonInfo(
+        videoId: json['youtube_video_id'] as String,
+        title: json['title'] as String?,
+        preacher: json['preacher'] as String?,
+        channel: json['channel'] as String?,
+        thumbnailUrl: json['thumbnail_url'] as String?,
+        sermonDate: DateTime.tryParse(json['sermon_date'] as String? ?? ''),
+      );
+
+  final String videoId;
+  final String? title;
+  final String? preacher;
+  final String? channel;
+  final String? thumbnailUrl;
+  final DateTime? sermonDate;
+}
+
+class DevotionalDay {
+  const DevotionalDay({
+    required this.number,
+    required this.title,
+    required this.questions,
+    this.bibleReading,
+    this.mainIdea,
+    this.reflection,
+    this.application,
+    this.prayer,
+    this.startSeconds,
+    this.endSeconds,
+  });
+
+  factory DevotionalDay.fromJson(Map<String, dynamic> json) => DevotionalDay(
+        number: json['day_number'] as int,
+        title: json['title'] as String,
+        questions: List<String>.from(json['questions'] as List? ?? const []),
+        bibleReading: json['bible_reading'] as String?,
+        mainIdea: json['main_idea'] as String?,
+        reflection: json['reflection'] as String?,
+        application: json['application'] as String?,
+        prayer: json['prayer'] as String?,
+        startSeconds: json['start_seconds'] as num?,
+        endSeconds: json['end_seconds'] as num?,
+      );
+
+  final int number;
+  final String title;
+  final List<String> questions;
+  final String? bibleReading;
+  final String? mainIdea;
+  final String? reflection;
+  final String? application;
+  final String? prayer;
+  final num? startSeconds;
+  final num? endSeconds;
+}
