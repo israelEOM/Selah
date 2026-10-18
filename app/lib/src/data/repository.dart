@@ -115,5 +115,9 @@ class SelahRepository {
     return response.session == null;
   }
 
+  /// On the web this leaves the page; Supabase brings the person back to [redirectTo].
+  Future<void> signInWithProvider(OAuthProvider provider, {required String redirectTo}) =>
+      _client.auth.signInWithOAuth(provider, redirectTo: redirectTo);
+
   Future<void> signOut() => _client.auth.signOut();
 }
