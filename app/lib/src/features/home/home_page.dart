@@ -6,6 +6,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../app/theme.dart';
 import '../../core/models.dart';
 import '../../data/providers.dart';
+import '../../l10n/locale.dart';
 import 'language_menu.dart';
 
 class HomePage extends ConsumerWidget {
@@ -16,6 +17,7 @@ class HomePage extends ConsumerWidget {
     final l = AppLocalizations.of(context)!;
     final text = Theme.of(context).textTheme;
     final studies = ref.watch(publishedStudiesProvider);
+    final language = ref.watch(appLocaleProvider).languageCode;
     final isAdmin = ref.watch(isAdminProvider).value ?? false;
     final signedIn = ref.watch(userIdProvider).value != null;
     return Scaffold(
@@ -65,13 +67,13 @@ class HomePage extends ConsumerWidget {
                   : [
                       Eyebrow(l.devotionalOfTheWeek),
                       const SizedBox(height: 12),
-                      _StudyTile(items.first, featured: true),
+                      _StudyTile(items.first.localizedTo(language), featured: true),
                       if (items.length > 1) ...[
                         const SizedBox(height: 36),
                         Eyebrow(l.recentStudies),
                         const SizedBox(height: 12),
                         for (final study in items.skip(1))
-                          Padding(padding: const EdgeInsets.only(bottom: 12), child: _StudyTile(study)),
+                          Padding(padding: const EdgeInsets.only(bottom: 12), child: _StudyTile(study.localizedTo(language))),
                       ],
                     ],
             ),

@@ -8,7 +8,9 @@ import '../../core/format.dart';
 import '../../core/models.dart';
 import '../../data/providers.dart';
 import '../home/language_menu.dart';
+import '../../l10n/locale.dart';
 import 'study_widgets.dart';
+import 'translation_banner.dart';
 
 class StudyPage extends ConsumerWidget {
   const StudyPage({super.key, required this.slug});
@@ -29,21 +31,23 @@ class StudyPage extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => PageBody(children: [Text(l.loadError, style: text.bodyLarge)]),
         data: (s) =>
-            s == null ? PageBody(children: [Text(l.studyNotFound, style: text.bodyLarge)]) : _StudyBody(study: s),
+            s == null ? PageBody(children: [Text(l.studyNotFound, style: text.bodyLarge)]) : _StudyBody(original: s),
       ),
     );
   }
 }
 
 class _StudyBody extends ConsumerWidget {
-  const _StudyBody({required this.study});
+  const _StudyBody({required this.original});
 
-  final PublicStudy study;
+  final PublicStudy original;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
     final text = Theme.of(context).textTheme;
+    final language = ref.watch(appLocaleProvider).languageCode;
+    final study = studyToShow(original, language, showOriginal: ref.watch(showOriginalProvider(original.id)));
     final read = ref.watch(readDaysProvider(study.id)).value ?? const <int>{};
     final summary = study.summary;
     final points = List<Map<String, dynamic>>.from(summary['points'] as List? ?? const []);
@@ -51,6 +55,7 @@ class _StudyBody extends ConsumerWidget {
     final byline = [study.sermon.preacher ?? study.sermon.channel, l.daysCount(study.numberOfDays)].whereType<String>();
     return PageBody(
       children: [
+        TranslationBanner(shown: study, original: original, language: language),
         if (study.sermon.thumbnailUrl != null)
           ClipRRect(
             borderRadius: BorderRadius.circular(18),

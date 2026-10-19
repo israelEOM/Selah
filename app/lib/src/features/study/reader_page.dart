@@ -8,7 +8,9 @@ import '../../core/format.dart';
 import '../../core/models.dart';
 import '../../data/providers.dart';
 import '../home/language_menu.dart';
+import '../../l10n/locale.dart';
 import 'study_widgets.dart';
+import 'translation_banner.dart';
 
 /// One devotional day, laid out for reading on a phone.
 class ReaderPage extends ConsumerWidget {
@@ -22,6 +24,7 @@ class ReaderPage extends ConsumerWidget {
     final l = AppLocalizations.of(context)!;
     final text = Theme.of(context).textTheme;
     final study = ref.watch(studyProvider(slug));
+    final language = ref.watch(appLocaleProvider).languageCode;
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -34,10 +37,15 @@ class ReaderPage extends ConsumerWidget {
       body: study.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => PageBody(children: [Text(l.loadError, style: text.bodyLarge)]),
-        data: (s) {
+        data: (original) {
+          final s = original == null
+              ? null
+              : studyToShow(original, language, showOriginal: ref.watch(showOriginalProvider(original.id)));
           final day = s?.days.where((d) => d.number == dayNumber).firstOrNull;
-          if (s == null || day == null) return PageBody(children: [Text(l.studyNotFound, style: text.bodyLarge)]);
-          return _Day(study: s, day: day);
+          if (original == null || s == null || day == null) {
+            return PageBody(children: [Text(l.studyNotFound, style: text.bodyLarge)]);
+          }
+          return _Day(study: s, original: original, language: language, day: day);
         },
       ),
     );
@@ -45,9 +53,11 @@ class ReaderPage extends ConsumerWidget {
 }
 
 class _Day extends ConsumerWidget {
-  const _Day({required this.study, required this.day});
+  const _Day({required this.study, required this.original, required this.language, required this.day});
 
   final PublicStudy study;
+  final PublicStudy original;
+  final String language;
   final DevotionalDay day;
 
   @override
@@ -61,6 +71,7 @@ class _Day extends ConsumerWidget {
     return PageBody(
       maxWidth: 680,
       children: [
+        TranslationBanner(shown: study, original: original, language: language),
         Eyebrow(l.dayOfTotal(day.number, total)),
         const SizedBox(height: 10),
         Row(
