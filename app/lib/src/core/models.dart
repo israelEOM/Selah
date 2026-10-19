@@ -9,6 +9,7 @@ class StudyCard {
     this.thumbnailUrl,
     this.preacher,
     this.sermonDate,
+    this.translatedTitles = const {},
   });
 
   factory StudyCard.fromJson(Map<String, dynamic> json) {
@@ -23,6 +24,10 @@ class StudyCard {
       thumbnailUrl: sermon['thumbnail_url'] as String?,
       preacher: (sermon['preacher'] ?? sermon['channel']) as String?,
       sermonDate: DateTime.tryParse(sermon['sermon_date'] as String? ?? ''),
+      translatedTitles: {
+        for (final t in (json['study_translations'] as List? ?? const []).cast<Map<String, dynamic>>())
+          t['language'] as String: t['title'] as String,
+      },
     );
   }
 
@@ -35,6 +40,27 @@ class StudyCard {
   final String? thumbnailUrl;
   final String? preacher;
   final DateTime? sermonDate;
+
+  /// Titles of the visible translations, by language code.
+  final Map<String, String> translatedTitles;
+
+  /// The card with its title in [language] when a translation exists, otherwise unchanged.
+  StudyCard localizedTo(String language) {
+    final translated = translatedTitles[language];
+    if (translated == null) return this;
+    return StudyCard(
+      id: id,
+      slug: slug,
+      title: translated,
+      numberOfDays: numberOfDays,
+      centralMessage: centralMessage,
+      publishedAt: publishedAt,
+      thumbnailUrl: thumbnailUrl,
+      preacher: preacher,
+      sermonDate: sermonDate,
+      translatedTitles: translatedTitles,
+    );
+  }
 }
 
 class SermonRow {
@@ -116,13 +142,13 @@ class PublicStudy {
     required this.days,
     this.centralMessage,
     this.publishedAt,
+    this.outputLanguage = 'es',
+    this.translations = const {},
+    this.translatedFrom,
   });
 
   factory PublicStudy.fromJson(Map<String, dynamic> json) {
-    final days = List<Map<String, dynamic>>.from(json['devotional_days'] as List? ?? const [])
-        .map(DevotionalDay.fromJson)
-        .toList()
-      ..sort((a, b) => a.number.compareTo(b.number));
+    final days = _sortedDays(json['devotional_days']);
     return PublicStudy(
       id: json['id'] as String,
       slug: json['slug'] as String,
@@ -134,6 +160,11 @@ class PublicStudy {
       days: days,
       centralMessage: json['central_message'] as String?,
       publishedAt: DateTime.tryParse(json['published_at'] as String? ?? ''),
+      outputLanguage: (json['output_language'] as String?) ?? 'es',
+      translations: {
+        for (final t in (json['study_translations'] as List? ?? const []).cast<Map<String, dynamic>>())
+          t['language'] as String: StudyTranslation.fromJson(t),
+      },
     );
   }
 
@@ -149,7 +180,70 @@ class PublicStudy {
   final List<DevotionalDay> days;
   final String? centralMessage;
   final DateTime? publishedAt;
+
+  /// Language the study was written in (`studies.output_language`).
+  final String outputLanguage;
+
+  /// Visible translations by language code. RLS already hides hidden and unpublished ones.
+  final Map<String, StudyTranslation> translations;
+
+  /// The original language when this is a translated copy, null on the original.
+  final String? translatedFrom;
+
+  /// This study in [language], or `this` when it is already in that language or has no translation.
+  PublicStudy localizedTo(String language) {
+    if (language == outputLanguage) return this;
+    final t = translations[language];
+    if (t == null) return this;
+    return PublicStudy(
+      id: id,
+      slug: slug,
+      title: t.title,
+      numberOfDays: numberOfDays,
+      bibleVersionCode: t.bibleVersionCode,
+      summary: t.summary,
+      sermon: sermon,
+      days: t.days,
+      centralMessage: t.centralMessage,
+      publishedAt: publishedAt,
+      outputLanguage: outputLanguage,
+      translations: translations,
+      translatedFrom: outputLanguage,
+    );
+  }
 }
+
+/// One row of `study_translations`: the study text in another language.
+class StudyTranslation {
+  const StudyTranslation({
+    required this.language,
+    required this.title,
+    required this.summary,
+    required this.days,
+    required this.bibleVersionCode,
+    this.centralMessage,
+  });
+
+  factory StudyTranslation.fromJson(Map<String, dynamic> json) => StudyTranslation(
+        language: json['language'] as String,
+        title: json['title'] as String,
+        centralMessage: json['central_message'] as String?,
+        summary: (json['summary'] as Map<String, dynamic>?) ?? const {},
+        days: _sortedDays(json['days']),
+        bibleVersionCode: json['bible_version_code'] as String,
+      );
+
+  final String language;
+  final String title;
+  final String? centralMessage;
+  final Map<String, dynamic> summary;
+  final List<DevotionalDay> days;
+  final String bibleVersionCode;
+}
+
+List<DevotionalDay> _sortedDays(Object? raw) =>
+    List<Map<String, dynamic>>.from(raw as List? ?? const []).map(DevotionalDay.fromJson).toList()
+      ..sort((a, b) => a.number.compareTo(b.number));
 
 class SermonInfo {
   const SermonInfo({required this.videoId, this.title, this.preacher, this.channel, this.thumbnailUrl, this.sermonDate});

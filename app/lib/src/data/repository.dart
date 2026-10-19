@@ -12,7 +12,8 @@ class SelahRepository {
     final rows = await _client
         .from('studies')
         .select('id, slug, title, number_of_days, central_message, published_at, '
-            'sermons(thumbnail_url, preacher, channel, sermon_date)')
+            'sermons(thumbnail_url, preacher, channel, sermon_date), '
+            'study_translations(language, title, central_message)')
         .eq('status', 'published')
         .order('published_at', ascending: false);
     return rows.map(StudyCard.fromJson).toList();
@@ -22,8 +23,8 @@ class SelahRepository {
   Future<PublicStudy?> studyBySlug(String slug) async {
     final row = await _client
         .from('studies')
-        .select('id, slug, title, number_of_days, bible_version_code, summary, central_message, published_at, '
-            'sermons(youtube_video_id, title, preacher, channel, thumbnail_url, sermon_date), devotional_days(*)')
+        .select('id, slug, title, number_of_days, bible_version_code, output_language, summary, central_message, published_at, '
+            'sermons(youtube_video_id, title, preacher, channel, thumbnail_url, sermon_date), devotional_days(*), study_translations(*)')
         .eq('slug', slug)
         .eq('status', 'published')
         .maybeSingle();
