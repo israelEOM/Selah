@@ -4,7 +4,7 @@
 
 **Goal:** Members can read Selah in English or Brazilian Portuguese: the app's interface, and every published study translated from the church's reviewed Spanish.
 
-**Architecture:** Publishing a study queues one `translate` job. The worker sends the published Spanish text, never the transcript, to Gemini once per language and checks that the structure came back intact. It writes Bible references itself with the existing parser, and stores one row per language in a new `study_translations` table. Members choose a language in the app; the choice is kept on the device. Study pages show the translation with an "automatic translation" notice and a link to the original, and fall back to Spanish with a short note when there is none. The admin can hide a translation or redo it from the sermon page.
+**Architecture:** Publishing a study queues one `translate` job. The worker sends the published Spanish text, never the transcript, to Gemini once per language and checks that the structure came back intact. It writes Bible references itself with the existing parser, and stores one row per language in a new `study_translations` table. Members choose a language in the app; the choice is kept on the device. Study pages show the translation with an "automatic translation" notice and a link to the original, and fall back to Spanish with a short note when there is none. Each translation waits for the admin to read and approve it on the sermon page before members see it; the admin can also withdraw it or redo it.
 
 **Tech Stack:** Supabase Postgres (migration + RLS), Python worker (Gemini structured output, pytest), Flutter (gen-l10n ARB files, Riverpod 3, shared_preferences).
 
@@ -12,9 +12,9 @@
 
 ## Decisions this plan makes (confirm at review)
 
-- **Translations go live without a separate approval.** They translate content the admin already reviewed, every page shows "Traducción automática" in the reader's language with a link to the Spanish, and the admin can hide either language. If you would rather approve each translation before members see it, Task 1's `hidden` defaults to `true` instead, and the admin switch becomes "publish translation"; nothing else changes.
-- **Only the study is translated, not the sermon.** Admin screens and the YouTube video stay as they are.
-- **Bible versions:** Portuguese readings link to **ARA** (Almeida Revista e Atualizada) and English readings to **NIV**. Selah only links to an outside reader, so no Bible text is stored either way.
+- **Translations need the admin's approval (confirmed 2026-10-19).** New translations are saved hidden (`hidden = true`). The admin reads them on the sermon page and approves each language. Every new translation of a study, for example after republishing, is saved hidden again and needs a new approval. The study already published before this feature gets translated too (Task 2 Step 5) and waits for approval like any other.
+- **Only member pages are translated (confirmed).** Admin screens stay in Spanish, and the YouTube video is unchanged.
+- **Bible versions (confirmed):** Portuguese readings link to **ARA** (Almeida Revista e Atualizada) and English readings to **NIV**. Selah only links to an outside reader, so no Bible text is stored either way.
 
 ## Global Constraints
 
@@ -25,11 +25,13 @@
 - Bible references are never translated by the model. The worker relabels them with `selah_worker.bible.parse_reference(reference, language)`.
 - Bible version per target language: `pt` → `ARA`, `en` → `NIV`.
 - Every translated page says it is an automatic translation, in the reader's language, and offers the original.
+- A translation is visible to members only after the admin approves it, and every re-translation needs approval again.
+- Admin screens stay Spanish-only; only member pages (home, study, reader, login) use the chosen language.
 - Supabase CLI and Wrangler need Node 20+: `PATH=/usr/local/n/versions/node/22.21.0/bin:$PATH`.
 
 ## Review Focus
 
-1. **A study is unpublished, or regenerated and republished, after translating.** Expected: members never see an old translation. RLS hides it while the study is unpublished, and republishing queues a fresh `translate` job that overwrites it. Pinned in Task 1 (anon check) and Task 6 (publish queues the job).
+1. **A study is unpublished, or regenerated and republished, after translating.** Expected: members never see an old or unapproved translation. RLS hides it while the study is unpublished; republishing queues a fresh `translate` job whose rows are saved hidden until approved. Pinned in Task 1 (anon check), Task 2 (`translation_row` sets `hidden: True`) and Task 6 (publish queues the job).
 2. **A member picks English before the translation exists, or after it failed or was hidden.** Expected: the Spanish study with the note "This study is not available in English yet.", never an empty page. Pinned in Task 5.
 3. **The model returns fewer days, points or questions than the original.** Expected: the job fails with a readable message and nothing is saved. Pinned in Task 2.
 4. **Bible references in the translation.** Expected: "2 Reyes 2:25" becomes exactly "2 Kings 2:25" and "2 Reis 2:25", whatever the model wrote. Pinned in Task 2.
@@ -44,7 +46,7 @@
 
 **Interfaces:**
 - Produces table `public.study_translations`:
-  `id uuid pk`, `study_id uuid not null references studies on delete cascade`, `language text not null check (language in ('en','pt'))`, `title text not null`, `central_message text`, `summary jsonb not null`, `days jsonb not null` (array of day objects, same keys as `devotional_days` rows minus ids), `bible_version_code text not null references bible_versions(code)`, `hidden boolean not null default false`, `source_updated_at timestamptz not null`, `model text not null`, `prompt_version text not null`, `input_tokens int`, `output_tokens int`, `created_at timestamptz not null default now()`, `unique (study_id, language)`.
+  `id uuid pk`, `study_id uuid not null references studies on delete cascade`, `language text not null check (language in ('en','pt'))`, `title text not null`, `central_message text`, `summary jsonb not null`, `days jsonb not null` (array of day objects, same keys as `devotional_days` rows minus ids), `bible_version_code text not null references bible_versions(code)`, `hidden boolean not null default true`, `source_updated_at timestamptz not null`, `model text not null`, `prompt_version text not null`, `input_tokens int`, `output_tokens int`, `created_at timestamptz not null default now()`, `unique (study_id, language)`.
 - RLS: anon and authenticated can `select` when `not hidden` and the parent study's `status = 'published'`. Admins have all rights (`is_admin()`). The worker writes with the service role.
 - `jobs.step` check also allows `'translate'` (drop and re-create the constraint).
 - `grant select on public.study_translations to anon`.
@@ -59,7 +61,7 @@
 - [ ] **Step 3: Verify RLS as an anonymous visitor**
 
   With the worker's service client, insert one translation for the published study and one for a study in `review`. With the publishable key from `app/config/beta.json`:
-  `GET /rest/v1/study_translations?select=study_id` must return only the published study's row. Set that row's `hidden = true`: the same request returns `[]`. Delete both rows afterwards.
+  `GET /rest/v1/study_translations?select=study_id`. Rows start hidden, so it returns `[]`. Set both rows to `hidden = false`: it returns only the published study's row. Set that row back to `hidden = true`: `[]` again. Delete both rows afterwards.
 
 - [ ] **Step 4: Commit**
 
@@ -84,9 +86,10 @@
   - In `translation.py`:
     - `BIBLE_VERSION = {"pt": "ARA", "en": "NIV"}`
     - `source_for_translation(study: dict, days: list[dict]) -> dict`: only the text fields, in the `TranslationOut` shape. No references, timestamps or ids.
+    - `translation_row(study: dict, merged: dict, language: str, usage: dict) -> dict`: the dict upserted into `study_translations`: `merged` plus `study_id`, `language`, `source_updated_at = study["updated_at"]`, the usage fields, and `hidden: True`.
     - `merge_translation(study: dict, days: list[dict], out: TranslationOut, language: str) -> dict`: returns `{title, central_message, summary, days, bible_version_code}` ready for `study_translations`. It keeps from the source every non-text field (`start_seconds`, `end_seconds`, `day_number`, each quote's `start_seconds`). It relabels `main_passage`, each point's `references` and each day's `bible_reading` with `parse_reference(..., language)`, keeping the original string when it does not parse. It raises `RuntimeError("La traducción no conserva la estructura del estudio.")` when any of these differ from the source: number of days, day numbers, number of points, subpoints per point, questions per day, key takeaways or quotes.
   - In `ai.py`: `translate(source: dict, language: str) -> tuple[TranslationOut, dict]`, using `generate(TRANSLATE.format(language=…), json.dumps(source, ensure_ascii=False), TranslationOut)`. The prompt says: translate from Spanish into `English` or `português do Brasil`; keep meaning, tone and structure exactly; add and remove nothing; keep quotes faithful to the preacher's words; leave `[` `]` and proper names as they are.
-  - In `pipeline.py`: `translate(job: dict) -> dict`. Payload `{"languages": ["en", "pt"]}`. It loads the study by `job["sermon_id"]` and requires `status == 'published'`, else raises `RuntimeError("Solo se traducen estudios publicados.")`. It loads its days, then per language calls `ai.translate`, `merge_translation`, and upserts on `(study_id, language)` with `source_updated_at = study["updated_at"]` and usage. The upsert does not send `hidden`, so an admin's choice survives a redo. Returns `{"languages": [...]} | usage of the last call`.
+  - In `pipeline.py`: `translate(job: dict) -> dict`. Payload `{"languages": ["en", "pt"]}`. It loads the study by `job["sermon_id"]` and requires `status == 'published'`, else raises `RuntimeError("Solo se traducen estudios publicados.")`. It loads its days, then per language calls `ai.translate`, `merge_translation`, and upserts on `(study_id, language)` the dict from `translation_row`, so every new translation is saved hidden and waits for approval. Returns `{"languages": [...]} | usage of the last call`.
 
 - [ ] **Step 1: Write the failing tests** in `worker/tests/test_translation.py`, with a fixture study of 2 days (2 questions each), 1 point (2 subpoints, references `["2 Reyes 2:25"]`, `start_seconds: 2183.0`), 2 key takeaways, 1 quote, `main_passage: "2 Reyes 2:25"`, and day 1 `bible_reading: "Salmo 27:14"`:
   - `test_source_has_no_references_or_times` → `"references"`, `"start_seconds"`, `"bible_reading"` and `"main_passage"` do not occur anywhere in `json.dumps(source_for_translation(...))`.
@@ -95,6 +98,7 @@
   - `test_merge_keeps_times_and_day_numbers` → `result["summary"]["points"][0]["start_seconds"] == 2183.0`, `[d["day_number"] for d in result["days"]] == [1, 2]`, and each day's `start_seconds` and `end_seconds` equal the source's.
   - `test_merge_rejects_missing_day` → output with one day raises `RuntimeError` matching `"estructura"`.
   - `test_merge_rejects_missing_question` → day 2 with one question raises `RuntimeError`.
+  - `test_translation_row_starts_hidden` → `translation_row(study, merged, 'en', usage)` has `row["hidden"] is True`, `row["language"] == "en"` and `row["source_updated_at"] == study["updated_at"]`.
 
 - [ ] **Step 2: Run them to see them fail**
 
@@ -106,12 +110,12 @@
 - [ ] **Step 4: Run the whole worker suite**
 
   Run: `cd worker && .venv/bin/python -m pytest -q`
-  Expected: all pass (31 existing + 6 new).
+  Expected: all pass (31 existing + 7 new).
 
 - [ ] **Step 5: Run it once for real**
 
   Insert a `translate` job for the published study (`sermon_id` of "Eliseo continúa su ministerio", payload `{"languages": ["en","pt"]}`) and run `cd worker && .venv/bin/python -m selah_worker run` until it finishes.
-  Expected: job `succeeded`; two `study_translations` rows; the English row's day 1 `bible_reading` starts with an English book name. Read both titles and day 1 to check the translation is faithful and the Portuguese is Brazilian.
+  Expected: job `succeeded`; two `study_translations` rows, both `hidden = true`; the English row's day 1 `bible_reading` starts with an English book name. Read both titles and day 1 to check the translation is faithful and the Portuguese is Brazilian. Leave both hidden; the owner approves them in Task 7.
 
 - [ ] **Step 6: Commit**
 
@@ -169,6 +173,7 @@
 - Modify: `app/lib/src/app/app.dart` (`locale:` comes from `appLocaleProvider`)
 - Modify: `app/lib/src/features/home/home_page.dart`, `app/lib/src/features/study/study_page.dart`, `app/lib/src/features/study/reader_page.dart` (show `LanguageMenu` in the app bar)
 - Modify: `app/lib/main.dart` (read the saved locale before `runApp`)
+- Modify: `app/lib/src/features/admin/admin_gate.dart` (admin screens stay Spanish)
 - Test: `app/test/locale_test.dart`
 
 **Interfaces:**
@@ -176,6 +181,7 @@
   - `const supportedLanguages = ['es', 'en', 'pt'];`
   - `String languageFor(Locale device)` → the device's language code when it is in `supportedLanguages`, else `'es'`.
   - `final appLocaleProvider = NotifierProvider<AppLocale, Locale>(AppLocale.new);` The initial value is the saved preference under key `'language'`, else `languageFor(PlatformDispatcher.instance.locale)`. `Future<void> AppLocale.set(String language)` updates state and saves it.
+- Produces: `AdminPage` wraps its `Scaffold` in `Localizations.override(context: context, locale: const Locale('es'), child: …)`, so every admin screen is Spanish whatever the chosen language.
 - Produces `LanguageMenu()`: an app-bar `PopupMenuButton` with a translate icon and three items, "Español", "English", "Português". Each item is in its own language whatever the current locale, and choosing one calls `set`.
 - New strings in all three ARB files (Spanish / English / Portuguese):
 
@@ -190,11 +196,12 @@
 
   Existing keys the tests pin: `signIn` → "Sign in" / "Entrar"; `readReference` → "Read {reference} ({version})" / "Ler {reference} ({version})"; `nextDay` → "Next day" / "Próximo dia".
 
-  `translationNotice` takes `{original}` (String) and is filled with `languageNameEs`. `translationMissing` names the reader's own language, so each locale's text is fixed. Every existing key gets an English and a Brazilian Portuguese text; keep the Spanish tone (warm, short). Brand words stay: "Selah", "La Palabra que permanece" becomes "The Word that remains" and "A Palavra que permanece".
+  `translationNotice` takes `{original}` (String) and is filled with `languageNameEs`. `translationMissing` names the reader's own language, so each locale's text is fixed. Every existing member-facing key gets an English and a Brazilian Portuguese text. Admin-only keys (those used only under `features/admin/` or the import page) get the Spanish text in all three files, because admin screens are never shown in another language; keep the Spanish tone (warm, short). Brand words stay: "Selah", "La Palabra que permanece" becomes "The Word that remains" and "A Palavra que permanece".
 
 - [ ] **Step 1: Write the failing tests**
   - `languageFor maps device locales` → `Locale('pt','PT')` → `'pt'`, `Locale('pt','BR')` → `'pt'`, `Locale('en','GB')` → `'en'`, `Locale('fr')` → `'es'`, `Locale('es','MX')` → `'es'`.
   - `choosing English changes the interface and is remembered` (widget) → pump `HomePage` under `SelahApp`'s localization setup with `appLocaleProvider`, `SharedPreferences.setMockInitialValues({})` and the home overrides from `home_page_test.dart`. Open `LanguageMenu`, tap "English". Expect `find.text('Sign in')` and `(await SharedPreferences.getInstance()).getString('language') == 'en'`.
+  - `admin screens stay in Spanish` → with `appLocaleProvider` overridden to `en`, pump `AdminPage(backTo: '/', children: [Builder(builder: (c) => Text(AppLocalizations.of(c)!.adminTitle))])` with an admin signed in; finds `'Predicaciones'`.
   - `every key exists in every language` → load the three ARB files as JSON; the sets of non-`@` keys are equal.
 
 - [ ] **Step 2: Run them to see them fail**
@@ -272,13 +279,14 @@
 - Produces:
   - `Future<List<Map<String, dynamic>>> translations(String studyId)` (admin view, includes hidden rows) and `Future<void> setTranslationHidden(String id, bool hidden)`.
   - Publishing (when `!published`) calls `setStudyPublished(id, true)` and then `createJob('translate', {'languages': ['en', 'pt']}, sermonId: sermonId)`.
-  - Section "Traducciones" under the study, for a published study. Per language it shows the name, the state, a `Visible` switch (calls `setTranslationHidden`) and a retry/"Traducir de nuevo" button that queues the same job. The state is one of: queued/running from the latest `translate` job, `failed` with its error, or the row's `created_at`.
-- New strings (es / en / pt): `translationsSection` Traducciones / Translations / Traduções; `translateAgain` Traducir de nuevo / Translate again / Traduzir novamente; `visible` Visible / Visible / Visível; `stepTranslate` Traducir al inglés y al portugués / Translate into English and Portuguese / Traduzir para inglês e português.
+  - Section "Traducciones" under the study, for a published study. Per language: the name; the state; an expandable preview of the translated title, central message and each day (title, main idea, reflection, application, questions, prayer) so the admin can read it before approving; "Aprobar" when hidden (calls `setTranslationHidden(id, false)`) or "Retirar" when visible (calls `setTranslationHidden(id, true)`); and "Traducir de nuevo", which queues the same job. The state is one of: queued/running from the latest `translate` job, `failed` with its error, or the row's `created_at`.
+- New strings, Spanish only, since admin screens are not translated. Add the same keys to `app_en.arb` and `app_pt.arb` with the Spanish text so Task 4's key check still passes. Keys: `translationsSection` Traducciones; `translateAgain` Traducir de nuevo; `approveTranslation` Aprobar; `withdrawTranslation` Retirar; `translationPending` Pendiente de aprobación; `translationLive` Publicada; `stepTranslate` Traducir al inglés y al portugués.
 
 - [ ] **Step 1: Write the failing tests** with a fake repository that records `createJob` calls (same pattern as `_FakeRepository` in `test/login_page_test.dart`) and a `SermonDetail` fixture whose study is in `review` with 3 days:
   - `publishing queues the translation` → tap "Publicar"; the fake recorded `setStudyPublished(id, true)` then `createJob('translate', {'languages': ['en','pt']}, sermonId: …)`.
   - `unpublishing does not translate` → study `published`; tap "Retirar publicación"; no `translate` job recorded.
-  - `hiding a translation` → with an `en` row, toggle its switch off; the fake recorded `setTranslationHidden(<row id>, true)`.
+  - `approving a translation` → with a hidden `en` row, tap "Aprobar"; the fake recorded `setTranslationHidden(<row id>, false)`.
+  - `withdrawing a translation` → with a visible `en` row, tap "Retirar"; the fake recorded `setTranslationHidden(<row id>, true)`.
 
 - [ ] **Step 2: Run them to see them fail**
 
@@ -321,12 +329,14 @@
   | Open the study, then Day 1 | English text; "Automatic translation from the original in Spanish."; reading link says NIV |
   | "Show original" | Spanish day; "Show translation" brings English back |
   | Language → Português | Brazilian Portuguese text and the ARA link |
-  | Admin hides the Portuguese translation | Portuguese reader sees Spanish with "Este estudo ainda não está disponível em português." |
+  | Before approving: Language → English | Spanish study with "This study is not available in English yet." |
+  | Admin: sermon page → Traducciones, read the English preview, tap Aprobar (same for Portuguese) | English reader shows the translation |
+  | Admin withdraws Portuguese (Retirar) | Portuguese reader sees Spanish with "Este estudo ainda não está disponível em português." |
   | Reload the page | The chosen language is kept |
 
 - [ ] **Step 3: Document and commit**
 
-  README "Translations": when they are made (on publish), which versions are linked, how to hide or redo one, and that they use the same Gemini key and worker. MVP_PLAN status line mentions translations.
+  README "Translations": when they are made (on publish), which versions are linked, that each needs approval under Traducciones, how to withdraw or redo one, and that they use the same Gemini key and worker. MVP_PLAN status line mentions translations.
 
   ```bash
   git add README.md docs/MVP_PLAN.md
