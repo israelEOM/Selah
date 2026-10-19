@@ -6,6 +6,7 @@ from selah_worker import ai, youtube
 from selah_worker.bible import parse_reference
 from selah_worker.db import client
 from selah_worker.grounding import fold, locate, window_end, window_start
+from selah_worker.translation import merge_translation, source_for_translation, translation_row
 from selah_worker.transcripts import build_windows, normalize, parse_manual, render_windows, within_interval
 
 
@@ -197,7 +198,25 @@ def devotional(job: dict) -> dict:
     return _usage(metrics) | {"days": days}
 
 
-HANDLERS = {"probe": probe, "transcript": transcript, "analysis": analysis, "summary": summary, "devotional": devotional}
+def translate(job: dict) -> dict:
+    study = _one("studies", "sermon_id", job["sermon_id"], "Primero genera el estudio.")
+    if study["status"] != "published":
+        raise RuntimeError("Solo se traducen estudios publicados.")
+    days = client().table("devotional_days").select("*").eq("study_id", study["id"]).order("day_number").execute().data
+    languages = job["payload"].get("languages") or ["en", "pt"]
+    source = source_for_translation(study, days)
+    result: dict = {}
+    for language in languages:
+        output, metrics = ai.translate(source, language)
+        merged = merge_translation(study, days, output, language)
+        row = translation_row(study, merged, language, _usage(metrics))
+        client().table("study_translations").upsert(row, on_conflict="study_id,language").execute()
+        result = _usage(metrics)
+    return {"languages": languages} | result
+
+
+HANDLERS = {"probe": probe, "transcript": transcript, "analysis": analysis, "summary": summary, "devotional": devotional,
+            "translate": translate}
 
 
 def run_all(url: str, language: str = "es", output_language: str = "es", days: int = 5,

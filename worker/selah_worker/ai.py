@@ -7,10 +7,10 @@ from typing import TypeVar
 from pydantic import BaseModel
 
 from selah_worker.config import settings
-from selah_worker.schemas import AnalysisOut, DevotionalOut, SummaryOut
+from selah_worker.schemas import AnalysisOut, DevotionalOut, SummaryOut, TranslationOut
 
 log = logging.getLogger("selah")
-PROMPT_VERSION = "2026-10-12.2"
+PROMPT_VERSION = "2026-10-19.1"
 LANGUAGES = {"es": "español", "pt": "português", "en": "English"}
 T = TypeVar("T", bound=BaseModel)
 
@@ -57,6 +57,17 @@ DEVOTIONAL = """Write a {days}-day devotional in {language} based on this sermon
 - prayer: a short prayer in first person plural or singular. It is devotional material, not a quote.
 - start_window and end_window: the part of the sermon this day draws on.
 - day_number runs from 1 to {days}."""
+
+TRANSLATE = """Translate this published study from Spanish into {language}. You receive the study as JSON.
+
+- Keep the meaning, tone and structure exactly. Add nothing and remove nothing.
+- Return the same number of points, subpoints, key takeaways, quotes, days and questions, in the same order,
+  and the same day_number values.
+- Quotes are the preacher's words: translate them faithfully, without polishing or paraphrasing.
+- Leave any text inside [ ] and all proper names as they are.
+- Bible references are handled elsewhere; do not add or write out Bible verses."""
+
+TRANSLATION_NAMES = {"en": "English", "pt": "português do Brasil"}
 
 
 @lru_cache
@@ -114,3 +125,8 @@ def summarize(analysis: dict, language: str) -> tuple[SummaryOut, dict]:
 def devotional(analysis: dict, transcript: str, days: int, language: str) -> tuple[DevotionalOut, dict]:
     source = "ANALYSIS\n" + json.dumps(analysis, ensure_ascii=False) + "\n\nTRANSCRIPT\n" + transcript
     return generate(DEVOTIONAL.format(days=days, language=LANGUAGES.get(language, language)), source, DevotionalOut)
+
+
+def translate(source: dict, language: str) -> tuple[TranslationOut, dict]:
+    instruction = TRANSLATE.format(language=TRANSLATION_NAMES[language])
+    return generate(instruction, json.dumps(source, ensure_ascii=False), TranslationOut)

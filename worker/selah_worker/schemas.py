@@ -77,3 +77,35 @@ class DayOut(BaseModel):
 
 class DevotionalOut(BaseModel):
     days: list[DayOut]
+
+
+class TranslatedPoint(BaseModel):
+    title: str
+    summary: str
+    subpoints: list[str]
+    application: Optional[str] = None
+
+
+class TranslatedSummary(BaseModel):
+    introduction: Optional[str] = None
+    points: list[TranslatedPoint]
+    conclusion: Optional[str] = None
+    key_takeaways: list[str]
+    quotes: list[str]
+
+
+class TranslatedDay(BaseModel):
+    day_number: int
+    title: str
+    main_idea: str
+    reflection: str
+    application: str
+    questions: list[str]
+    prayer: str
+
+
+class TranslationOut(BaseModel):
+    title: str
+    central_message: Optional[str] = None
+    summary: TranslatedSummary
+    days: list[TranslatedDay]
