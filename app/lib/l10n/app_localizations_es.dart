@@ -375,4 +375,25 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get languageNameEs => 'español';
+
+  @override
+  String get translationsSection => 'Traducciones';
+
+  @override
+  String get translateAgain => 'Traducir de nuevo';
+
+  @override
+  String get approveTranslation => 'Aprobar';
+
+  @override
+  String get withdrawTranslation => 'Retirar';
+
+  @override
+  String get translationPending => 'Pendiente de aprobación';
+
+  @override
+  String get translationLive => 'Publicada';
+
+  @override
+  String get stepTranslate => 'Traducir al inglés y al portugués';
 }

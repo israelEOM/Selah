@@ -1,0 +1,130 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:selah/l10n/app_localizations.dart';
+import 'package:selah/src/app/app.dart';
+import 'package:selah/src/core/models.dart';
+import 'package:selah/src/data/providers.dart';
+import 'package:selah/src/data/repository.dart';
+import 'package:selah/src/features/admin/sermon_page.dart';
+
+class _FakeRepository implements SelahRepository {
+  final calls = <String>[];
+
+  @override
+  Future<void> setStudyPublished(String studyId, bool published) async => calls.add('published:$studyId:$published');
+
+  @override
+  Future<String> createJob(String step, Map<String, dynamic> payload, {String? sermonId}) async {
+    calls.add('job:$step:$payload:$sermonId');
+    return 'job-1';
+  }
+
+  @override
+  Future<void> setTranslationHidden(String id, bool hidden) async => calls.add('hidden:$id:$hidden');
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+SermonDetail _detail(String status) => SermonDetail(
+      sermon: {'id': 's1', 'title': 'Sermón', 'youtube_video_id': 'abc'},
+      hasTranscript: true,
+      study: {
+        'id': 'st1',
+        'status': status,
+        'title': 'Estudio',
+        'central_message': 'Mensaje',
+        'summary': <String, dynamic>{},
+        'number_of_days': 3,
+      },
+      days: [
+        for (var i = 1; i <= 3; i++)
+          {
+            'day_number': i,
+            'title': 'Día $i',
+            'bible_reading': 'Juan $i',
+            'main_idea': 'idea',
+            'reflection': 'reflexión',
+            'application': 'aplicación',
+            'questions': ['¿Pregunta?'],
+            'prayer': 'oración',
+          },
+      ],
+    );
+
+Map<String, dynamic> _row(String id, {required bool hidden}) => {
+      'id': id,
+      'study_id': 'st1',
+      'language': 'en',
+      'title': 'Translated title',
+      'central_message': 'Translated message',
+      'summary': <String, dynamic>{},
+      'days': <Map<String, dynamic>>[],
+      'hidden': hidden,
+      'created_at': '2026-10-19T10:00:00Z',
+    };
+
+Future<_FakeRepository> _pump(
+  WidgetTester tester, {
+  required String status,
+  List<Map<String, dynamic>> rows = const [],
+}) async {
+  tester.view.physicalSize = const Size(1000, 4000);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+  final fake = _FakeRepository();
+  await tester.pumpWidget(ProviderScope(
+    overrides: [
+      repositoryProvider.overrideWithValue(fake),
+      userIdProvider.overrideWith((ref) => Stream.value('admin')),
+      isAdminProvider.overrideWith((ref) async => true),
+      sermonDetailProvider('s1').overrideWith((ref) async => _detail(status)),
+      sermonJobsProvider('s1').overrideWith((ref) => Stream.value(const <String, Job>{})),
+      adminTranslationsProvider('st1').overrideWith((ref) async => rows),
+    ],
+    child: MaterialApp(
+      locale: const Locale('es'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: Builder(builder: (context) => inSpanish(context, const SermonPage(sermonId: 's1'))),
+    ),
+  ));
+  await tester.pumpAndSettle();
+  return fake;
+}
+
+void main() {
+  testWidgets('publishing queues the translation', (tester) async {
+    final fake = await _pump(tester, status: 'review');
+    await tester.tap(find.text('Publicar'));
+    await tester.pumpAndSettle();
+    expect(fake.calls, [
+      'published:st1:true',
+      "job:translate:{languages: [en, pt]}:s1",
+    ]);
+  });
+
+  testWidgets('unpublishing does not translate', (tester) async {
+    final fake = await _pump(tester, status: 'published');
+    await tester.tap(find.text('Retirar publicación'));
+    await tester.pumpAndSettle();
+    expect(fake.calls, ['published:st1:false']);
+  });
+
+  testWidgets('approving a translation', (tester) async {
+    final fake = await _pump(tester, status: 'published', rows: [_row('t1', hidden: true)]);
+    expect(find.textContaining('Pendiente de aprobación'), findsOneWidget);
+    await tester.tap(find.text('Aprobar'));
+    await tester.pumpAndSettle();
+    expect(fake.calls, ['hidden:t1:false']);
+  });
+
+  testWidgets('withdrawing a translation', (tester) async {
+    final fake = await _pump(tester, status: 'published', rows: [_row('t1', hidden: false)]);
+    expect(find.textContaining('Publicada'), findsOneWidget);
+    await tester.tap(find.text('Retirar'));
+    await tester.pumpAndSettle();
+    expect(fake.calls, ['hidden:t1:true']);
+  });
+}

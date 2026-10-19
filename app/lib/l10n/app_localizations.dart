@@ -747,6 +747,48 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'español'**
   String get languageNameEs;
+
+  /// No description provided for @translationsSection.
+  ///
+  /// In es, this message translates to:
+  /// **'Traducciones'**
+  String get translationsSection;
+
+  /// No description provided for @translateAgain.
+  ///
+  /// In es, this message translates to:
+  /// **'Traducir de nuevo'**
+  String get translateAgain;
+
+  /// No description provided for @approveTranslation.
+  ///
+  /// In es, this message translates to:
+  /// **'Aprobar'**
+  String get approveTranslation;
+
+  /// No description provided for @withdrawTranslation.
+  ///
+  /// In es, this message translates to:
+  /// **'Retirar'**
+  String get withdrawTranslation;
+
+  /// No description provided for @translationPending.
+  ///
+  /// In es, this message translates to:
+  /// **'Pendiente de aprobación'**
+  String get translationPending;
+
+  /// No description provided for @translationLive.
+  ///
+  /// In es, this message translates to:
+  /// **'Publicada'**
+  String get translationLive;
+
+  /// No description provided for @stepTranslate.
+  ///
+  /// In es, this message translates to:
+  /// **'Traducir al inglés y al portugués'**
+  String get stepTranslate;
 }
 
 class _AppLocalizationsDelegate

@@ -35,6 +35,10 @@ final sermonsProvider = FutureProvider<List<SermonRow>>((ref) {
 final sermonDetailProvider = FutureProvider.autoDispose
     .family<SermonDetail, String>((ref, id) => ref.watch(repositoryProvider).sermonDetail(id));
 
+/// A study's translations as the admin sees them, hidden ones included.
+final adminTranslationsProvider = FutureProvider.autoDispose
+    .family<List<Map<String, dynamic>>, String>((ref, studyId) => ref.watch(repositoryProvider).translations(studyId));
+
 /// Latest job per step, refreshed every two seconds while the page is open.
 final sermonJobsProvider = StreamProvider.autoDispose.family<Map<String, Job>, String>((ref, sermonId) async* {
   final repo = ref.watch(repositoryProvider);

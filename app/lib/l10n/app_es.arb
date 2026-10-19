@@ -162,5 +162,12 @@
   "showOriginal": "Ver original",
   "showTranslation": "Ver traducción",
   "translationMissing": "Este estudio aún no está disponible en español.",
-  "languageNameEs": "español"
+  "languageNameEs": "español",
+  "translationsSection": "Traducciones",
+  "translateAgain": "Traducir de nuevo",
+  "approveTranslation": "Aprobar",
+  "withdrawTranslation": "Retirar",
+  "translationPending": "Pendiente de aprobación",
+  "translationLive": "Publicada",
+  "stepTranslate": "Traducir al inglés y al portugués"
 }

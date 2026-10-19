@@ -9,6 +9,7 @@ import '../../core/models.dart';
 import '../../data/providers.dart';
 import 'admin_gate.dart';
 
+const _translateTargets = {'languages': ['en', 'pt']};
 const _steps = ['transcript', 'analysis', 'summary', 'devotional'];
 
 class SermonPage extends ConsumerWidget {
@@ -29,6 +30,8 @@ class SermonPage extends ConsumerWidget {
       if (signature(previous?.value) != signature(next.value)) {
         ref.invalidate(sermonDetailProvider(sermonId));
         ref.invalidate(sermonsProvider);
+        final studyId = detail.value?.study?['id'] as String?;
+        if (studyId != null) ref.invalidate(adminTranslationsProvider(studyId));
       }
     });
 
@@ -57,6 +60,10 @@ class SermonPage extends ConsumerWidget {
           _References(detail: d, sermonId: sermonId),
           const SizedBox(height: 32),
           _Study(detail: d, jobs: jobs, sermonId: sermonId),
+          if (d.study?['status'] == 'published') ...[
+            const SizedBox(height: 32),
+            _Translations(studyId: d.study!['id'] as String, sermonId: sermonId, job: jobs['translate']),
+          ],
         ],
       ),
     );
@@ -341,8 +348,10 @@ class _StudyState extends ConsumerState<_Study> {
           FilledButton(
             onPressed: busy
                 ? null
-                : () => _run(() => repo.setStudyPublished(study['id'] as String, !published),
-                    notice: published ? null : l.published),
+                : () => _run(() async {
+                      await repo.setStudyPublished(study['id'] as String, !published);
+                      if (!published) await repo.createJob('translate', _translateTargets, sermonId: widget.sermonId);
+                    }, notice: published ? null : l.published),
             child: Text(published ? l.unpublish : l.publish),
           ),
         SegmentedButton<int>(
@@ -387,4 +396,158 @@ class _StudyState extends ConsumerState<_Study> {
           Text(value ?? '', style: Theme.of(context).textTheme.bodyMedium),
         ]),
       );
+}
+
+const _languageNames = {'en': 'Inglés', 'pt': 'Portugués (Brasil)'};
+
+class _Translations extends ConsumerWidget {
+  const _Translations({required this.studyId, required this.sermonId, required this.job});
+
+  final String studyId;
+  final String sermonId;
+  final Job? job;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
+    final text = Theme.of(context).textTheme;
+    final repo = ref.read(repositoryProvider);
+    final rows = ref.watch(adminTranslationsProvider(studyId)).value ?? const <Map<String, dynamic>>[];
+    final active = job?.isActive ?? false;
+
+    Future<void> setHidden(String id, bool hidden) async {
+      await repo.setTranslationHidden(id, hidden);
+      ref.invalidate(adminTranslationsProvider(studyId));
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(l.translationsSection, style: text.headlineSmall),
+        const SizedBox(height: 10),
+        if (active)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Row(
+              children: [
+                job!.status == 'running'
+                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2.5))
+                    : const Icon(Icons.schedule, color: SelahColors.goldDeep, size: 18),
+                const SizedBox(width: 10),
+                Expanded(child: Text(l.stepTranslate, style: text.bodyMedium)),
+              ],
+            ),
+          ),
+        if (job?.status == 'failed')
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Text(
+              job!.error ?? l.genericError,
+              style: text.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.error),
+            ),
+          ),
+        for (final row in rows)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Card(
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                children: [
+                  ExpansionTile(
+                    shape: const Border(),
+                    title: Text(_languageNames[row['language']] ?? '${row['language']}', style: text.titleLarge),
+                    subtitle: Text(
+                      '${(row['hidden'] as bool? ?? true) ? l.translationPending : l.translationLive}'
+                      ' · ${(row['created_at'] as String? ?? '').split('T').first}',
+                    ),
+                    childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    expandedCrossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(row['title'] as String? ?? '', style: text.titleLarge),
+                      const SizedBox(height: 6),
+                      Text(row['central_message'] as String? ?? '', style: text.bodyLarge),
+                      for (final day in List<Map<String, dynamic>>.from((row['days'] as List?) ?? const []))
+                        _TranslatedDay(day: day),
+                    ],
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: (row['hidden'] as bool? ?? true)
+                          ? FilledButton(
+                              onPressed: () => setHidden(row['id'] as String, false),
+                              child: Text(l.approveTranslation),
+                            )
+                          : OutlinedButton(
+                              onPressed: () => setHidden(row['id'] as String, true),
+                              child: Text(l.withdrawTranslation),
+                            ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            TextButton(
+              onPressed: active
+                  ? null
+                  : () async {
+                      try {
+                        await repo.createJob('translate', _translateTargets, sermonId: sermonId);
+                        ref.invalidate(sermonJobsProvider(sermonId));
+                      } catch (_) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.jobAlreadyRunning)));
+                        }
+                      }
+                    },
+              child: Text(l.translateAgain),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _TranslatedDay extends StatelessWidget {
+  const _TranslatedDay({required this.day});
+
+  final Map<String, dynamic> day;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final text = Theme.of(context).textTheme;
+    Widget field(String label, String? value) => Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Eyebrow(label),
+          const SizedBox(height: 4),
+          Text(value ?? '', style: text.bodyMedium),
+        ],
+      ),
+    );
+    return Padding(
+      padding: const EdgeInsets.only(top: 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('${l.dayLabel(day['day_number'] as int)} · ${day['title']}', style: text.titleMedium),
+          field(l.mainIdea, day['main_idea'] as String?),
+          field(l.reflection, day['reflection'] as String?),
+          field(l.application, day['application'] as String?),
+          field(l.questions, List<String>.from((day['questions'] as List?) ?? const []).map((q) => '• $q').join('\n')),
+          field(l.prayer, day['prayer'] as String?),
+        ],
+      ),
+    );
+  }
 }

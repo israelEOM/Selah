@@ -114,6 +114,13 @@ class SelahRepository {
         'published_at': published ? DateTime.now().toUtc().toIso8601String() : null,
       }).eq('id', studyId);
 
+  /// Admin view of a study's translations, hidden ones included.
+  Future<List<Map<String, dynamic>>> translations(String studyId) =>
+      _client.from('study_translations').select().eq('study_id', studyId).order('language', ascending: true);
+
+  Future<void> setTranslationHidden(String id, bool hidden) =>
+      _client.from('study_translations').update({'hidden': hidden}).eq('id', id);
+
   Future<void> setReferenceApproved(String referenceId, bool approved) =>
       _client.from('bible_references').update({'approved': approved}).eq('id', referenceId);
 
