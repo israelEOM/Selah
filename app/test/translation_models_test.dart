@@ -83,4 +83,19 @@ void main() {
     expect(card.localizedTo('en').title, 'Title');
     expect(card.localizedTo('pt').title, 'Título');
   });
+
+  test('StudyCard.localizedTo swaps the central message too', () {
+    final card = StudyCard.fromJson({
+      'id': '1',
+      'slug': 's',
+      'title': 'Título',
+      'number_of_days': 3,
+      'central_message': 'Mensaje',
+      'study_translations': [
+        {'language': 'en', 'title': 'Title', 'central_message': 'Msg'},
+      ],
+    });
+    expect(card.localizedTo('en').centralMessage, 'Msg');
+    expect(card.localizedTo('pt').centralMessage, 'Mensaje');
+  });
 }

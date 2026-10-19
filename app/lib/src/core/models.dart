@@ -10,6 +10,7 @@ class StudyCard {
     this.preacher,
     this.sermonDate,
     this.translatedTitles = const {},
+    this.translatedMessages = const {},
   });
 
   factory StudyCard.fromJson(Map<String, dynamic> json) {
@@ -28,6 +29,10 @@ class StudyCard {
         for (final t in (json['study_translations'] as List? ?? const []).cast<Map<String, dynamic>>())
           t['language'] as String: t['title'] as String,
       },
+      translatedMessages: {
+        for (final t in (json['study_translations'] as List? ?? const []).cast<Map<String, dynamic>>())
+          if (t['central_message'] != null) t['language'] as String: t['central_message'] as String,
+      },
     );
   }
 
@@ -44,7 +49,10 @@ class StudyCard {
   /// Titles of the visible translations, by language code.
   final Map<String, String> translatedTitles;
 
-  /// The card with its title in [language] when a translation exists, otherwise unchanged.
+  /// Central messages of the visible translations, by language code.
+  final Map<String, String> translatedMessages;
+
+  /// The card with its title and central message in [language] when a translation exists, otherwise unchanged.
   StudyCard localizedTo(String language) {
     final translated = translatedTitles[language];
     if (translated == null) return this;
@@ -53,12 +61,13 @@ class StudyCard {
       slug: slug,
       title: translated,
       numberOfDays: numberOfDays,
-      centralMessage: centralMessage,
+      centralMessage: translatedMessages[language] ?? centralMessage,
       publishedAt: publishedAt,
       thumbnailUrl: thumbnailUrl,
       preacher: preacher,
       sermonDate: sermonDate,
       translatedTitles: translatedTitles,
+      translatedMessages: translatedMessages,
     );
   }
 }
