@@ -10,7 +10,7 @@ from selah_worker.config import settings
 from selah_worker.schemas import AnalysisOut, DevotionalOut, SummaryOut, TranslationOut
 
 log = logging.getLogger("selah")
-PROMPT_VERSION = "2026-10-19.1"
+PROMPT_VERSION = "2026-10-19.2"
 LANGUAGES = {"es": "español", "pt": "português", "en": "English"}
 T = TypeVar("T", bound=BaseModel)
 
@@ -64,8 +64,13 @@ TRANSLATE = """Translate this published study from Spanish into {language}. You 
 - Return the same number of points, subpoints, key takeaways, quotes, days and questions, in the same order,
   and the same day_number values.
 - Quotes are the preacher's words: translate them faithfully, without polishing or paraphrasing.
-- Leave any text inside [ ] and all proper names as they are.
-- Bible references are handled elsewhere; do not add or write out Bible verses."""
+- Write the whole output in {language}. Leave no Spanish words, except text inside [ ] and the names covered below.
+- For Portuguese, use Brazilian wording and spelling ("você", never "tu" or "vós").
+- Biblical people and places use their standard form in {language} (Portuguese: Eliseu, Elias, Jordão, Betel;
+  English: Elisha, Elijah, Jordan, Bethel). Other names, such as the preacher's, stay exactly as written.
+- Bible references written inside the prose use the book names of {language}
+  (for example "2 Reyes 2:25" becomes "2 Reis 2:25" or "2 Kings 2:25").
+- Reference fields are handled elsewhere; do not write out Bible verses."""
 
 TRANSLATION_NAMES = {"en": "English", "pt": "português do Brasil"}
 

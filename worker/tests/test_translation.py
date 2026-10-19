@@ -83,3 +83,17 @@ def test_translation_row_starts_hidden():
     row = translation_row(STUDY, merged, "en", usage)
     assert row["hidden"] is True and row["language"] == "en"
     assert row["source_updated_at"] == STUDY["updated_at"] and row["study_id"] == "s1"
+
+
+def test_translate_rejects_unknown_language(monkeypatch):
+    from selah_worker import pipeline
+
+    monkeypatch.setattr(pipeline, "_one", lambda *a: STUDY | {"status": "published"})
+
+    class Boom:
+        def table(self, *a):
+            raise AssertionError("no DB access expected")
+
+    monkeypatch.setattr(pipeline, "client", lambda: Boom())
+    with pytest.raises(RuntimeError, match="Idiomas de traducción no válidos"):
+        pipeline.translate({"sermon_id": "x", "payload": {"languages": ["en", "fr"]}})

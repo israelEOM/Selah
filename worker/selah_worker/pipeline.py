@@ -6,7 +6,7 @@ from selah_worker import ai, youtube
 from selah_worker.bible import parse_reference
 from selah_worker.db import client
 from selah_worker.grounding import fold, locate, window_end, window_start
-from selah_worker.translation import merge_translation, source_for_translation, translation_row
+from selah_worker.translation import BIBLE_VERSION, merge_translation, source_for_translation, translation_row
 from selah_worker.transcripts import build_windows, normalize, parse_manual, render_windows, within_interval
 
 
@@ -202,8 +202,11 @@ def translate(job: dict) -> dict:
     study = _one("studies", "sermon_id", job["sermon_id"], "Primero genera el estudio.")
     if study["status"] != "published":
         raise RuntimeError("Solo se traducen estudios publicados.")
-    days = client().table("devotional_days").select("*").eq("study_id", study["id"]).order("day_number").execute().data
     languages = job["payload"].get("languages") or ["en", "pt"]
+    invalid = [l for l in languages if l not in BIBLE_VERSION]
+    if invalid:
+        raise RuntimeError(f"Idiomas de traducción no válidos: {invalid}")
+    days = client().table("devotional_days").select("*").eq("study_id", study["id"]).order("day_number").execute().data
     source = source_for_translation(study, days)
     result: dict = {}
     for language in languages:
