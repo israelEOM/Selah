@@ -6,6 +6,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../app/theme.dart';
 import '../../core/models.dart';
 import '../../data/providers.dart';
+import 'language_menu.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -21,6 +22,7 @@ class HomePage extends ConsumerWidget {
       appBar: AppBar(
         title: Text('Selah.', style: text.headlineMedium),
         actions: [
+          const LanguageMenu(),
           if (isAdmin)
             TextButton(onPressed: () => context.push('/admin'), child: Text(l.admin))
           else if (signedIn)

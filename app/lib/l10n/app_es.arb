@@ -149,5 +149,18 @@
   "studyNotFound": "Este estudio no está disponible.",
   "backToStudy": "Volver al estudio",
   "watchThisPart": "Ver esta parte de la predicación",
-  "aiNotice": "Resumen y devocional preparados con ayuda de IA a partir de la predicación, y revisados por la iglesia. La predicación y la Escritura son la fuente."
+  "aiNotice": "Resumen y devocional preparados con ayuda de IA a partir de la predicación, y revisados por la iglesia. La predicación y la Escritura son la fuente.",
+  "language": "Idioma",
+  "translationNotice": "Traducción automática del original en {original}.",
+  "@translationNotice": {
+    "placeholders": {
+      "original": {
+        "type": "String"
+      }
+    }
+  },
+  "showOriginal": "Ver original",
+  "showTranslation": "Ver traducción",
+  "translationMissing": "Este estudio aún no está disponible en español.",
+  "languageNameEs": "español"
 }

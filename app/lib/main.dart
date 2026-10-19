@@ -7,6 +7,7 @@ import 'src/app/app.dart';
 import 'src/core/config.dart';
 import 'src/data/providers.dart';
 import 'src/data/repository.dart';
+import 'src/l10n/locale.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,8 +17,10 @@ Future<void> main() async {
     throw StateError('Run with --dart-define-from-file=config/beta.json');
   }
   await Supabase.initialize(url: config.supabaseUrl, publishableKey: config.supabaseAnonKey);
+  final savedLanguage = await loadSavedLanguage();
   runApp(ProviderScope(
-    overrides: [repositoryProvider.overrideWithValue(SelahRepository(Supabase.instance.client))],
+    overrides: [
+      savedLanguageProvider.overrideWithValue(savedLanguage),repositoryProvider.overrideWithValue(SelahRepository(Supabase.instance.client))],
     child: const SelahApp(),
   ));
 }

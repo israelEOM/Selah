@@ -354,4 +354,25 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get aiNotice =>
       'Resumen y devocional preparados con ayuda de IA a partir de la predicación, y revisados por la iglesia. La predicación y la Escritura son la fuente.';
+
+  @override
+  String get language => 'Idioma';
+
+  @override
+  String translationNotice(String original) {
+    return 'Traducción automática del original en $original.';
+  }
+
+  @override
+  String get showOriginal => 'Ver original';
+
+  @override
+  String get showTranslation => 'Ver traducción';
+
+  @override
+  String get translationMissing =>
+      'Este estudio aún no está disponible en español.';
+
+  @override
+  String get languageNameEs => 'español';
 }

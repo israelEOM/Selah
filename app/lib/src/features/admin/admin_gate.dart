@@ -17,6 +17,15 @@ class AdminPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Admin screens are always Spanish, whatever language the member picked.
+    return Localizations.override(
+      context: context,
+      locale: const Locale('es'),
+      child: Builder(builder: (context) => _build(context, ref)),
+    );
+  }
+
+  Widget _build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
     final userId = ref.watch(userIdProvider);
     final isAdmin = ref.watch(isAdminProvider);

@@ -5,7 +5,9 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
+import 'app_localizations_en.dart';
 import 'app_localizations_es.dart';
+import 'app_localizations_pt.dart';
 
 // ignore_for_file: type=lint
 
@@ -92,7 +94,11 @@ abstract class AppLocalizations {
       ];
 
   /// A list of this localizations delegate's supported locales.
-  static const List<Locale> supportedLocales = <Locale>[Locale('es')];
+  static const List<Locale> supportedLocales = <Locale>[
+    Locale('en'),
+    Locale('es'),
+    Locale('pt'),
+  ];
 
   /// No description provided for @tagline.
   ///
@@ -705,6 +711,42 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Resumen y devocional preparados con ayuda de IA a partir de la predicación, y revisados por la iglesia. La predicación y la Escritura son la fuente.'**
   String get aiNotice;
+
+  /// No description provided for @language.
+  ///
+  /// In es, this message translates to:
+  /// **'Idioma'**
+  String get language;
+
+  /// No description provided for @translationNotice.
+  ///
+  /// In es, this message translates to:
+  /// **'Traducción automática del original en {original}.'**
+  String translationNotice(String original);
+
+  /// No description provided for @showOriginal.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver original'**
+  String get showOriginal;
+
+  /// No description provided for @showTranslation.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver traducción'**
+  String get showTranslation;
+
+  /// No description provided for @translationMissing.
+  ///
+  /// In es, this message translates to:
+  /// **'Este estudio aún no está disponible en español.'**
+  String get translationMissing;
+
+  /// No description provided for @languageNameEs.
+  ///
+  /// In es, this message translates to:
+  /// **'español'**
+  String get languageNameEs;
 }
 
 class _AppLocalizationsDelegate
@@ -718,7 +760,7 @@ class _AppLocalizationsDelegate
 
   @override
   bool isSupported(Locale locale) =>
-      <String>['es'].contains(locale.languageCode);
+      <String>['en', 'es', 'pt'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -727,8 +769,12 @@ class _AppLocalizationsDelegate
 AppLocalizations lookupAppLocalizations(Locale locale) {
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
+    case 'en':
+      return AppLocalizationsEn();
     case 'es':
       return AppLocalizationsEs();
+    case 'pt':
+      return AppLocalizationsPt();
   }
 
   throw FlutterError(

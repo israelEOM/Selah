@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../l10n/app_localizations.dart';
@@ -9,6 +10,7 @@ import '../features/auth/login_page.dart';
 import '../features/home/home_page.dart';
 import '../features/study/reader_page.dart';
 import '../features/study/study_page.dart';
+import '../l10n/locale.dart';
 import 'theme.dart';
 
 final _router = GoRouter(
@@ -29,16 +31,16 @@ final _router = GoRouter(
   ],
 );
 
-class SelahApp extends StatelessWidget {
+class SelahApp extends ConsumerWidget {
   const SelahApp({super.key});
 
   @override
-  Widget build(BuildContext context) => MaterialApp.router(
+  Widget build(BuildContext context, WidgetRef ref) => MaterialApp.router(
         title: 'Selah',
         debugShowCheckedModeBanner: false,
         theme: selahTheme(),
         routerConfig: _router,
-        locale: const Locale('es'),
+        locale: ref.watch(appLocaleProvider),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
       );

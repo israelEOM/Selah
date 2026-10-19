@@ -7,6 +7,7 @@ import '../../app/theme.dart';
 import '../../core/format.dart';
 import '../../core/models.dart';
 import '../../data/providers.dart';
+import '../home/language_menu.dart';
 import 'study_widgets.dart';
 
 /// One devotional day, laid out for reading on a phone.
@@ -28,6 +29,7 @@ class ReaderPage extends ConsumerWidget {
           tooltip: l.backToStudy,
           onPressed: () => context.go('/studies/$slug'),
         ),
+        actions: const [LanguageMenu(), SizedBox(width: 8)],
       ),
       body: study.when(
         loading: () => const Center(child: CircularProgressIndicator()),

@@ -7,6 +7,7 @@ import '../../app/theme.dart';
 import '../../core/format.dart';
 import '../../core/models.dart';
 import '../../data/providers.dart';
+import '../home/language_menu.dart';
 import 'study_widgets.dart';
 
 class StudyPage extends ConsumerWidget {
@@ -22,6 +23,7 @@ class StudyPage extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(icon: const Icon(Icons.arrow_back), tooltip: l.back, onPressed: () => context.go('/')),
+        actions: const [LanguageMenu(), SizedBox(width: 8)],
       ),
       body: study.when(
         loading: () => const Center(child: CircularProgressIndicator()),
