@@ -396,4 +396,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get stepTranslate => 'Traducir al inglés y al portugués';
+
+  @override
+  String get publishedWithoutTranslation =>
+      'Estudio publicado, pero no se pudo iniciar la traducción. Usa «Traducir de nuevo».';
 }

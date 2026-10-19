@@ -283,6 +283,28 @@ class _StudyState extends ConsumerState<_Study> {
     }
   }
 
+  /// Publishes, then queues the translation. A failure queuing it must not hide that the study is live.
+  Future<void> _publish(String studyId) async {
+    final l = AppLocalizations.of(context)!;
+    final repo = ref.read(repositoryProvider);
+    try {
+      await repo.setStudyPublished(studyId, true);
+    } catch (_) {
+      if (mounted) setState(() => _notice = l.jobAlreadyRunning);
+      return;
+    }
+    var notice = l.published;
+    try {
+      await repo.createJob('translate', _translateTargets, sermonId: widget.sermonId);
+    } catch (_) {
+      notice = l.publishedWithoutTranslation;
+    }
+    ref.invalidate(sermonDetailProvider(widget.sermonId));
+    ref.invalidate(sermonsProvider);
+    ref.invalidate(publishedStudiesProvider);
+    if (mounted) setState(() => _notice = notice);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
@@ -348,10 +370,9 @@ class _StudyState extends ConsumerState<_Study> {
           FilledButton(
             onPressed: busy
                 ? null
-                : () => _run(() async {
-                      await repo.setStudyPublished(study['id'] as String, !published);
-                      if (!published) await repo.createJob('translate', _translateTargets, sermonId: widget.sermonId);
-                    }, notice: published ? null : l.published),
+                : published
+                    ? () => _run(() => repo.setStudyPublished(study['id'] as String, false))
+                    : () => _publish(study['id'] as String),
             child: Text(published ? l.unpublish : l.publish),
           ),
         SegmentedButton<int>(

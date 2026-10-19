@@ -9,6 +9,7 @@ import 'package:selah/src/data/repository.dart';
 import 'package:selah/src/features/admin/sermon_page.dart';
 
 class _FakeRepository implements SelahRepository {
+  bool failJob = false;
   final calls = <String>[];
 
   @override
@@ -16,6 +17,7 @@ class _FakeRepository implements SelahRepository {
 
   @override
   Future<String> createJob(String step, Map<String, dynamic> payload, {String? sermonId}) async {
+    if (failJob) throw Exception('network');
     calls.add('job:$step:$payload:$sermonId');
     return 'job-1';
   }
@@ -69,17 +71,23 @@ Future<_FakeRepository> _pump(
   WidgetTester tester, {
   required String status,
   List<Map<String, dynamic>> rows = const [],
+  bool failJob = false,
 }) async {
   tester.view.physicalSize = const Size(1000, 4000);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
-  final fake = _FakeRepository();
+  final fake = _FakeRepository()..failJob = failJob;
+  var reads = 0;
   await tester.pumpWidget(ProviderScope(
     overrides: [
       repositoryProvider.overrideWithValue(fake),
       userIdProvider.overrideWith((ref) => Stream.value('admin')),
       isAdminProvider.overrideWith((ref) async => true),
-      sermonDetailProvider('s1').overrideWith((ref) async => _detail(status)),
+      sermonDetailProvider('s1').overrideWith((ref) async {
+        // After the first read, a failed-job scenario shows the study as published, as the database now has it.
+        reads++;
+        return _detail(failJob && reads > 1 ? 'published' : status);
+      }),
       sermonJobsProvider('s1').overrideWith((ref) => Stream.value(const <String, Job>{})),
       adminTranslationsProvider('st1').overrideWith((ref) async => rows),
     ],
@@ -126,5 +134,15 @@ void main() {
     await tester.tap(find.text('Retirar'));
     await tester.pumpAndSettle();
     expect(fake.calls, ['hidden:t1:true']);
+  });
+
+  testWidgets('a failed translation job after publishing still refreshes and says so', (tester) async {
+    final fake = await _pump(tester, status: 'review', failJob: true);
+    await tester.tap(find.text('Publicar'));
+    await tester.pumpAndSettle();
+    expect(fake.calls, ['published:st1:true']);
+    expect(find.textContaining('no se pudo iniciar la traducción'), findsOneWidget);
+    expect(find.text('Retirar publicación'), findsOneWidget);
+    expect(find.text('Traducciones'), findsOneWidget);
   });
 }

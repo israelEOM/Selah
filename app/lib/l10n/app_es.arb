@@ -169,5 +169,6 @@
   "withdrawTranslation": "Retirar",
   "translationPending": "Pendiente de aprobación",
   "translationLive": "Publicada",
-  "stepTranslate": "Traducir al inglés y al portugués"
+  "stepTranslate": "Traducir al inglés y al portugués",
+  "publishedWithoutTranslation": "Estudio publicado, pero no se pudo iniciar la traducción. Usa «Traducir de nuevo»."
 }

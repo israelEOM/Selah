@@ -789,6 +789,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Traducir al inglés y al portugués'**
   String get stepTranslate;
+
+  /// No description provided for @publishedWithoutTranslation.
+  ///
+  /// In es, this message translates to:
+  /// **'Estudio publicado, pero no se pudo iniciar la traducción. Usa «Traducir de nuevo».'**
+  String get publishedWithoutTranslation;
 }
 
 class _AppLocalizationsDelegate
