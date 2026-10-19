@@ -7,7 +7,8 @@ import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:selah/l10n/app_localizations.dart';
 import 'package:selah/src/data/providers.dart';
-import 'package:selah/src/features/admin/admin_gate.dart';
+import 'package:selah/src/app/app.dart';
+import 'package:selah/src/features/admin/admin_home_page.dart';
 import 'package:selah/src/features/home/home_page.dart';
 import 'package:selah/src/l10n/locale.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -60,15 +61,18 @@ void main() {
 
   testWidgets('admin screens stay in Spanish', (tester) async {
     await tester.pumpWidget(_app(
-      AdminPage(
-        backTo: '/',
-        children: [Builder(builder: (c) => Text(AppLocalizations.of(c)!.adminTitle))],
-      ),
+      Builder(builder: (context) => inSpanish(context, const AdminHomePage())),
       admin: true,
-      overrides: [savedLanguageProvider.overrideWithValue('en')],
+      overrides: [
+        savedLanguageProvider.overrideWithValue('en'),
+        sermonsProvider.overrideWith((ref) async => const []),
+      ],
     ));
     await tester.pumpAndSettle();
     expect(find.text('Predicaciones'), findsOneWidget);
+    expect(find.text('ADMINISTRAR'), findsOneWidget);
+    expect(find.text('MANAGE'), findsNothing);
+    expect(find.text('Manage'), findsNothing);
   });
 
   test('every key exists in every language', () {

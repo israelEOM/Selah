@@ -13,6 +13,10 @@ import '../features/study/study_page.dart';
 import '../l10n/locale.dart';
 import 'theme.dart';
 
+/// Admin screens are always Spanish, whatever language the member picked.
+Widget inSpanish(BuildContext context, Widget page) =>
+    Localizations.override(context: context, locale: const Locale('es'), child: page);
+
 final _router = GoRouter(
   routes: [
     GoRoute(path: '/', builder: (_, _) => const HomePage()),
@@ -25,9 +29,9 @@ final _router = GoRouter(
       ),
     ),
     GoRoute(path: '/login', builder: (_, _) => const LoginPage()),
-    GoRoute(path: '/admin', builder: (_, _) => const AdminHomePage()),
-    GoRoute(path: '/admin/sermons/new', builder: (_, _) => const ImportPage()),
-    GoRoute(path: '/admin/sermons/:id', builder: (_, state) => SermonPage(sermonId: state.pathParameters['id']!)),
+    GoRoute(path: '/admin', builder: (context, _) => inSpanish(context, const AdminHomePage())),
+    GoRoute(path: '/admin/sermons/new', builder: (context, _) => inSpanish(context, const ImportPage())),
+    GoRoute(path: '/admin/sermons/:id', builder: (context, state) => inSpanish(context, SermonPage(sermonId: state.pathParameters['id']!))),
   ],
 );
 
