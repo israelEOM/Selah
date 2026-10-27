@@ -154,4 +154,27 @@ void main() {
     await tester.pump();
     expect(fake.redirects, ['https://selah-226.pages.dev/login?next=%2Fjoin%2Fabc']);
   });
+
+  testWidgets('signed in with no next and a failing churches fetch goes home', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (_, _) => const Text('HOME')),
+      GoRoute(path: '/login', builder: (_, _) => LoginPage(landing: Uri.parse('https://x.test/login'), userAgent: '')),
+    ], initialLocation: '/login');
+    await tester.pumpWidget(ProviderScope(
+      retry: (_, _) => null,
+      overrides: [
+        repositoryProvider.overrideWithValue(_FakeRepository()),
+        userIdProvider.overrideWith((ref) => Stream.value('user-1')),
+        myChurchesProvider.overrideWith((ref) async => throw Exception('offline')),
+      ],
+      child: MaterialApp.router(
+        routerConfig: router,
+        locale: const Locale('es'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+      ),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text('HOME'), findsOneWidget);
+  });
 }

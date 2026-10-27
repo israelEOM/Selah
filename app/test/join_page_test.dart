@@ -13,10 +13,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 typedef _Info = ({String churchName, String churchSlug, ChurchRole role});
 
 class _FakeRepository implements SelahRepository {
-  _FakeRepository(this.info, {this.acceptFails = false});
+  _FakeRepository(this.info, {this.acceptFails = false, this.failure});
 
   final _Info? info;
   final bool acceptFails;
+  Object? failure;
+  int attempts = 0;
   final accepted = <String>[];
 
   @override
@@ -24,6 +26,8 @@ class _FakeRepository implements SelahRepository {
 
   @override
   Future<String> acceptInvite(String token) async {
+    attempts++;
+    if (failure != null) throw failure!;
     if (acceptFails) throw PostgrestException(message: 'invite_invalid');
     accepted.add(token);
     return 'vida-nueva';
@@ -40,8 +44,9 @@ Future<_FakeRepository> _pump(
   _Info? info = _editorInfo,
   String? userId,
   bool acceptFails = false,
+  Object? failure,
 }) async {
-  final fake = _FakeRepository(info, acceptFails: acceptFails);
+  final fake = _FakeRepository(info, acceptFails: acceptFails, failure: failure);
   final router = GoRouter(initialLocation: '/join/t1', routes: [
     GoRoute(path: '/join/:token', builder: (_, s) => JoinPage(token: s.pathParameters['token']!)),
     GoRoute(path: '/login', builder: (_, s) => Text('LOGIN ${s.uri.queryParameters['next']}')),
@@ -97,5 +102,18 @@ void main() {
   testWidgets('a link that stops working while joining is reported', (tester) async {
     await _pump(tester, userId: 'user-1', acceptFails: true);
     expect(find.text(es.inviteInvalid), findsOneWidget);
+  });
+
+  testWidgets('a network failure shows a generic error and retry joins', (tester) async {
+    final fake = await _pump(tester, userId: 'user-1', failure: Exception('offline'));
+    expect(find.text(es.genericError), findsOneWidget);
+    expect(find.text(es.inviteInvalid), findsNothing);
+    expect(fake.attempts, 1);
+    fake.failure = null;
+    await tester.tap(find.text(es.retry));
+    await tester.pumpAndSettle();
+    expect(fake.attempts, 2);
+    expect(fake.accepted, ['t1']);
+    expect(find.text('ADMIN vida-nueva'), findsOneWidget);
   });
 }

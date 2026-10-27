@@ -45,8 +45,12 @@ class AdminPage extends ConsumerWidget {
           const SizedBox(height: 20),
           FilledButton(
             onPressed: () async {
-              if (signedIn) await ref.read(repositoryProvider).signOut();
-              if (context.mounted) context.go(signedIn ? '/' : '/login');
+              if (signedIn) {
+                await ref.read(repositoryProvider).signOut();
+              }
+              if (!context.mounted) return;
+              final here = Uri.encodeQueryComponent(GoRouterState.of(context).uri.toString());
+              context.go(signedIn ? '/' : '/login?next=$here');
             },
             child: Text(signedIn ? l.signOut : l.signIn),
           ),

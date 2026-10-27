@@ -1,5 +1,5 @@
 begin;
-select plan(12);
+select plan(13);
 
 select has_table('public', 'churches', 'churches table exists');
 select has_table('public', 'church_members', 'church_members table exists');
@@ -63,6 +63,9 @@ values ('00000000-0000-0000-0000-00000000000a', 'old1', 'https://youtu.be/old1',
         date_trunc('month', now() at time zone 'utc') - interval '1 day');
 select is(public.sermons_this_month('00000000-0000-0000-0000-00000000000a'), 1,
   'only this month''s sermon is counted');
+
+select is((select monthly_sermon_limit from public.churches where slug = 'selah'), 30,
+  'the church backfilled from church_settings keeps a limit of 30');
 
 select * from finish();
 rollback;

@@ -106,7 +106,7 @@ $$;
 -- Backfill: today's single church comes from church_settings.
 insert into public.churches (
   slug, name, default_sermon_language, default_output_language,
-  default_bible_version_code, default_devotional_days, require_review)
+  default_bible_version_code, default_devotional_days, require_review, monthly_sermon_limit)
 select
   case
     when s.slug ~ '^[a-z0-9](?:[a-z0-9-]{1,38})[a-z0-9]$' then s.slug
@@ -115,7 +115,7 @@ select
   case when length(trim(cs.church_name)) between 2 and 80
        then trim(cs.church_name) else 'Selah' end,
   cs.default_sermon_language, cs.default_output_language,
-  cs.default_bible_version_code, cs.default_devotional_days, cs.require_review
+  cs.default_bible_version_code, cs.default_devotional_days, cs.require_review, 30
 from public.church_settings cs
 cross join lateral (
   select trim(both '-' from left(trim(both '-' from regexp_replace(

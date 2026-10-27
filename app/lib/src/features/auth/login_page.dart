@@ -42,9 +42,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       // A safe `next` wins outright, so don't wait on (or fail with) the memberships fetch.
       var destination = safeNext(_next);
       if (destination == null) {
-        final churches = await ref.read(myChurchesProvider.future);
-        final editable = churches.where((m) => m.role.canEdit).toList();
-        destination = editable.length == 1 ? '/c/${editable.first.church.slug}/admin' : '/';
+        try {
+          final churches = await ref.read(myChurchesProvider.future);
+          final editable = churches.where((m) => m.role.canEdit).toList();
+          destination = editable.length == 1 ? '/c/${editable.first.church.slug}/admin' : '/';
+        } catch (_) {
+          destination = '/';
+        }
       }
       if (mounted) GoRouter.of(context).go(destination);
     });

@@ -27,15 +27,20 @@ class JoinPage extends ConsumerStatefulWidget {
 class _JoinPageState extends ConsumerState<JoinPage> {
   bool _accepting = false;
   bool _failed = false;
+  bool _inviteGone = false;
 
   Future<void> _accept(InviteInfo info) async {
-    _accepting = true;
     try {
       final slug = await ref.read(repositoryProvider).acceptInvite(widget.token);
       ref.invalidate(myChurchesProvider);
       if (mounted) context.go(info.role.canEdit ? '/c/$slug/admin' : '/c/$slug');
-    } catch (_) {
-      if (mounted) setState(() => _failed = true);
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _failed = true;
+          _inviteGone = SelahError.fromException(e) == 'invite_invalid';
+        });
+      }
     }
   }
 
@@ -49,12 +54,31 @@ class _JoinPageState extends ConsumerState<JoinPage> {
     Widget body;
     if (info.isLoading || user.isLoading) {
       body = const Center(child: CircularProgressIndicator());
-    } else if (info.hasError || info.value == null || _failed) {
+    } else if (info.value == null || (_failed && _inviteGone)) {
       body = Text(l.inviteInvalid, style: text.bodyLarge);
+    } else if (info.hasError || _failed) {
+      body = Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(l.genericError, style: text.bodyLarge),
+        const SizedBox(height: 20),
+        FilledButton(
+          onPressed: () {
+            setState(() {
+              _accepting = false;
+              _failed = false;
+              _inviteGone = false;
+            });
+            ref.invalidate(inviteInfoProvider(widget.token));
+          },
+          child: Text(l.retry),
+        ),
+      ]);
     } else {
       final invite = info.value!;
       if (user.value != null) {
-        if (!_accepting) WidgetsBinding.instance.addPostFrameCallback((_) => _accept(invite));
+        if (!_accepting) {
+          _accepting = true; // set before scheduling so a rebuild can't schedule it twice
+          WidgetsBinding.instance.addPostFrameCallback((_) => _accept(invite));
+        }
         body = const Center(child: CircularProgressIndicator());
       } else {
         body = Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

@@ -193,6 +193,7 @@ class SelahRepository {
   }
 
   Future<ChurchRole?> roleIn(String churchId) async {
+    if (_client.auth.currentUser == null) return null;
     final role = await _client.rpc('church_role_of', params: {'p_church': churchId});
     return ChurchRole.parse(role as String?);
   }

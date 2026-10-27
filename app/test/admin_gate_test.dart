@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:selah/l10n/app_localizations.dart';
 import 'package:selah/src/core/models.dart';
 import 'package:selah/src/data/providers.dart';
@@ -53,5 +54,30 @@ void main() {
     await _pump(tester, ChurchRole.editor, minRole: ChurchRole.owner);
     expect(find.text('CONTENT'), findsNothing);
     expect(find.text(_adminOnly), findsOneWidget);
+  });
+
+  testWidgets('signed-out Sign in keeps the deep link', (tester) async {
+    final router = GoRouter(initialLocation: '/c/vida-nueva/admin/people', routes: [
+      GoRoute(
+          path: '/c/vida-nueva/admin/people',
+          builder: (_, _) => const AdminPage(church: _church, backTo: '/c/vida-nueva', children: [Text('CONTENT')])),
+      GoRoute(path: '/login', builder: (_, s) => Text('LOGIN ${s.uri.queryParameters['next']}')),
+    ]);
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        userIdProvider.overrideWith((ref) => Stream.value(null)),
+        churchRoleProvider('A').overrideWith((ref) async => null),
+      ],
+      child: MaterialApp.router(
+        routerConfig: router,
+        locale: const Locale('es'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+      ),
+    ));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(FilledButton));
+    await tester.pumpAndSettle();
+    expect(find.text('LOGIN /c/vida-nueva/admin/people'), findsOneWidget);
   });
 }
