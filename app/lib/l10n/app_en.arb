@@ -279,5 +279,12 @@
   "requestRejected": "Your request was not approved",
   "sendAnother": "Send another",
   "joinAChurch": "Join a church",
-  "bringMyChurch": "Bring my church to Selah"
+  "bringMyChurch": "Bring my church to Selah",
+  "churchRequests": "Solicitudes de iglesias",
+  "approve": "Aprobar",
+  "reject": "Rechazar",
+  "requestAlreadyDecided": "Esta solicitud ya fue resuelta.",
+  "noPendingRequests": "No hay solicitudes pendientes.",
+  "churchCreated": "Iglesia creada",
+  "requestRejectedNotice": "Solicitud rechazada"
 }

@@ -662,4 +662,25 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get bringMyChurch => 'Traer mi iglesia a Selah';
+
+  @override
+  String get churchRequests => 'Solicitudes de iglesias';
+
+  @override
+  String get approve => 'Aprobar';
+
+  @override
+  String get reject => 'Rechazar';
+
+  @override
+  String get requestAlreadyDecided => 'Esta solicitud ya fue resuelta.';
+
+  @override
+  String get noPendingRequests => 'No hay solicitudes pendientes.';
+
+  @override
+  String get churchCreated => 'Iglesia creada';
+
+  @override
+  String get requestRejectedNotice => 'Solicitud rechazada';
 }

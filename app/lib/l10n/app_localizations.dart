@@ -1287,6 +1287,48 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Traer mi iglesia a Selah'**
   String get bringMyChurch;
+
+  /// No description provided for @churchRequests.
+  ///
+  /// In es, this message translates to:
+  /// **'Solicitudes de iglesias'**
+  String get churchRequests;
+
+  /// No description provided for @approve.
+  ///
+  /// In es, this message translates to:
+  /// **'Aprobar'**
+  String get approve;
+
+  /// No description provided for @reject.
+  ///
+  /// In es, this message translates to:
+  /// **'Rechazar'**
+  String get reject;
+
+  /// No description provided for @requestAlreadyDecided.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta solicitud ya fue resuelta.'**
+  String get requestAlreadyDecided;
+
+  /// No description provided for @noPendingRequests.
+  ///
+  /// In es, this message translates to:
+  /// **'No hay solicitudes pendientes.'**
+  String get noPendingRequests;
+
+  /// No description provided for @churchCreated.
+  ///
+  /// In es, this message translates to:
+  /// **'Iglesia creada'**
+  String get churchCreated;
+
+  /// No description provided for @requestRejectedNotice.
+  ///
+  /// In es, this message translates to:
+  /// **'Solicitud rechazada'**
+  String get requestRejectedNotice;
 }
 
 class _AppLocalizationsDelegate

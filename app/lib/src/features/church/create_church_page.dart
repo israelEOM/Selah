@@ -8,7 +8,7 @@ import '../../core/models.dart';
 import '../../data/providers.dart';
 import 'church_scope.dart';
 
-final _slugPattern = RegExp(r'^[a-z0-9](?:[a-z0-9-]{1,38})[a-z0-9]$');
+final slugPattern = RegExp(r'^[a-z0-9](?:[a-z0-9-]{1,38})[a-z0-9]$');
 
 const _accents = {
   'àáâãäå': 'a',
@@ -125,7 +125,7 @@ class _CreateChurchPageState extends ConsumerState<CreateChurchPage> {
                   controller: _slug,
                   decoration: InputDecoration(labelText: l.churchAddress),
                   onChanged: (_) => setState(() => _slugEdited = true),
-                  validator: (v) => _slugPattern.hasMatch((v ?? '').trim()) ? null : l.slugInvalid,
+                  validator: (v) => slugPattern.hasMatch((v ?? '').trim()) ? null : l.slugInvalid,
                 ),
                 const SizedBox(height: 8),
                 Text('${Uri.base.host}/c/${_slug.text.trim()}', style: text.bodyMedium),

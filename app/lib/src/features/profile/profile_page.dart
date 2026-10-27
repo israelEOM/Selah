@@ -120,6 +120,15 @@ class ProfilePage extends ConsumerWidget {
                 onPressed: () => context.push('/churches/new'),
               ),
             ),
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.inbox_outlined),
+                label: Text(l.churchRequests),
+                onPressed: () => context.push('/requests'),
+              ),
+            ),
             const SizedBox(height: 16),
           ],
           Align(

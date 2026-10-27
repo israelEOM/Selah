@@ -7,6 +7,7 @@ import '../features/admin/admin_home_page.dart';
 import '../features/admin/church_settings_page.dart';
 import '../features/admin/import_page.dart';
 import '../features/admin/people_page.dart';
+import '../features/admin/requests_page.dart';
 import '../features/admin/sermon_page.dart';
 import '../core/models.dart';
 import '../features/auth/login_page.dart';
@@ -71,6 +72,7 @@ GoRouter createRouter({String initialLocation = '/'}) => GoRouter(
         GoRoute(path: '/welcome', builder: (_, state) => WelcomePage(step: state.uri.queryParameters['step'])),
         GoRoute(path: '/join/:token', builder: (_, state) => JoinPage(token: state.pathParameters['token']!)),
         GoRoute(path: '/churches/new', builder: (_, _) => const CreateChurchPage()),
+        GoRoute(path: '/requests', builder: (context, _) => inSpanish(context, const RequestsPage())),
         GoRoute(
           path: '/c/:church/admin',
           builder: (context, state) => _inChurchAdmin(context, state, (church) => AdminHomePage(church: church)),
