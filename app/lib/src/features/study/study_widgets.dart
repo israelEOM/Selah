@@ -15,7 +15,7 @@ class ExternalLink extends StatelessWidget {
   Widget build(BuildContext context) => Align(
     alignment: Alignment.centerLeft,
     child: TextButton.icon(
-      style: TextButton.styleFrom(padding: EdgeInsets.zero, foregroundColor: SelahColors.goldDeep),
+      style: TextButton.styleFrom(padding: EdgeInsets.zero, foregroundColor: Theme.of(context).colorScheme.primary),
       onPressed: () => launchUrl(uri, mode: LaunchMode.externalApplication),
       icon: Icon(icon, size: 18),
       label: Text(label, textAlign: TextAlign.left),

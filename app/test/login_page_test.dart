@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:selah/src/app/theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -32,6 +33,7 @@ Future<_FakeRepository> _pump(WidgetTester tester, {Uri? landing, String? userAg
       myChurchesProvider.overrideWith((ref) async => const []),
     ],
     child: MaterialApp(
+      theme: selahLightTheme(),
       locale: const Locale('es'),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
@@ -111,6 +113,7 @@ void main() {
               ]),
         ],
         child: MaterialApp.router(
+      theme: selahLightTheme(),
           routerConfig: router,
           locale: const Locale('es'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -138,6 +141,7 @@ void main() {
         myChurchesProvider.overrideWith((ref) async => throw Exception('network')),
       ],
       child: MaterialApp.router(
+      theme: selahLightTheme(),
         routerConfig: router,
         locale: const Locale('es'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -168,6 +172,7 @@ void main() {
         myChurchesProvider.overrideWith((ref) async => throw Exception('offline')),
       ],
       child: MaterialApp.router(
+      theme: selahLightTheme(),
         routerConfig: router,
         locale: const Locale('es'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,

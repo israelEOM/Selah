@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:selah/src/app/theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:selah/l10n/app_localizations.dart';
@@ -99,6 +100,7 @@ Future<_FakeRepository> _pump(
           ]),
     ],
     child: MaterialApp(
+      theme: selahLightTheme(),
       locale: const Locale('es'),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,

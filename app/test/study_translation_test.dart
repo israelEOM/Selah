@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:selah/src/app/theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -72,6 +73,7 @@ Future<void> _pump(WidgetTester tester, String language, String location) async 
     ],
     child: Consumer(
       builder: (context, ref, _) => MaterialApp.router(
+      theme: selahLightTheme(),
         routerConfig: router,
         locale: ref.watch(appLocaleProvider),
         localizationsDelegates: AppLocalizations.localizationsDelegates,

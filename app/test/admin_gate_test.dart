@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:selah/src/app/theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -17,6 +18,7 @@ Future<void> _pump(WidgetTester tester, ChurchRole? role, {ChurchRole minRole = 
       churchRoleProvider('A').overrideWith((ref) async => role),
     ],
     child: MaterialApp(
+      theme: selahLightTheme(),
       locale: const Locale('es'),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
@@ -69,6 +71,7 @@ void main() {
         churchRoleProvider('A').overrideWith((ref) async => null),
       ],
       child: MaterialApp.router(
+      theme: selahLightTheme(),
         routerConfig: router,
         locale: const Locale('es'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,

@@ -74,7 +74,7 @@ class _Day extends ConsumerWidget {
     final text = Theme.of(context).textTheme;
     final read = ref.watch(readDaysProvider(study.id)).value ?? const <int>{};
     final total = study.days.length;
-    final reading = text.bodyLarge?.copyWith(fontSize: 18, height: 1.7);
+    final reading = serifReading(context);
     String dayPath(int n) => '/c/${church.slug}/studies/${study.slug}/day/$n';
     return PageBody(
       maxWidth: 680,
@@ -90,7 +90,7 @@ class _Day extends ConsumerWidget {
                 child: Icon(
                   d.number <= day.number || read.contains(d.number) ? Icons.circle : Icons.circle_outlined,
                   size: 10,
-                  color: d.number == day.number ? SelahColors.gold : SelahColors.ink.withValues(alpha: 0.6),
+                  color: d.number == day.number ? Theme.of(context).colorScheme.primary : context.tones.muted,
                 ),
               ),
           ],
@@ -110,8 +110,8 @@ class _Day extends ConsumerWidget {
           const SizedBox(height: 28),
           Container(
             padding: const EdgeInsets.only(left: 16),
-            decoration: const BoxDecoration(
-              border: Border(left: BorderSide(color: SelahColors.gold, width: 2)),
+            decoration: BoxDecoration(
+              border: Border(left: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2)),
             ),
             child: Text(day.mainIdea!, style: text.titleLarge?.copyWith(fontWeight: FontWeight.w500)),
           ),
@@ -146,7 +146,7 @@ class _Day extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(day.prayer!, style: reading?.copyWith(fontStyle: FontStyle.italic)),
+                Text(day.prayer!, style: reading.copyWith(fontStyle: FontStyle.italic)),
                 const SizedBox(height: 8),
                 Text(l.prayerNote, style: text.bodyMedium?.copyWith(fontSize: 12)),
               ],
@@ -163,7 +163,7 @@ class _Day extends ConsumerWidget {
         read.contains(day.number)
             ? Row(
                 children: [
-                  const Icon(Icons.check_circle, color: SelahColors.ink),
+                  Icon(Icons.check_circle, color: context.tones.done),
                   const SizedBox(width: 8),
                   Text(l.markedRead, style: text.bodyLarge),
                 ],

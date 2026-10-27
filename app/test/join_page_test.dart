@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:selah/src/app/theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -60,6 +61,7 @@ Future<_FakeRepository> _pump(
       myChurchesProvider.overrideWith((ref) async => const []),
     ],
     child: MaterialApp.router(
+      theme: selahLightTheme(),
       routerConfig: router,
       locale: const Locale('es'),
       localizationsDelegates: AppLocalizations.localizationsDelegates,

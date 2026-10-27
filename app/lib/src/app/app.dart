@@ -103,7 +103,8 @@ class SelahApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) => MaterialApp.router(
         title: 'Selah',
         debugShowCheckedModeBanner: false,
-        theme: selahTheme(),
+        theme: selahLightTheme(),
+        darkTheme: selahDarkTheme(),
         routerConfig: _router,
         locale: ref.watch(appLocaleProvider),
         localizationsDelegates: AppLocalizations.localizationsDelegates,

@@ -135,7 +135,7 @@ class _StudyTile extends StatelessWidget {
                 child: Image.network(
                   study.thumbnailUrl!,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => const ColoredBox(color: SelahColors.sage),
+                  errorBuilder: (_, _, _) => ColoredBox(color: context.tones.surface),
                 ),
               ),
             Padding(

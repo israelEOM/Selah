@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:selah/src/app/theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -40,6 +41,7 @@ Future<_FakeRepository> _pump(WidgetTester tester, {String? userId = 'user-1', S
       isPlatformAdminProvider.overrideWith((ref) async => platformAdmin),
     ],
     child: MaterialApp.router(
+      theme: selahLightTheme(),
       routerConfig: router,
       locale: const Locale('es'),
       localizationsDelegates: AppLocalizations.localizationsDelegates,

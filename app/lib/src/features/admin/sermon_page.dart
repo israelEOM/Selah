@@ -93,7 +93,7 @@ class _Link extends StatelessWidget {
   Widget build(BuildContext context) => Align(
         alignment: Alignment.centerLeft,
         child: TextButton.icon(
-          style: TextButton.styleFrom(padding: EdgeInsets.zero, foregroundColor: SelahColors.goldDeep),
+          style: TextButton.styleFrom(padding: EdgeInsets.zero, foregroundColor: Theme.of(context).colorScheme.primary),
           onPressed: () => launchUrl(uri, mode: LaunchMode.externalApplication),
           icon: const Icon(Icons.play_circle_outline, size: 18),
           label: Text(label),
@@ -140,11 +140,11 @@ class _Progress extends ConsumerWidget {
           });
           final status = redoing ? 'pending' : job?.status ?? (_hasOutput(step) ? 'succeeded' : 'pending');
           final Widget icon = switch (status) {
-            'succeeded' => const Icon(Icons.check_circle, color: SelahColors.ink, size: 22),
+            'succeeded' => Icon(Icons.check_circle, color: context.tones.done, size: 22),
             'failed' => Icon(Icons.error, color: Theme.of(context).colorScheme.error, size: 22),
             'running' => const SizedBox(width: 22, height: 22, child: Padding(padding: EdgeInsets.all(2), child: CircularProgressIndicator(strokeWidth: 2.5))),
-            'queued' => const Icon(Icons.schedule, color: SelahColors.goldDeep, size: 22),
-            _ => Icon(Icons.circle_outlined, color: SelahColors.ink.withValues(alpha: 0.3), size: 22),
+            'queued' => Icon(Icons.schedule, color: Theme.of(context).colorScheme.primary, size: 22),
+            _ => Icon(Icons.circle_outlined, color: context.tones.muted, size: 22),
           };
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 6),
@@ -470,7 +470,7 @@ class _Translations extends ConsumerWidget {
               children: [
                 job!.status == 'running'
                     ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2.5))
-                    : const Icon(Icons.schedule, color: SelahColors.goldDeep, size: 18),
+                    : Icon(Icons.schedule, color: Theme.of(context).colorScheme.primary, size: 18),
                 const SizedBox(width: 10),
                 Expanded(child: Text(l.stepTranslate, style: text.bodyMedium)),
               ],

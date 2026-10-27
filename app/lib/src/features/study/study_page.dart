@@ -66,7 +66,7 @@ class _StudyBody extends ConsumerWidget {
               child: Image.network(
                 study.sermon.thumbnailUrl!,
                 fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => const ColoredBox(color: SelahColors.sage),
+                errorBuilder: (_, _, _) => ColoredBox(color: context.tones.surface),
               ),
             ),
           ),
@@ -79,8 +79,8 @@ class _StudyBody extends ConsumerWidget {
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.only(left: 16),
-            decoration: const BoxDecoration(
-              border: Border(left: BorderSide(color: SelahColors.gold, width: 2)),
+            decoration: BoxDecoration(
+              border: Border(left: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2)),
             ),
             child: Text(study.centralMessage!, style: text.bodyLarge),
           ),
@@ -96,8 +96,8 @@ class _StudyBody extends ConsumerWidget {
                     child: ListTile(
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                       leading: read.contains(day.number)
-                          ? const Icon(Icons.check_circle, color: SelahColors.ink)
-                          : Text('${day.number}', style: text.headlineSmall?.copyWith(color: SelahColors.goldDeep)),
+                          ? Icon(Icons.check_circle, color: context.tones.done)
+                          : Text('${day.number}', style: text.headlineSmall?.copyWith(color: Theme.of(context).colorScheme.primary)),
                       title: Text(day.title, style: text.titleLarge),
                       subtitle: day.bibleReading == null ? null : Text(day.bibleReading!),
                       trailing: const Icon(Icons.chevron_right),
