@@ -67,7 +67,7 @@ Only platform admins create churches (see below); everyone else joins one throug
 
 New accounts choose what they are: a member joins a church (Unirme a una iglesia), or a pastor requests one (Traer mi iglesia a Selah) with the church's name and an optional note. A request only creates a church once a platform admin approves it. Nobody becomes Owner or Editor without a person approving it.
 
-People join by invite link. A link can be used many times and can be revoked by an Owner from the church's people page. Owners can also promote an Editor from the same People page. The Hoy tab shows today's reading across the churches a member follows, and the app has a light and a dark theme (Perfil → Tema, which follows the device by default). Each church can add a limited number of new sermons per month (default 4).
+People join by invite link. A link can be used many times and can be revoked by an Owner from the church's people page. Owners can promote a Member to Editor from the same People page. The Hoy tab shows today's part of the current church's newest study, and the app has a light and a dark theme (Perfil → Tema, which follows the device by default). Each church can add a limited number of new sermons per month (default 4).
 
 ## Platform admin
 
