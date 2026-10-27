@@ -232,7 +232,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get analysisSection => 'Análisis del sermón';
 
   @override
-  String get mainPassage => 'Pasaje principal';
+  String get mainPassage => 'Main passage';
 
   @override
   String get centralTheme => 'Tema central';
@@ -580,4 +580,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminArea => 'Manage the church';
+
+  @override
+  String get todayDevotional => 'Today\'s devotional';
+
+  @override
+  String get bibleReading => 'Bible reading';
+
+  @override
+  String get doneForToday => 'Done for today';
+
+  @override
+  String get readNext => 'Read the next one';
+
+  @override
+  String get sermonSummaryButton => 'Sermon summary';
+
+  @override
+  String get meditateToday => 'To meditate on today';
+
+  @override
+  String readPassage(String reference) {
+    return 'Read $reference';
+  }
+
+  @override
+  String get noStudiesYetToday =>
+      'Your church hasn\'t published any studies yet.';
+
+  @override
+  String get goToStudies => 'See studies';
 }

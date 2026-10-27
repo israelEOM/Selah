@@ -80,6 +80,13 @@ final bibleVersionsProvider =
 final studyProvider = FutureProvider.autoDispose.family<PublicStudy?, ({String churchId, String slug})>(
     (ref, key) => ref.watch(repositoryProvider).studyBySlug(key.churchId, key.slug));
 
+/// A church's most recently published study, by church id; the one the Today page follows.
+final newestStudyProvider = FutureProvider.autoDispose
+    .family<PublicStudy?, String>((ref, churchId) => ref.watch(repositoryProvider).newestStudy(churchId));
+
+/// The current time; tests override it to pin the day.
+final clockProvider = Provider<DateTime Function()>((_) => DateTime.now);
+
 /// Day numbers read on this device. Members have no account, so progress stays local.
 final readDaysProvider = FutureProvider.autoDispose.family<Set<int>, String>((ref, studyId) async {
   final prefs = await SharedPreferences.getInstance();

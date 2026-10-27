@@ -580,4 +580,33 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get adminArea => 'Administrar la iglesia';
+
+  @override
+  String get todayDevotional => 'Devocional de hoy';
+
+  @override
+  String get bibleReading => 'Lectura bíblica';
+
+  @override
+  String get doneForToday => 'Hecho por hoy';
+
+  @override
+  String get readNext => 'Leer el siguiente';
+
+  @override
+  String get sermonSummaryButton => 'Resumen del sermón';
+
+  @override
+  String get meditateToday => 'Para meditar hoy';
+
+  @override
+  String readPassage(String reference) {
+    return 'Leer $reference';
+  }
+
+  @override
+  String get noStudiesYetToday => 'Tu iglesia aún no ha publicado estudios.';
+
+  @override
+  String get goToStudies => 'Ver estudios';
 }

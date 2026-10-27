@@ -253,5 +253,15 @@
   "themeSystem": "Sistema",
   "themeLight": "Claro",
   "themeDark": "Escuro",
-  "adminArea": "Administrar a igreja"
+  "adminArea": "Administrar a igreja",
+  "todayDevotional": "Devocional de hoje",
+  "bibleReading": "Leitura bíblica",
+  "doneForToday": "Feito por hoje",
+  "readNext": "Ler o próximo",
+  "sermonSummaryButton": "Resumo do sermão",
+  "meditateToday": "Para meditar hoje",
+  "mainPassage": "Passagem principal",
+  "readPassage": "Ler {reference}",
+  "noStudiesYetToday": "Sua igreja ainda não publicou estudos.",
+  "goToStudies": "Ver estudos"
 }

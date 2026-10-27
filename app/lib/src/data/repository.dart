@@ -34,6 +34,20 @@ class SelahRepository {
     return row == null ? null : PublicStudy.fromJson(row);
   }
 
+  /// A church's most recently published study, or null when it has none.
+  Future<PublicStudy?> newestStudy(String churchId) async {
+    final row = await _client
+        .from('studies')
+        .select('id, slug, title, number_of_days, bible_version_code, output_language, summary, central_message, published_at, '
+            'sermons!studies_sermon_id_fkey(youtube_video_id, title, preacher, channel, thumbnail_url, sermon_date), devotional_days(*), study_translations(*)')
+        .eq('church_id', churchId)
+        .eq('status', 'published')
+        .order('published_at', ascending: false)
+        .limit(1)
+        .maybeSingle();
+    return row == null ? null : PublicStudy.fromJson(row);
+  }
+
   /// The slug of the church that owns the oldest study with [slug], for links made before churches existed.
   Future<String?> legacyStudyChurch(String slug) async {
     final row = await _client

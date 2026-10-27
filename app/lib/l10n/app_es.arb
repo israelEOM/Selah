@@ -260,5 +260,22 @@
   "themeSystem": "Sistema",
   "themeLight": "Claro",
   "themeDark": "Oscuro",
-  "adminArea": "Administrar la iglesia"
+  "adminArea": "Administrar la iglesia",
+  "todayDevotional": "Devocional de hoy",
+  "bibleReading": "Lectura bíblica",
+  "doneForToday": "Hecho por hoy",
+  "readNext": "Leer el siguiente",
+  "sermonSummaryButton": "Resumen del sermón",
+  "meditateToday": "Para meditar hoy",
+  "mainPassage": "Pasaje principal",
+  "readPassage": "Leer {reference}",
+  "@readPassage": {
+    "placeholders": {
+      "reference": {
+        "type": "String"
+      }
+    }
+  },
+  "noStudiesYetToday": "Tu iglesia aún no ha publicado estudios.",
+  "goToStudies": "Ver estudios"
 }

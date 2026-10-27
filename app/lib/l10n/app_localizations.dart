@@ -1131,6 +1131,60 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Administrar la iglesia'**
   String get adminArea;
+
+  /// No description provided for @todayDevotional.
+  ///
+  /// In es, this message translates to:
+  /// **'Devocional de hoy'**
+  String get todayDevotional;
+
+  /// No description provided for @bibleReading.
+  ///
+  /// In es, this message translates to:
+  /// **'Lectura bíblica'**
+  String get bibleReading;
+
+  /// No description provided for @doneForToday.
+  ///
+  /// In es, this message translates to:
+  /// **'Hecho por hoy'**
+  String get doneForToday;
+
+  /// No description provided for @readNext.
+  ///
+  /// In es, this message translates to:
+  /// **'Leer el siguiente'**
+  String get readNext;
+
+  /// No description provided for @sermonSummaryButton.
+  ///
+  /// In es, this message translates to:
+  /// **'Resumen del sermón'**
+  String get sermonSummaryButton;
+
+  /// No description provided for @meditateToday.
+  ///
+  /// In es, this message translates to:
+  /// **'Para meditar hoy'**
+  String get meditateToday;
+
+  /// No description provided for @readPassage.
+  ///
+  /// In es, this message translates to:
+  /// **'Leer {reference}'**
+  String readPassage(String reference);
+
+  /// No description provided for @noStudiesYetToday.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu iglesia aún no ha publicado estudios.'**
+  String get noStudiesYetToday;
+
+  /// No description provided for @goToStudies.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver estudios'**
+  String get goToStudies;
 }
 
 class _AppLocalizationsDelegate
