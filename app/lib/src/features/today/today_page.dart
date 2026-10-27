@@ -14,6 +14,7 @@ import '../../data/providers.dart';
 import '../../l10n/locale.dart';
 import '../home/church_picker_page.dart';
 import '../study/translation_banner.dart';
+import 'part_tick.dart';
 import 'today_state.dart';
 
 /// The Hoy tab: today's part of the church's newest study, or the church list when none is chosen yet.
@@ -305,7 +306,7 @@ class _Row extends StatelessWidget {
       child: InkWell(
         onTap: onOpen,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(18, 14, 12, 14),
+          padding: const EdgeInsets.fromLTRB(18, 8, 8, 8),
           child: Row(children: [
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -316,26 +317,7 @@ class _Row extends StatelessWidget {
             if (ticked == null)
               Icon(Icons.chevron_right, color: tones.muted)
             else
-              Semantics(
-                button: true,
-                checked: ticked,
-                label: label,
-                child: InkResponse(
-                  key: tickKey,
-                  onTap: onTick,
-                  radius: 24,
-                  child: Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: ticked! ? tones.done : null,
-                      border: ticked! ? null : Border.all(color: tones.muted, width: 1.5),
-                    ),
-                    child: ticked! ? Icon(Icons.check, size: 18, color: Theme.of(context).colorScheme.onPrimary) : null,
-                  ),
-                ),
-              ),
+              PartTick(key: tickKey, label: label, ticked: ticked!, onTap: onTick!),
           ]),
         ),
       ),

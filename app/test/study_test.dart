@@ -54,8 +54,8 @@ final _json = {
   'devotional_days': [_day(3), _day(1), _day(2)],
 };
 
-Future<GoRouter> _pump(WidgetTester tester, String location) async {
-  SharedPreferences.setMockInitialValues({});
+Future<GoRouter> _pump(WidgetTester tester, String location, {Map<String, Object> prefs = const {}}) async {
+  SharedPreferences.setMockInitialValues(prefs);
   final router = GoRouter(initialLocation: location, routes: [
     GoRoute(path: '/', builder: (_, _) => const Text('HOME')),
     GoRoute(path: '/c/vida-nueva', builder: (_, _) => const Text('CHURCH')),
@@ -135,12 +135,26 @@ void main() {
     expect(find.text('Día siguiente'), findsNothing);
   });
 
-  testWidgets('marking a day as read is remembered on the device', (tester) async {
-    await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/1');
-    await tester.scrollUntilVisible(find.text('Marcar como leído'), 300);
-    await tester.tap(find.text('Marcar como leído'));
-    await tester.pumpAndSettle();
+  testWidgets('ticking the three parts in the reader marks the day done on the study page', (tester) async {
+    final router = await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/1');
+    expect(find.text('Marcar como leído'), findsNothing);
+    for (final part in ['reading', 'reflection', 'prayer']) {
+      await tester.ensureVisible(find.byKey(ValueKey('tick-$part')));
+      await tester.tap(find.byKey(ValueKey('tick-$part')));
+      await tester.pumpAndSettle();
+    }
     final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getStringList('read:study-1'), ['1']);
+    expect(prefs.getString('progress:study-1'), contains('"doneOn"'));
+    router.go('/c/vida-nueva/studies/retiro-espiritual');
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Título día 2'), 300);
+    expect(find.byIcon(Icons.check_circle), findsOneWidget);
+    expect(find.text('Título día 1'), findsOneWidget);
+  });
+
+  testWidgets('old read marks still show as done', (tester) async {
+    await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual', prefs: {'read:study-1': ['2']});
+    await tester.scrollUntilVisible(find.text('Título día 2'), 300);
+    expect(find.byIcon(Icons.check_circle), findsOneWidget);
   });
 }

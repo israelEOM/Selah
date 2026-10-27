@@ -372,12 +372,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Prayer suggested from the study; it is not a quote from the preacher.';
 
   @override
-  String get markRead => 'Mark as read';
-
-  @override
-  String get markedRead => 'Read';
-
-  @override
   String get studyNotFound => 'This study isn\'t available.';
 
   @override

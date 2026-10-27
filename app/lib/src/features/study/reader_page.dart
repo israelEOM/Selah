@@ -6,9 +6,11 @@ import '../../../l10n/app_localizations.dart';
 import '../../app/theme.dart';
 import '../../core/format.dart';
 import '../../core/models.dart';
+import '../../data/progress.dart';
 import '../../data/providers.dart';
 import '../home/language_menu.dart';
 import '../../l10n/locale.dart';
+import '../today/part_tick.dart';
 import 'study_widgets.dart';
 import 'translation_banner.dart';
 
@@ -72,7 +74,17 @@ class _Day extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
     final text = Theme.of(context).textTheme;
-    final read = ref.watch(readDaysProvider(study.id)).value ?? const <int>{};
+    final progress = ref.watch(studyProgressProvider(original.id)).value;
+    final ticked = progress?.days[day.number]?.parts ?? const <DayPart>{};
+    Widget tick(DayPart part, String label) => PartTick(
+          key: ValueKey('tick-${part.name}'),
+          label: label,
+          ticked: ticked.contains(part),
+          onTap: () => tickPart(ref, original.id, day, part, ref.read(clockProvider)()),
+        );
+    // The reflection tick sits on the first of reflection, application and questions that the day has.
+    final reflectionHolder = day.reflection != null ? 0 : day.application != null ? 1 : day.questions.isNotEmpty ? 2 : -1;
+    Widget? reflectionTick(int i) => i == reflectionHolder ? tick(DayPart.reflection, l.reflection) : null;
     final total = study.days.length;
     final reading = serifReading(context);
     String dayPath(int n) => '/c/${church.slug}/studies/${study.slug}/day/$n';
@@ -88,7 +100,7 @@ class _Day extends ConsumerWidget {
               Padding(
                 padding: const EdgeInsets.only(right: 6),
                 child: Icon(
-                  d.number <= day.number || read.contains(d.number) ? Icons.circle : Icons.circle_outlined,
+                  d.number <= day.number || (progress?.isDone(d) ?? false) ? Icons.circle : Icons.circle_outlined,
                   size: 10,
                   color: d.number == day.number ? Theme.of(context).colorScheme.primary : context.tones.muted,
                 ),
@@ -99,11 +111,16 @@ class _Day extends ConsumerWidget {
         Text(day.title, style: text.displaySmall?.copyWith(fontSize: 34)),
         if (day.bibleReading != null) ...[
           const SizedBox(height: 14),
-          ExternalLink(
-            icon: Icons.menu_book_outlined,
-            label: l.readReference(day.bibleReading!, study.bibleVersionCode),
-            uri: bibleReaderUrl(day.bibleReading!, study.bibleVersionCode),
-          ),
+          Row(children: [
+            Expanded(
+              child: ExternalLink(
+                icon: Icons.menu_book_outlined,
+                label: l.readReference(day.bibleReading!, study.bibleVersionCode),
+                uri: bibleReaderUrl(day.bibleReading!, study.bibleVersionCode),
+              ),
+            ),
+            tick(DayPart.reading, l.bibleReading),
+          ]),
           Text(l.externalReaderNote, style: text.bodyMedium?.copyWith(fontSize: 12)),
         ],
         if (day.mainIdea != null) ...[
@@ -119,16 +136,19 @@ class _Day extends ConsumerWidget {
         if (day.reflection != null)
           ReadingSection(
             label: l.reflection,
+            tick: reflectionTick(0),
             child: Text(day.reflection!, style: reading),
           ),
         if (day.application != null)
           ReadingSection(
             label: l.application,
+            tick: reflectionTick(1),
             child: Text(day.application!, style: reading),
           ),
         if (day.questions.isNotEmpty)
           ReadingSection(
             label: l.questions,
+            tick: reflectionTick(2),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -143,6 +163,7 @@ class _Day extends ConsumerWidget {
         if (day.prayer != null)
           ReadingSection(
             label: l.prayer,
+            tick: tick(DayPart.prayer, l.prayer),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -159,16 +180,6 @@ class _Day extends ConsumerWidget {
             uri: youtubeAt(study.sermon.videoId, day.startSeconds),
           ),
         ],
-        const SizedBox(height: 28),
-        read.contains(day.number)
-            ? Row(
-                children: [
-                  Icon(Icons.check_circle, color: context.tones.done),
-                  const SizedBox(width: 8),
-                  Text(l.markedRead, style: text.bodyLarge),
-                ],
-              )
-            : OutlinedButton(onPressed: () => markDayRead(ref, study.id, day.number), child: Text(l.markRead)),
         const SizedBox(height: 28),
         Row(
           children: [

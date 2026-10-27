@@ -25,17 +25,24 @@ class ExternalLink extends StatelessWidget {
 
 /// A labelled block of reading text.
 class ReadingSection extends StatelessWidget {
-  const ReadingSection({super.key, required this.label, required this.child});
+  const ReadingSection({super.key, required this.label, required this.child, this.tick});
 
   final String label;
   final Widget child;
+
+  /// A tick for the part this section belongs to, shown beside the label.
+  final Widget? tick;
 
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.only(top: 32),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [Eyebrow(label), const SizedBox(height: 10), child],
+      children: [
+        if (tick == null) Eyebrow(label) else Row(children: [Expanded(child: Eyebrow(label)), tick!]),
+        const SizedBox(height: 10),
+        child,
+      ],
     ),
   );
 }

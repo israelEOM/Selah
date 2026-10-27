@@ -371,12 +371,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'Oração sugerida a partir do estudo; não é uma citação do pregador.';
 
   @override
-  String get markRead => 'Marcar como lido';
-
-  @override
-  String get markedRead => 'Lido';
-
-  @override
   String get studyNotFound => 'Este estudo não está disponível.';
 
   @override

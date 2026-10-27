@@ -742,18 +742,6 @@ abstract class AppLocalizations {
   /// **'Oración sugerida a partir del estudio; no es una cita del predicador.'**
   String get prayerNote;
 
-  /// No description provided for @markRead.
-  ///
-  /// In es, this message translates to:
-  /// **'Marcar como leído'**
-  String get markRead;
-
-  /// No description provided for @markedRead.
-  ///
-  /// In es, this message translates to:
-  /// **'Leído'**
-  String get markedRead;
-
   /// No description provided for @studyNotFound.
   ///
   /// In es, this message translates to:

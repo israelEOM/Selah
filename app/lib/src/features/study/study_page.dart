@@ -6,6 +6,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../app/theme.dart';
 import '../../core/format.dart';
 import '../../core/models.dart';
+import '../../data/progress.dart';
 import '../../data/providers.dart';
 import '../home/language_menu.dart';
 import '../../l10n/locale.dart';
@@ -50,7 +51,7 @@ class _StudyBody extends ConsumerWidget {
     final text = Theme.of(context).textTheme;
     final language = ref.watch(appLocaleProvider).languageCode;
     final study = studyToShow(original, language, showOriginal: ref.watch(showOriginalProvider(original.id)));
-    final read = ref.watch(readDaysProvider(study.id)).value ?? const <int>{};
+    final progress = ref.watch(studyProgressProvider(original.id)).value;
     final summary = study.summary;
     final points = List<Map<String, dynamic>>.from(summary['points'] as List? ?? const []);
     final takeaways = List<String>.from(summary['key_takeaways'] as List? ?? const []);
@@ -95,7 +96,7 @@ class _StudyBody extends ConsumerWidget {
                   child: Card(
                     child: ListTile(
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                      leading: read.contains(day.number)
+                      leading: progress?.isDone(day) ?? false
                           ? Icon(Icons.check_circle, color: context.tones.done)
                           : Text('${day.number}', style: text.headlineSmall?.copyWith(color: Theme.of(context).colorScheme.primary)),
                       title: Text(day.title, style: text.titleLarge),
