@@ -35,6 +35,17 @@ final isPlatformAdminProvider = FutureProvider<bool>((ref) async {
   return userId != null && await ref.watch(repositoryProvider).isPlatformAdmin(userId);
 });
 
+/// The signed-in user's newest church request, or null (also when signed out).
+final myChurchRequestProvider = FutureProvider<ChurchRequest?>((ref) async {
+  final userId = await ref.watch(userIdProvider.future);
+  if (userId == null) return null;
+  return ref.watch(repositoryProvider).myLatestChurchRequest();
+});
+
+/// Requests waiting for a platform admin's decision.
+final pendingChurchRequestsProvider =
+    FutureProvider.autoDispose<List<ChurchRequest>>((ref) => ref.watch(repositoryProvider).pendingChurchRequests());
+
 /// The signed-in user's role in a church (by id), or null.
 final churchRoleProvider = FutureProvider.family<ChurchRole?, String>((ref, churchId) {
   ref.watch(userIdProvider);

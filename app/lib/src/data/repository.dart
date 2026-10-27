@@ -220,6 +220,33 @@ class SelahRepository {
     return Church.fromJson(row as Map<String, dynamic>);
   }
 
+  Future<ChurchRequest> requestChurch(String name, String? note) async {
+    final row = await _client.rpc('request_church', params: {'p_name': name, 'p_note': note});
+    return ChurchRequest.fromJson(row as Map<String, dynamic>);
+  }
+
+  /// The signed-in user's newest request, or null.
+  Future<ChurchRequest?> myLatestChurchRequest() async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return null;
+    final row = await _client
+        .from('church_requests')
+        .select()
+        .eq('requested_by', userId)
+        .order('created_at', ascending: false)
+        .limit(1)
+        .maybeSingle();
+    return row == null ? null : ChurchRequest.fromJson(row);
+  }
+
+  Future<List<ChurchRequest>> pendingChurchRequests() async {
+    final rows = await _client.rpc('pending_church_requests') as List;
+    return [for (final r in rows) ChurchRequest.fromJson(r as Map<String, dynamic>)];
+  }
+
+  Future<void> decideChurchRequest(String id, {required bool approve, String? slug}) =>
+      _client.rpc('decide_church_request', params: {'p_request': id, 'p_approve': approve, 'p_slug': slug});
+
   Future<void> updateChurch(String churchId, Map<String, dynamic> fields) =>
       _client.from('churches').update(fields).eq('id', churchId);
 

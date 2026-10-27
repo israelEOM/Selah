@@ -56,4 +56,39 @@ void main() {
     expect(SelahError.fromException(const PostgrestException(message: 'boom')), isNull);
     expect(SelahError.fromException(Exception('x')), isNull);
   });
+
+  test('ChurchRequest.fromJson parses each status and a null note', () {
+    for (final status in ChurchRequestStatus.values) {
+      final r = ChurchRequest.fromJson({
+        'id': 'r1',
+        'church_name': 'Grace Church',
+        'note': null,
+        'status': status.name,
+        'created_at': '2026-10-30T12:00:00Z',
+      });
+      expect(r.status, status);
+      expect(r.note, isNull);
+      expect(r.requesterEmail, isNull);
+      expect(r.churchName, 'Grace Church');
+      expect(r.createdAt, DateTime.utc(2026, 10, 30, 12));
+    }
+  });
+
+  test('ChurchRequest.fromJson reads the requester email of pending rows', () {
+    final r = ChurchRequest.fromJson({
+      'id': 'r2',
+      'church_name': 'Hope',
+      'note': 'We meet on Sundays',
+      'status': 'pending',
+      'created_at': '2026-10-30T12:00:00Z',
+      'requester_email': 'pastor@example.com',
+    });
+    expect(r.note, 'We meet on Sundays');
+    expect(r.requesterEmail, 'pastor@example.com');
+  });
+
+  test('SelahError reads the request codes', () {
+    expect(SelahError.fromException(const PostgrestException(message: 'request_pending_exists')), 'request_pending_exists');
+    expect(SelahError.fromException(const PostgrestException(message: 'request_not_pending')), 'request_not_pending');
+  });
 }

@@ -83,6 +83,36 @@ class Person {
   final DateTime? joinedAt;
 }
 
+enum ChurchRequestStatus { pending, approved, rejected }
+
+/// A pastor's request to bring a church to Selah. Table and RPC rows carry no requester email; `pending_church_requests` rows do.
+class ChurchRequest {
+  const ChurchRequest({
+    required this.id,
+    required this.churchName,
+    required this.status,
+    required this.createdAt,
+    this.note,
+    this.requesterEmail,
+  });
+
+  factory ChurchRequest.fromJson(Map<String, dynamic> json) => ChurchRequest(
+        id: json['id'] as String,
+        churchName: json['church_name'] as String,
+        note: json['note'] as String?,
+        status: ChurchRequestStatus.values.byName(json['status'] as String),
+        createdAt: DateTime.parse(json['created_at'] as String),
+        requesterEmail: json['requester_email'] as String?,
+      );
+
+  final String id;
+  final String churchName;
+  final String? note;
+  final ChurchRequestStatus status;
+  final DateTime createdAt;
+  final String? requesterEmail;
+}
+
 /// Error codes the database raises on purpose.
 class SelahError {
   static const codes = [
@@ -92,6 +122,8 @@ class SelahError {
     'last_owner',
     'monthly_limit_reached',
     'not_allowed',
+    'request_pending_exists',
+    'request_not_pending',
   ];
 
   /// The known code in a [PostgrestException]'s message, or null.
