@@ -80,6 +80,12 @@ create policy church_members_read on public.church_members for select to authent
 
 -- Studies and sermons (the published-read policies stay) -----------------------------
 
+-- A study belongs to the church of its sermon; this also binds service-role writes.
+alter table public.sermons add constraint sermons_id_church_key unique (id, church_id);
+alter table public.studies add constraint studies_sermon_church_fkey
+  foreign key (sermon_id, church_id) references public.sermons (id, church_id)
+  on delete cascade;
+
 create policy studies_edit on public.studies for all to authenticated
   using ((select public.can_edit_church(church_id)))
   with check ((select public.can_edit_church(church_id)));

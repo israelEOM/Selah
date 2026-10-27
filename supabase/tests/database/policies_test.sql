@@ -1,5 +1,5 @@
 begin;
-select plan(19);
+select plan(20);
 
 -- cross_church_isolation
 -- Churches A and B, plus C with a monthly limit of one.
@@ -27,6 +27,7 @@ insert into public.sermons (id, church_id, youtube_video_id, youtube_url) values
   ('00000000-0000-0000-0000-0000000000a2', '00000000-0000-0000-0000-00000000000a', 'a-pub', 'https://youtu.be/a-pub'),
   ('00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-00000000000b', 'b-draft', 'https://youtu.be/b-draft'),
   ('00000000-0000-0000-0000-0000000000b2', '00000000-0000-0000-0000-00000000000b', 'b-pub', 'https://youtu.be/b-pub'),
+  ('00000000-0000-0000-0000-0000000000b3', '00000000-0000-0000-0000-00000000000b', 'b-free', 'https://youtu.be/b-free'),
   ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-00000000000c', 'c-one', 'https://youtu.be/c-one');
 insert into public.studies (id, church_id, sermon_id, title, slug, status) values
   ('00000000-0000-0000-0000-0000000000d1', '00000000-0000-0000-0000-00000000000a', '00000000-0000-0000-0000-0000000000a1', 'A draft', 'a-draft', 'draft'),
@@ -63,6 +64,11 @@ select lives_ok(
     values ('00000000-0000-0000-0000-00000000000a', '00000000-0000-0000-0000-0000000000a1',
             'probe', 'queued', (select editor from u))$$,
   'the editor of A can queue a job for a sermon of A');
+select throws_ok(
+  $$insert into public.studies (church_id, sermon_id, title, slug, status)
+    values ('00000000-0000-0000-0000-00000000000a', '00000000-0000-0000-0000-0000000000b3',
+            'stolen', 'stolen', 'published')$$,
+  '23503', null, 'a study of A cannot point at a sermon of B');
 select throws_ok(
   $$insert into public.sermons (church_id, youtube_video_id, youtube_url)
     values ('00000000-0000-0000-0000-00000000000b', 'x1', 'https://youtu.be/x1')$$,
