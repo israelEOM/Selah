@@ -6,6 +6,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../app/theme.dart';
 import '../../core/models.dart';
 import '../../data/providers.dart';
+import '../church/church_switcher.dart';
 
 /// Frame for every admin screen of a church. Shows the content only to people whose role in
 /// [church] is at least [minRole]; the database enforces the same rule, this just gives
@@ -56,6 +57,7 @@ class AdminPage extends ConsumerWidget {
       appBar: AppBar(
         leading: IconButton(icon: const Icon(Icons.arrow_back), tooltip: l.back, onPressed: () => context.go(backTo)),
         actions: [
+          ChurchSwitcher(current: church, admin: true),
           TextButton(
             onPressed: () async {
               await ref.read(repositoryProvider).signOut();

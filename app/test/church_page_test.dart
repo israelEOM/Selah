@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -12,16 +14,21 @@ const _church = Church(id: 'A', slug: 'vida-nueva', name: 'Iglesia Vida Nueva');
 
 class _FakeRepository implements SelahRepository {
   final joined = <String>[];
+  bool failJoin = false;
 
   @override
-  Future<void> joinChurch(String churchId) async => joined.add(churchId);
+  Future<void> joinChurch(String churchId) async {
+    if (failJoin) throw Exception('nope');
+    joined.add(churchId);
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-Future<_FakeRepository> _pump(WidgetTester tester, {String? userId, ChurchRole? role}) async {
-  final fake = _FakeRepository();
+Future<_FakeRepository> _pump(WidgetTester tester,
+    {String? userId, ChurchRole? role, bool failJoin = false, bool roleLoading = false}) async {
+  final fake = _FakeRepository()..failJoin = failJoin;
   final router = GoRouter(initialLocation: '/c/vida-nueva', routes: [
     GoRoute(path: '/c/vida-nueva', builder: (_, _) => const ChurchPage(church: _church)),
     GoRoute(path: '/c/vida-nueva/studies/:slug', builder: (_, s) => Text('STUDY ${s.pathParameters['slug']}')),
@@ -33,7 +40,7 @@ Future<_FakeRepository> _pump(WidgetTester tester, {String? userId, ChurchRole? 
       repositoryProvider.overrideWithValue(fake),
       userIdProvider.overrideWith((ref) => Stream.value(userId)),
       myChurchesProvider.overrideWith((ref) async => const []),
-      churchRoleProvider('A').overrideWith((ref) async => role),
+      churchRoleProvider('A').overrideWith((ref) => roleLoading ? Completer<ChurchRole?>().future : Future.value(role)),
       publishedStudiesProvider('A').overrideWith((ref) async => const [
             StudyCard(id: '1', slug: 'retiro-espiritual', title: 'La necesidad del retiro espiritual', numberOfDays: 3),
           ]),
@@ -45,7 +52,11 @@ Future<_FakeRepository> _pump(WidgetTester tester, {String? userId, ChurchRole? 
       supportedLocales: AppLocalizations.supportedLocales,
     ),
   ));
-  await tester.pumpAndSettle();
+  if (roleLoading) {
+    await tester.pump(const Duration(milliseconds: 100));
+  } else {
+    await tester.pumpAndSettle();
+  }
   return fake;
 }
 
@@ -71,6 +82,18 @@ void main() {
     await tester.tap(find.text('Seguir'));
     await tester.pumpAndSettle();
     expect(fake.joined, ['A']);
+  });
+
+  testWidgets('follow is not offered while the role is loading', (tester) async {
+    await _pump(tester, userId: 'u', roleLoading: true);
+    expect(find.text('Seguir'), findsNothing);
+  });
+
+  testWidgets('a failed follow shows an error', (tester) async {
+    await _pump(tester, userId: 'u', failJoin: true);
+    await tester.tap(find.text('Seguir'));
+    await tester.pumpAndSettle();
+    expect(find.text('No fue posible completar esta acción.'), findsOneWidget);
   });
 
   testWidgets('a visitor is not offered follow', (tester) async {

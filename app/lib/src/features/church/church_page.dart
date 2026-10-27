@@ -8,6 +8,7 @@ import '../../core/models.dart';
 import '../../data/providers.dart';
 import '../../l10n/locale.dart';
 import '../home/language_menu.dart';
+import 'church_switcher.dart';
 
 /// A church's front page: its published studies, newest first.
 class ChurchPage extends ConsumerWidget {
@@ -21,22 +22,29 @@ class ChurchPage extends ConsumerWidget {
     final text = Theme.of(context).textTheme;
     final studies = ref.watch(publishedStudiesProvider(church.id));
     final language = ref.watch(appLocaleProvider).languageCode;
-    final role = ref.watch(churchRoleProvider(church.id)).value;
+    final roleState = ref.watch(churchRoleProvider(church.id));
+    final role = roleState.value;
     final canEdit = role?.canEdit ?? false;
     final signedIn = ref.watch(userIdProvider).value != null;
     return Scaffold(
       appBar: AppBar(
         title: Text(church.name, style: text.titleLarge),
         actions: [
+          ChurchSwitcher(current: church, admin: false),
           const LanguageMenu(),
           if (canEdit)
             TextButton(onPressed: () => context.push('/c/${church.slug}/admin'), child: Text(l.manage))
-          else if (signedIn && role == null)
+          else if (signedIn && roleState.hasValue && role == null)
             TextButton(
               onPressed: () async {
-                await ref.read(repositoryProvider).joinChurch(church.id);
-                ref.invalidate(churchRoleProvider(church.id));
-                ref.invalidate(myChurchesProvider);
+                final messenger = ScaffoldMessenger.of(context);
+                try {
+                  await ref.read(repositoryProvider).joinChurch(church.id);
+                  ref.invalidate(churchRoleProvider(church.id));
+                  ref.invalidate(myChurchesProvider);
+                } catch (_) {
+                  messenger.showSnackBar(SnackBar(content: Text(l.genericError)));
+                }
               },
               child: Text(l.followChurch),
             ),
