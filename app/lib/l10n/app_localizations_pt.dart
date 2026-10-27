@@ -527,4 +527,18 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get inviteInvalid => 'Este link de convite não é mais válido.';
+
+  @override
+  String get save => 'Guardar';
+
+  @override
+  String get saved => 'Guardado';
+
+  @override
+  String get churchLink => 'Enlace de la iglesia';
+
+  @override
+  String sermonsThisMonth(int used, int limit) {
+    return '$used de $limit este mes';
+  }
 }

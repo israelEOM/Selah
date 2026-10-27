@@ -529,4 +529,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get inviteInvalid => 'This invitation link is no longer valid.';
+
+  @override
+  String get save => 'Guardar';
+
+  @override
+  String get saved => 'Guardado';
+
+  @override
+  String get churchLink => 'Enlace de la iglesia';
+
+  @override
+  String sermonsThisMonth(int used, int limit) {
+    return '$used de $limit este mes';
+  }
 }

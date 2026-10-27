@@ -1035,6 +1035,30 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Este enlace de invitación ya no es válido.'**
   String get inviteInvalid;
+
+  /// No description provided for @save.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardar'**
+  String get save;
+
+  /// No description provided for @saved.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardado'**
+  String get saved;
+
+  /// No description provided for @churchLink.
+  ///
+  /// In es, this message translates to:
+  /// **'Enlace de la iglesia'**
+  String get churchLink;
+
+  /// No description provided for @sermonsThisMonth.
+  ///
+  /// In es, this message translates to:
+  /// **'{used} de {limit} este mes'**
+  String sermonsThisMonth(int used, int limit);
 }
 
 class _AppLocalizationsDelegate

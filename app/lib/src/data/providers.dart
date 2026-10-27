@@ -21,6 +21,10 @@ final userIdProvider = StreamProvider<String?>((ref) {
 final churchProvider =
     FutureProvider.family<Church?, String>((ref, slug) => ref.watch(repositoryProvider).churchBySlug(slug));
 
+/// Sermons started in a church this calendar month; counts toward its monthly limit.
+final sermonsThisMonthProvider = FutureProvider.autoDispose.family<int, String>(
+    (ref, churchId) => ref.watch(repositoryProvider).sermonsThisMonth(churchId));
+
 final myChurchesProvider = FutureProvider<List<Membership>>((ref) {
   ref.watch(userIdProvider);
   return ref.watch(repositoryProvider).myChurches();

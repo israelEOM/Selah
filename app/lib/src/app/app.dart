@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../features/admin/admin_home_page.dart';
+import '../features/admin/church_settings_page.dart';
 import '../features/admin/import_page.dart';
 import '../features/admin/people_page.dart';
 import '../features/admin/sermon_page.dart';
@@ -60,10 +61,9 @@ GoRouter createRouter({String initialLocation = '/'}) => GoRouter(
           path: '/c/:church/admin',
           builder: (context, state) => _inChurchAdmin(context, state, (church) => AdminHomePage(church: church)),
         ),
-        // Temporary: Task 10 replaces this with the real settings page.
         GoRoute(
           path: '/c/:church/admin/settings',
-          builder: (context, state) => _inChurchAdmin(context, state, (church) => AdminHomePage(church: church)),
+          builder: (context, state) => _inChurchAdmin(context, state, (church) => ChurchSettingsPage(church: church)),
         ),
         GoRoute(
           path: '/c/:church/admin/people',

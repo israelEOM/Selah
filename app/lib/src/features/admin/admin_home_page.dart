@@ -20,16 +20,30 @@ class AdminHomePage extends ConsumerWidget {
     final sermons = ref.watch(sermonsProvider(church.id));
     final isOwner = ref.watch(churchRoleProvider(church.id)).value == ChurchRole.owner;
     final base = '/c/${church.slug}/admin';
+    final used = ref.watch(sermonsThisMonthProvider(church.id)).value;
+    final limit = church.monthlySermonLimit;
+    final atLimit = used != null && limit != null && used >= limit;
     return AdminPage(church: church, backTo: '/c/${church.slug}', children: [
       Eyebrow(l.admin),
       const SizedBox(height: 8),
       Text(l.adminTitle, style: text.headlineMedium),
+      if (used != null && limit != null) ...[
+        const SizedBox(height: 6),
+        Text(l.sermonsThisMonth(used, limit), style: text.bodyMedium),
+      ],
       const SizedBox(height: 20),
       Wrap(spacing: 12, runSpacing: 8, children: [
-        FilledButton(onPressed: () => context.go('$base/sermons/new'), child: Text(l.importSermon)),
+        FilledButton(
+          onPressed: atLimit ? null : () => context.go('$base/sermons/new'),
+          child: Text(l.importSermon),
+        ),
         if (isOwner) OutlinedButton(onPressed: () => context.go('$base/people'), child: Text(l.people)),
         if (isOwner) OutlinedButton(onPressed: () => context.go('$base/settings'), child: Text(l.churchSettings)),
       ]),
+      if (atLimit) ...[
+        const SizedBox(height: 10),
+        Text(l.monthlyLimitReached(limit), style: text.bodyMedium),
+      ],
       const SizedBox(height: 24),
       ...sermons.when(
         loading: () => [const Center(child: CircularProgressIndicator())],

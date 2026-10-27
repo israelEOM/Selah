@@ -227,5 +227,19 @@
         "type": "String"
       }
     }
+  },
+  "save": "Guardar",
+  "saved": "Guardado",
+  "churchLink": "Enlace de la iglesia",
+  "sermonsThisMonth": "{used} de {limit} este mes",
+  "@sermonsThisMonth": {
+    "placeholders": {
+      "used": {
+        "type": "int"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
   }
 }
