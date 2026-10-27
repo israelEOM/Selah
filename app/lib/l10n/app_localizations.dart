@@ -927,6 +927,42 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Miembro'**
   String get roleMember;
+
+  /// No description provided for @createChurchTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Crea tu iglesia'**
+  String get createChurchTitle;
+
+  /// No description provided for @churchName.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre de la iglesia'**
+  String get churchName;
+
+  /// No description provided for @churchAddress.
+  ///
+  /// In es, this message translates to:
+  /// **'Dirección'**
+  String get churchAddress;
+
+  /// No description provided for @slugTaken.
+  ///
+  /// In es, this message translates to:
+  /// **'Esa dirección ya está en uso. Prueba con otra.'**
+  String get slugTaken;
+
+  /// No description provided for @slugInvalid.
+  ///
+  /// In es, this message translates to:
+  /// **'Usa de 3 a 40 letras minúsculas, números o guiones.'**
+  String get slugInvalid;
+
+  /// No description provided for @churchNameInvalid.
+  ///
+  /// In es, this message translates to:
+  /// **'El nombre debe tener entre 2 y 80 caracteres.'**
+  String get churchNameInvalid;
 }
 
 class _AppLocalizationsDelegate

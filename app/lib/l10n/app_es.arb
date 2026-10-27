@@ -206,5 +206,11 @@
   "followChurch": "Seguir",
   "roleOwner": "Propietario",
   "roleEditor": "Editor",
-  "roleMember": "Miembro"
+  "roleMember": "Miembro",
+  "createChurchTitle": "Crea tu iglesia",
+  "churchName": "Nombre de la iglesia",
+  "churchAddress": "Dirección",
+  "slugTaken": "Esa dirección ya está en uso. Prueba con otra.",
+  "slugInvalid": "Usa de 3 a 40 letras minúsculas, números o guiones.",
+  "churchNameInvalid": "El nombre debe tener entre 2 y 80 caracteres."
 }

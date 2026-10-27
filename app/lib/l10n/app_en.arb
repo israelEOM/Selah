@@ -199,5 +199,11 @@
   "followChurch": "Follow",
   "roleOwner": "Owner",
   "roleEditor": "Editor",
-  "roleMember": "Member"
+  "roleMember": "Member",
+  "createChurchTitle": "Create your church",
+  "churchName": "Church name",
+  "churchAddress": "Address",
+  "slugTaken": "That address is already taken. Try another.",
+  "slugInvalid": "Use 3 to 40 lowercase letters, numbers or hyphens.",
+  "churchNameInvalid": "The name must be between 2 and 80 characters."
 }

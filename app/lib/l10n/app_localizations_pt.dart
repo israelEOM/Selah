@@ -470,4 +470,23 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get roleMember => 'Membro';
+
+  @override
+  String get createChurchTitle => 'Crie sua igreja';
+
+  @override
+  String get churchName => 'Nome da igreja';
+
+  @override
+  String get churchAddress => 'Endereço';
+
+  @override
+  String get slugTaken => 'Esse endereço já está em uso. Tente outro.';
+
+  @override
+  String get slugInvalid =>
+      'Use de 3 a 40 letras minúsculas, números ou hífens.';
+
+  @override
+  String get churchNameInvalid => 'O nome deve ter entre 2 e 80 caracteres.';
 }
