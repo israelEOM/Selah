@@ -51,6 +51,17 @@ def probe(job: dict) -> dict:
     return data | {"languages": youtube.transcript_languages(data["youtube_video_id"])}
 
 
+def channel_search(job: dict) -> dict:
+    """Channels matching a church's name, for the import picker."""
+    return {"channels": youtube.search_channels(job["payload"]["query"])}
+
+
+def channel_lives(job: dict) -> dict:
+    """A channel's finished lives, newest first, for the import picker."""
+    payload = job["payload"]
+    return youtube.recent_lives(payload["channel_id"], payload.get("page_token"))
+
+
 def transcript(job: dict) -> dict:
     sermon = _one("sermons", "id", job["sermon_id"], "Sermón no encontrado.")
     payload = job["payload"]
@@ -218,7 +229,8 @@ def translate(job: dict) -> dict:
     return {"languages": languages} | result
 
 
-HANDLERS = {"probe": probe, "transcript": transcript, "analysis": analysis, "summary": summary, "devotional": devotional,
+HANDLERS = {"probe": probe, "channel_search": channel_search, "channel_lives": channel_lives,
+            "transcript": transcript, "analysis": analysis, "summary": summary, "devotional": devotional,
             "translate": translate}
 
 

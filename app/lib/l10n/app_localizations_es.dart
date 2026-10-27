@@ -109,6 +109,45 @@ class AppLocalizationsEs extends AppLocalizations {
   String get youtubeUrl => 'URL de YouTube';
 
   @override
+  String get searchChannel => 'Busca el canal de una iglesia';
+
+  @override
+  String get searchChannelHint => 'Nombre de la iglesia';
+
+  @override
+  String get searchingChannels => 'Buscando canales…';
+
+  @override
+  String get noChannelsFound => 'No encontramos canales con ese nombre.';
+
+  @override
+  String get recentChannels => 'Canales recientes';
+
+  @override
+  String livesFrom(String channel) {
+    return 'Transmisiones de $channel';
+  }
+
+  @override
+  String get loadingLives => 'Cargando transmisiones…';
+
+  @override
+  String get noLives =>
+      'Este canal no tiene transmisiones terminadas en las últimas semanas.';
+
+  @override
+  String get loadOlderLives => 'Cargar anteriores';
+
+  @override
+  String get pasteLinkInstead => 'Pegar un enlace de YouTube';
+
+  @override
+  String get pickFromChannel => 'Elegir de un canal';
+
+  @override
+  String get changeVideo => 'Cambiar video';
+
+  @override
   String get findVideo => 'Buscar video';
 
   @override

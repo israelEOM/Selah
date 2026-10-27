@@ -36,6 +36,25 @@
   "back": "Voltar",
   "newSermonTitle": "Comienza con el video",
   "youtubeUrl": "URL de YouTube",
+  "searchChannel": "Busca el canal de una iglesia",
+  "searchChannelHint": "Nombre de la iglesia",
+  "searchingChannels": "Buscando canales…",
+  "noChannelsFound": "No encontramos canales con ese nombre.",
+  "recentChannels": "Canales recientes",
+  "livesFrom": "Transmisiones de {channel}",
+  "@livesFrom": {
+    "placeholders": {
+      "channel": {
+        "type": "String"
+      }
+    }
+  },
+  "loadingLives": "Cargando transmisiones…",
+  "noLives": "Este canal no tiene transmisiones terminadas en las últimas semanas.",
+  "loadOlderLives": "Cargar anteriores",
+  "pasteLinkInstead": "Pegar un enlace de YouTube",
+  "pickFromChannel": "Elegir de un canal",
+  "changeVideo": "Cambiar video",
   "findVideo": "Buscar video",
   "searchingVideo": "Consultando YouTube…",
   "workerHint": "El trabajo sigue en cola. Comprueba que el worker esté en marcha en tu Mac.",

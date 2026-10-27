@@ -274,6 +274,78 @@ abstract class AppLocalizations {
   /// **'URL de YouTube'**
   String get youtubeUrl;
 
+  /// No description provided for @searchChannel.
+  ///
+  /// In es, this message translates to:
+  /// **'Busca el canal de una iglesia'**
+  String get searchChannel;
+
+  /// No description provided for @searchChannelHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre de la iglesia'**
+  String get searchChannelHint;
+
+  /// No description provided for @searchingChannels.
+  ///
+  /// In es, this message translates to:
+  /// **'Buscando canales…'**
+  String get searchingChannels;
+
+  /// No description provided for @noChannelsFound.
+  ///
+  /// In es, this message translates to:
+  /// **'No encontramos canales con ese nombre.'**
+  String get noChannelsFound;
+
+  /// No description provided for @recentChannels.
+  ///
+  /// In es, this message translates to:
+  /// **'Canales recientes'**
+  String get recentChannels;
+
+  /// No description provided for @livesFrom.
+  ///
+  /// In es, this message translates to:
+  /// **'Transmisiones de {channel}'**
+  String livesFrom(String channel);
+
+  /// No description provided for @loadingLives.
+  ///
+  /// In es, this message translates to:
+  /// **'Cargando transmisiones…'**
+  String get loadingLives;
+
+  /// No description provided for @noLives.
+  ///
+  /// In es, this message translates to:
+  /// **'Este canal no tiene transmisiones terminadas en las últimas semanas.'**
+  String get noLives;
+
+  /// No description provided for @loadOlderLives.
+  ///
+  /// In es, this message translates to:
+  /// **'Cargar anteriores'**
+  String get loadOlderLives;
+
+  /// No description provided for @pasteLinkInstead.
+  ///
+  /// In es, this message translates to:
+  /// **'Pegar un enlace de YouTube'**
+  String get pasteLinkInstead;
+
+  /// No description provided for @pickFromChannel.
+  ///
+  /// In es, this message translates to:
+  /// **'Elegir de un canal'**
+  String get pickFromChannel;
+
+  /// No description provided for @changeVideo.
+  ///
+  /// In es, this message translates to:
+  /// **'Cambiar video'**
+  String get changeVideo;
+
   /// No description provided for @findVideo.
   ///
   /// In es, this message translates to:

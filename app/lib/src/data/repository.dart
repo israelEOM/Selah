@@ -104,6 +104,18 @@ class SelahRepository {
     return row['id'] as String;
   }
 
+  /// Channels imported from before, most recently used first.
+  Future<List<Map<String, dynamic>>> recentChannels() =>
+      _client.from('youtube_channels').select().order('last_used_at', ascending: false).limit(8);
+
+  Future<void> rememberChannel(Map<String, dynamic> channel) => _client.from('youtube_channels').upsert({
+        'channel_id': channel['channel_id'],
+        'title': channel['title'],
+        'handle': channel['handle'],
+        'thumbnail_url': channel['thumbnail_url'],
+        'last_used_at': DateTime.now().toUtc().toIso8601String(),
+      });
+
   Future<Map<String, dynamic>> churchSettings() => _client.from('church_settings').select().single();
 
   Future<List<Map<String, dynamic>>> bibleVersions() =>

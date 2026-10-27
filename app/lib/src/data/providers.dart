@@ -48,6 +48,9 @@ final sermonJobsProvider = StreamProvider.autoDispose.family<Map<String, Job>, S
   }
 });
 
+final recentChannelsProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>(
+    (ref) => ref.watch(repositoryProvider).recentChannels());
+
 final churchSettingsProvider =
     FutureProvider<Map<String, dynamic>>((ref) => ref.watch(repositoryProvider).churchSettings());
 
