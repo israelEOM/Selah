@@ -1,5 +1,5 @@
 begin;
-select plan(28);
+select plan(29);
 
 create temp table u as
 select tests.create_user('pastor@example.com') as pastor,
@@ -92,6 +92,12 @@ select lives_ok($$select public.request_church('Iglesia Dos', null)$$,
   'a rejected requester can request again');
 select results_eq($$select count(*)::int from public.church_requests$$,
   $$values (3)$$, 'the requester reads all of their own requests');
+
+-- deleting the admin who decided keeps the requests
+select tests.reset();
+delete from auth.users where id = (select admin from u);
+select results_eq($$select count(*)::int from public.church_requests where status <> 'pending' and decided_by is null$$,
+  $$values (2)$$, 'deleting the deciding admin keeps their decisions with no decider');
 
 select * from finish();
 rollback;

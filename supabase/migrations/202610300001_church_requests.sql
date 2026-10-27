@@ -15,7 +15,7 @@ create table public.church_requests (
   church_id uuid references public.churches (id) on delete set null,
   created_at timestamptz not null default now(),
   decided_at timestamptz,
-  decided_by uuid references auth.users (id)
+  decided_by uuid references auth.users (id) on delete set null
 );
 -- One pending request per person.
 create unique index church_requests_one_pending_idx on public.church_requests (requested_by)
