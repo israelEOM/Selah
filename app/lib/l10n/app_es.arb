@@ -198,5 +198,13 @@
         "type": "int"
       }
     }
-  }
+  },
+  "yourChurches": "Tus iglesias",
+  "allChurches": "Iglesias en Selah",
+  "createChurch": "Crear una iglesia",
+  "manage": "Gestionar",
+  "followChurch": "Seguir",
+  "roleOwner": "Propietario",
+  "roleEditor": "Editor",
+  "roleMember": "Miembro"
 }

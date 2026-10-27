@@ -31,8 +31,8 @@ class _FakeRepository implements SelahRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-SermonDetail _detail(String status) => SermonDetail(
-      sermon: {'id': 's1', 'title': 'Sermón', 'youtube_video_id': 'abc'},
+SermonDetail _detail(String status, {String churchId = 'A'}) => SermonDetail(
+      sermon: {'id': 's1', 'title': 'Sermón', 'youtube_video_id': 'abc', 'church_id': churchId},
       hasTranscript: true,
       study: {
         'id': 'st1',
@@ -74,6 +74,7 @@ Future<_FakeRepository> _pump(
   required String status,
   List<Map<String, dynamic>> rows = const [],
   bool failJob = false,
+  String sermonChurchId = 'A',
 }) async {
   tester.view.physicalSize = const Size(1000, 4000);
   tester.view.devicePixelRatio = 1;
@@ -88,7 +89,7 @@ Future<_FakeRepository> _pump(
       sermonDetailProvider('s1').overrideWith((ref) async {
         // After the first read, a failed-job scenario shows the study as published, as the database now has it.
         reads++;
-        return _detail(failJob && reads > 1 ? 'published' : status);
+        return _detail(failJob && reads > 1 ? 'published' : status, churchId: sermonChurchId);
       }),
       sermonJobsProvider('s1').overrideWith((ref) => Stream.value(const <String, Job>{})),
       adminTranslationsProvider('st1').overrideWith((ref) async => rows),
@@ -105,6 +106,12 @@ Future<_FakeRepository> _pump(
 }
 
 void main() {
+  testWidgets("another church's sermon is not found under this church", (tester) async {
+    await _pump(tester, status: 'review', sermonChurchId: 'B');
+    expect(find.text('No encontramos esta iglesia.'), findsOneWidget);
+    expect(find.text('Publicar'), findsNothing);
+  });
+
   testWidgets('publishing queues the translation', (tester) async {
     final fake = await _pump(tester, status: 'review');
     await tester.tap(find.text('Publicar'));

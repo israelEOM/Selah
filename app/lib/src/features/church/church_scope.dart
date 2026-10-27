@@ -20,14 +20,15 @@ class ChurchScope extends ConsumerWidget {
     final text = Theme.of(context).textTheme;
     return ref.watch(churchProvider(slug)).when(
           loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
-          error: (_, _) => _Message(text: l.loadError, style: text.bodyLarge),
-          data: (church) => church == null ? _Message(text: l.churchNotFound, style: text.bodyLarge) : builder(church),
+          error: (_, _) => ChurchMessage(text: l.loadError, style: text.bodyLarge),
+          data: (church) => church == null ? ChurchMessage(text: l.churchNotFound, style: text.bodyLarge) : builder(church),
         );
   }
 }
 
-class _Message extends StatelessWidget {
-  const _Message({required this.text, this.style});
+/// A full-page message with a way back home.
+class ChurchMessage extends StatelessWidget {
+  const ChurchMessage({super.key, required this.text, this.style});
 
   final String text;
   final TextStyle? style;

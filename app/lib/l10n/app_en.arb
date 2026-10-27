@@ -191,5 +191,13 @@
   "publishedWithoutTranslation": "Estudio publicado, pero no se pudo iniciar la traducción. Usa «Traducir de nuevo».",
   "churchNotFound": "We couldn't find this church.",
   "churchAdminOnly": "Esta sección es solo para quienes administran esta iglesia.",
-  "monthlyLimitReached": "Esta iglesia ya llegó a su límite de {limit} predicaciones este mes."
+  "monthlyLimitReached": "Esta iglesia ya llegó a su límite de {limit} predicaciones este mes.",
+  "yourChurches": "Your churches",
+  "allChurches": "Churches on Selah",
+  "createChurch": "Create a church",
+  "manage": "Manage",
+  "followChurch": "Follow",
+  "roleOwner": "Owner",
+  "roleEditor": "Editor",
+  "roleMember": "Member"
 }

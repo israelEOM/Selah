@@ -40,6 +40,7 @@ class SelahRepository {
         .from('studies')
         .select('churches(slug)')
         .eq('slug', slug)
+        .eq('status', 'published')
         .order('created_at', ascending: true)
         .limit(1)
         .maybeSingle();

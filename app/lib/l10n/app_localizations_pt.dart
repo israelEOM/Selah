@@ -446,4 +446,28 @@ class AppLocalizationsPt extends AppLocalizations {
   String monthlyLimitReached(int limit) {
     return 'Esta iglesia ya llegó a su límite de $limit predicaciones este mes.';
   }
+
+  @override
+  String get yourChurches => 'Suas igrejas';
+
+  @override
+  String get allChurches => 'Igrejas no Selah';
+
+  @override
+  String get createChurch => 'Criar uma igreja';
+
+  @override
+  String get manage => 'Gerenciar';
+
+  @override
+  String get followChurch => 'Seguir';
+
+  @override
+  String get roleOwner => 'Proprietário';
+
+  @override
+  String get roleEditor => 'Editor';
+
+  @override
+  String get roleMember => 'Membro';
 }

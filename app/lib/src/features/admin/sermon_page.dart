@@ -7,6 +7,7 @@ import '../../app/theme.dart';
 import '../../core/format.dart';
 import '../../core/models.dart';
 import '../../data/providers.dart';
+import '../church/church_scope.dart';
 import 'admin_gate.dart';
 
 const _translateTargets = {'languages': ['en', 'pt']};
@@ -35,6 +36,11 @@ class SermonPage extends ConsumerWidget {
         if (studyId != null) ref.invalidate(adminTranslationsProvider(studyId));
       }
     });
+
+    // A sermon of another church is not reachable under this church's address.
+    if (detail.value != null && detail.value!.sermon['church_id'] != church.id) {
+      return ChurchMessage(text: l.churchNotFound, style: text.bodyLarge);
+    }
 
     return AdminPage(
       church: church,

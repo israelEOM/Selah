@@ -2,6 +2,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:selah/src/core/auth_redirect.dart';
 
 void main() {
+  test('the return url carries a safe next', () {
+    expect(oauthReturnUrl(Uri.parse('https://x.dev/join/t'), next: '/join/t'), 'https://x.dev/login?next=%2Fjoin%2Ft');
+    expect(oauthReturnUrl(Uri.parse('https://x.dev/join/t'), next: '//evil.com'), 'https://x.dev/login');
+  });
+
+  test('safeNext keeps only paths on this site', () {
+    expect(safeNext('/join/abc'), '/join/abc');
+    expect(safeNext('//evil.com'), isNull);
+    expect(safeNext('https://evil.com'), isNull);
+    expect(safeNext('evil.com'), isNull);
+    expect(safeNext(null), isNull);
+    expect(safeNext(''), isNull);
+  });
+
   test('returns to /login on the same origin', () {
     expect(oauthReturnUrl(Uri.parse('https://selah-226.pages.dev/admin?x=1')),
         'https://selah-226.pages.dev/login');

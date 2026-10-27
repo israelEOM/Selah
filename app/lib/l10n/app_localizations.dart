@@ -879,6 +879,54 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Esta iglesia ya llegó a su límite de {limit} predicaciones este mes.'**
   String monthlyLimitReached(int limit);
+
+  /// No description provided for @yourChurches.
+  ///
+  /// In es, this message translates to:
+  /// **'Tus iglesias'**
+  String get yourChurches;
+
+  /// No description provided for @allChurches.
+  ///
+  /// In es, this message translates to:
+  /// **'Iglesias en Selah'**
+  String get allChurches;
+
+  /// No description provided for @createChurch.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear una iglesia'**
+  String get createChurch;
+
+  /// No description provided for @manage.
+  ///
+  /// In es, this message translates to:
+  /// **'Gestionar'**
+  String get manage;
+
+  /// No description provided for @followChurch.
+  ///
+  /// In es, this message translates to:
+  /// **'Seguir'**
+  String get followChurch;
+
+  /// No description provided for @roleOwner.
+  ///
+  /// In es, this message translates to:
+  /// **'Propietario'**
+  String get roleOwner;
+
+  /// No description provided for @roleEditor.
+  ///
+  /// In es, this message translates to:
+  /// **'Editor'**
+  String get roleEditor;
+
+  /// No description provided for @roleMember.
+  ///
+  /// In es, this message translates to:
+  /// **'Miembro'**
+  String get roleMember;
 }
 
 class _AppLocalizationsDelegate

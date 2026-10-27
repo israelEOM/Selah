@@ -447,4 +447,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String monthlyLimitReached(int limit) {
     return 'Esta iglesia ya llegó a su límite de $limit predicaciones este mes.';
   }
+
+  @override
+  String get yourChurches => 'Your churches';
+
+  @override
+  String get allChurches => 'Churches on Selah';
+
+  @override
+  String get createChurch => 'Create a church';
+
+  @override
+  String get manage => 'Manage';
+
+  @override
+  String get followChurch => 'Follow';
+
+  @override
+  String get roleOwner => 'Owner';
+
+  @override
+  String get roleEditor => 'Editor';
+
+  @override
+  String get roleMember => 'Member';
 }

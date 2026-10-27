@@ -11,10 +11,13 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class _FakeRepository implements SelahRepository {
   final calls = <OAuthProvider>[];
+  final redirects = <String>[];
 
   @override
-  Future<void> signInWithProvider(OAuthProvider provider, {required String redirectTo}) async =>
-      calls.add(provider);
+  Future<void> signInWithProvider(OAuthProvider provider, {required String redirectTo}) async {
+    calls.add(provider);
+    redirects.add(redirectTo);
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -79,18 +82,21 @@ void main() {
     expect(find.text('Para entrar con Google, abre esta página en Safari o Chrome.'), findsOneWidget);
   });
 
-  for (final (admin, destination) in [(false, 'HOME'), (true, 'ADMIN')]) {
-    testWidgets('someone already signed in is sent to ${destination.toLowerCase()}', (tester) async {
-      final router = GoRouter(routes: [
-        // Home reads the signed-in user first, as the real home page does.
-        GoRoute(
-          path: '/',
-          builder: (_, _) => Consumer(builder: (_, ref, _) => Text('HOME ${ref.watch(userIdProvider).value}')),
-        ),
-        GoRoute(path: '/admin', builder: (_, _) => const Text('ADMIN')),
+  for (final c in [
+    (name: 'to next', next: '?next=/join/abc', role: ChurchRole.member, expected: 'JOIN abc'),
+    (name: 'to the admin of the one church they edit', next: '', role: ChurchRole.editor, expected: 'ADMIN vida-nueva'),
+    (name: 'home when they only follow', next: '', role: ChurchRole.member, expected: 'HOME'),
+    (name: 'home when next leaves the site', next: '?next=//evil.com', role: ChurchRole.member, expected: 'HOME'),
+  ]) {
+    testWidgets('someone signed in is sent ${c.name}', (tester) async {
+      final router = GoRouter(initialLocation: '/login', routes: [
+        GoRoute(path: '/', builder: (_, _) => const Text('HOME')),
+        GoRoute(path: '/join/:t', builder: (_, s) => Text('JOIN ${s.pathParameters['t']}')),
+        GoRoute(path: '/c/:church/admin', builder: (_, s) => Text('ADMIN ${s.pathParameters['church']}')),
         GoRoute(
           path: '/login',
-          builder: (_, _) => LoginPage(landing: Uri.parse('https://selah-226.pages.dev/login'), userAgent: ''),
+          builder: (_, _) =>
+              LoginPage(landing: Uri.parse('https://selah-226.pages.dev/login${c.next}'), userAgent: ''),
         ),
       ]);
       await tester.pumpWidget(ProviderScope(
@@ -100,7 +106,7 @@ void main() {
           myChurchesProvider.overrideWith((ref) async => [
                 Membership(
                   church: const Church(id: 'A', slug: 'vida-nueva', name: 'Iglesia Vida Nueva'),
-                  role: admin ? ChurchRole.editor : ChurchRole.member,
+                  role: c.role,
                 ),
               ]),
         ],
@@ -112,11 +118,14 @@ void main() {
         ),
       ));
       await tester.pumpAndSettle();
-      expect(find.text('HOME user-1'), findsOneWidget);
-      router.push('/login');
-      await tester.pumpAndSettle();
-      expect(find.text('Continuar con Google'), findsNothing);
-      expect(find.textContaining(destination), findsOneWidget);
+      expect(find.text(c.expected), findsOneWidget);
     });
   }
+
+  testWidgets('Google sign-in carries next in the return url', (tester) async {
+    final fake = await _pump(tester, landing: Uri.parse('https://selah-226.pages.dev/login?next=/join/abc'));
+    await tester.tap(find.text('Continuar con Google'));
+    await tester.pump();
+    expect(fake.redirects, ['https://selah-226.pages.dev/login?next=%2Fjoin%2Fabc']);
+  });
 }

@@ -4,10 +4,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../app/theme.dart';
+import '../../core/models.dart';
 import '../../data/providers.dart';
 import 'language_menu.dart';
 
-/// The front door: churches that have published studies.
+/// The front door: the person's churches, then every church on Selah.
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
@@ -16,16 +17,14 @@ class HomePage extends ConsumerWidget {
     final l = AppLocalizations.of(context)!;
     final text = Theme.of(context).textTheme;
     final churches = ref.watch(publicChurchesProvider);
-    final editsAny = ref.watch(myChurchesProvider).value?.any((m) => m.role.canEdit) ?? false;
+    final mine = ref.watch(myChurchesProvider).value ?? const <Membership>[];
     final signedIn = ref.watch(userIdProvider).value != null;
     return Scaffold(
       appBar: AppBar(
         title: Text('Selah.', style: text.headlineMedium),
         actions: [
           const LanguageMenu(),
-          if (editsAny)
-            TextButton(onPressed: () => context.push('/admin'), child: Text(l.admin))
-          else if (signedIn)
+          if (signedIn)
             TextButton(onPressed: () => ref.read(repositoryProvider).signOut(), child: Text(l.signOut))
           else
             TextButton(onPressed: () => context.push('/login'), child: Text(l.signIn)),
@@ -33,7 +32,11 @@ class HomePage extends ConsumerWidget {
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () => ref.refresh(publicChurchesProvider.future),
+        onRefresh: () async {
+          ref.invalidate(myChurchesProvider);
+          ref.invalidate(publicChurchesProvider);
+          await ref.read(publicChurchesProvider.future);
+        },
         child: PageBody(
           children: [
             const SizedBox(height: 16),
@@ -41,6 +44,14 @@ class HomePage extends ConsumerWidget {
             const SizedBox(height: 12),
             Text('${l.tagline}.', style: text.displaySmall),
             const SizedBox(height: 36),
+            if (signedIn && mine.isNotEmpty) ...[
+              Eyebrow(l.yourChurches),
+              const SizedBox(height: 12),
+              for (final m in mine) _ChurchTile(church: m.church, subtitle: _roleLabel(l, m.role)),
+              const SizedBox(height: 24),
+            ],
+            Eyebrow(l.allChurches),
+            const SizedBox(height: 12),
             ...churches.when(
               loading: () => [
                 const Center(
@@ -60,25 +71,48 @@ class HomePage extends ConsumerWidget {
               ],
               data: (items) => items.isEmpty
                   ? [Text(l.noStudiesYet, style: text.bodyMedium)]
-                  : [
-                      for (final church in items)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: Card(
-                            clipBehavior: Clip.antiAlias,
-                            child: ListTile(
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-                              title: Text(church.name, style: text.titleLarge),
-                              trailing: const Icon(Icons.chevron_right),
-                              onTap: () => context.push('/c/${church.slug}'),
-                            ),
-                          ),
-                        ),
-                    ],
+                  : [for (final church in items) _ChurchTile(church: church)],
+            ),
+            const SizedBox(height: 24),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.add),
+                label: Text(l.createChurch),
+                onPressed: () => context.push(signedIn ? '/churches/new' : '/login?next=/churches/new'),
+              ),
             ),
           ],
         ),
       ),
     );
   }
+}
+
+String _roleLabel(AppLocalizations l, ChurchRole role) => switch (role) {
+      ChurchRole.owner => l.roleOwner,
+      ChurchRole.editor => l.roleEditor,
+      ChurchRole.member => l.roleMember,
+    };
+
+class _ChurchTile extends StatelessWidget {
+  const _ChurchTile({required this.church, this.subtitle});
+
+  final Church church;
+  final String? subtitle;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Card(
+          clipBehavior: Clip.antiAlias,
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+            title: Text(church.name, style: Theme.of(context).textTheme.titleLarge),
+            subtitle: subtitle == null ? null : Text(subtitle!),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/c/${church.slug}'),
+          ),
+        ),
+      );
 }

@@ -21,7 +21,8 @@ class ChurchPage extends ConsumerWidget {
     final text = Theme.of(context).textTheme;
     final studies = ref.watch(publishedStudiesProvider(church.id));
     final language = ref.watch(appLocaleProvider).languageCode;
-    final canEdit = ref.watch(churchRoleProvider(church.id)).value?.canEdit ?? false;
+    final role = ref.watch(churchRoleProvider(church.id)).value;
+    final canEdit = role?.canEdit ?? false;
     final signedIn = ref.watch(userIdProvider).value != null;
     return Scaffold(
       appBar: AppBar(
@@ -29,11 +30,23 @@ class ChurchPage extends ConsumerWidget {
         actions: [
           const LanguageMenu(),
           if (canEdit)
-            TextButton(onPressed: () => context.push('/c/${church.slug}/admin'), child: Text(l.admin))
-          else if (signedIn)
+            TextButton(onPressed: () => context.push('/c/${church.slug}/admin'), child: Text(l.manage))
+          else if (signedIn && role == null)
+            TextButton(
+              onPressed: () async {
+                await ref.read(repositoryProvider).joinChurch(church.id);
+                ref.invalidate(churchRoleProvider(church.id));
+                ref.invalidate(myChurchesProvider);
+              },
+              child: Text(l.followChurch),
+            ),
+          if (signedIn)
             TextButton(onPressed: () => ref.read(repositoryProvider).signOut(), child: Text(l.signOut))
           else
-            TextButton(onPressed: () => context.push('/login'), child: Text(l.signIn)),
+            TextButton(
+              onPressed: () => context.push('/login?next=${Uri.encodeQueryComponent('/c/${church.slug}')}'),
+              child: Text(l.signIn),
+            ),
           const SizedBox(width: 8),
         ],
       ),

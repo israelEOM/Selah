@@ -191,5 +191,13 @@
   "publishedWithoutTranslation": "Estudio publicado, pero no se pudo iniciar la traducción. Usa «Traducir de nuevo».",
   "churchNotFound": "Não encontramos esta igreja.",
   "churchAdminOnly": "Esta sección es solo para quienes administran esta iglesia.",
-  "monthlyLimitReached": "Esta iglesia ya llegó a su límite de {limit} predicaciones este mes."
+  "monthlyLimitReached": "Esta iglesia ya llegó a su límite de {limit} predicaciones este mes.",
+  "yourChurches": "Suas igrejas",
+  "allChurches": "Igrejas no Selah",
+  "createChurch": "Criar uma igreja",
+  "manage": "Gerenciar",
+  "followChurch": "Seguir",
+  "roleOwner": "Proprietário",
+  "roleEditor": "Editor",
+  "roleMember": "Membro"
 }
