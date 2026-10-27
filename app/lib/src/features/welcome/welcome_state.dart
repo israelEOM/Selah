@@ -24,3 +24,16 @@ Future<void> skipWelcome(WidgetRef ref) async {
   await (await SharedPreferences.getInstance()).setBool(_skippedKey(userId), true);
   ref.invalidate(needsWelcomeProvider);
 }
+
+/// The accounts already shown the welcome question in this app session, so the tab shell asks at most once.
+class WelcomeShown extends Notifier<Set<String>> {
+  @override
+  Set<String> build() => const {};
+
+  void add(String userId) => state = {...state, userId};
+}
+
+final welcomeShownProvider = NotifierProvider<WelcomeShown, Set<String>>(WelcomeShown.new);
+
+/// Records that [userId] has seen the welcome question in this app session.
+void markWelcomeShown(WidgetRef ref, String userId) => ref.read(welcomeShownProvider.notifier).add(userId);

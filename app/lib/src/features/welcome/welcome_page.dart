@@ -37,6 +37,16 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
   String? _error;
 
   @override
+  void initState() {
+    super.initState();
+    // However they got here, don't send them here again from the tab bar in this app session.
+    ref.listenManual(userIdProvider, fireImmediately: true, (_, user) {
+      final userId = user.value;
+      if (userId != null) Future.microtask(() => mounted ? markWelcomeShown(ref, userId) : null);
+    });
+  }
+
+  @override
   void dispose() {
     _name.dispose();
     _note.dispose();

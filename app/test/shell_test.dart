@@ -10,6 +10,7 @@ import 'package:selah/src/core/models.dart';
 import 'package:selah/src/data/current_church.dart';
 import 'package:selah/src/data/providers.dart';
 import 'package:selah/src/data/repository.dart';
+import 'package:selah/src/features/welcome/welcome_state.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const _vida = Church(id: 'A', slug: 'vida-nueva', name: 'Iglesia Vida Nueva');
@@ -34,7 +35,7 @@ class _FakeRepository implements SelahRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-Future<GoRouter> _pump(WidgetTester tester, String location, {Church? current = _vida}) async {
+Future<GoRouter> _pump(WidgetTester tester, String location, {Church? current = _vida, bool needsWelcome = false}) async {
   SharedPreferences.setMockInitialValues({});
   final router = createRouter(initialLocation: location);
   await tester.pumpWidget(ProviderScope(
@@ -44,6 +45,7 @@ Future<GoRouter> _pump(WidgetTester tester, String location, {Church? current = 
       myChurchesProvider.overrideWith((ref) async => const [Membership(church: _vida, role: ChurchRole.editor)]),
       isPlatformAdminProvider.overrideWith((ref) async => false),
       currentChurchProvider.overrideWith((ref) async => current),
+      needsWelcomeProvider.overrideWith((ref) async => needsWelcome),
     ],
     child: MaterialApp.router(
       theme: selahLightTheme(),
@@ -105,5 +107,43 @@ void main() {
     expect(find.text('Predicaciones'), findsOneWidget);
     expect(find.text('Hoy'), findsNothing);
     expect(find.text('Estudios'), findsNothing);
+  });
+
+  testWidgets('a new account is sent to the welcome question once', (tester) async {
+    final router = await _pump(tester, '/', current: null, needsWelcome: true);
+    expect(_path(router), '/welcome');
+    router.go('/');
+    await tester.pumpAndSettle();
+    expect(_path(router), '/');
+    await tester.tap(find.text('Perfil'));
+    await tester.pumpAndSettle();
+    expect(_path(router), '/profile');
+  });
+
+  testWidgets('Estudios opens the picker when the church lookup fails', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final router = createRouter(initialLocation: '/profile');
+    await tester.pumpWidget(ProviderScope(
+      retry: (_, _) => null,
+      overrides: [
+        repositoryProvider.overrideWithValue(_FakeRepository()),
+        userIdProvider.overrideWith((ref) => Stream.value('user-1')),
+        myChurchesProvider.overrideWith((ref) async => const [Membership(church: _vida, role: ChurchRole.editor)]),
+        isPlatformAdminProvider.overrideWith((ref) async => false),
+        currentChurchProvider.overrideWith((ref) async => throw Exception('offline')),
+        needsWelcomeProvider.overrideWith((ref) async => false),
+      ],
+      child: MaterialApp.router(
+        theme: selahLightTheme(),
+        routerConfig: router,
+        locale: const Locale('es'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+      ),
+    ));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Estudios'));
+    await tester.pumpAndSettle();
+    expect(_path(router), '/churches');
   });
 }

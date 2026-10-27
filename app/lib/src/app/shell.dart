@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../data/current_church.dart';
+import '../data/providers.dart';
+import '../features/welcome/welcome_state.dart';
 import 'theme.dart';
 
 /// Which tab a location belongs to: Hoy (0), Estudios (1) or Perfil (2).
@@ -14,18 +16,51 @@ int tabIndexFor(String location) {
 }
 
 /// The member pages, with the tab bar floating under them.
-class SelahShell extends ConsumerWidget {
+class SelahShell extends ConsumerStatefulWidget {
   const SelahShell({super.key, required this.location, required this.child});
 
   final String location;
   final Widget child;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SelahShell> createState() => _SelahShellState();
+}
+
+class _SelahShellState extends ConsumerState<SelahShell> {
+  @override
+  void initState() {
+    super.initState();
+    // A new account that arrives here without passing the sign-in page (the return from Google, an email
+    // confirmation link, a restored session) gets the welcome question once per app session.
+    ref.listenManual(needsWelcomeProvider, fireImmediately: true, (_, needs) {
+      if (needs.value != true) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+        final userId = await ref.read(userIdProvider.future);
+        if (!mounted || userId == null || ref.read(welcomeShownProvider).contains(userId)) return;
+        markWelcomeShown(ref, userId);
+        context.go('/welcome');
+      });
+    });
+  }
+
+  Future<void> _openStudies() async {
+    String destination;
+    try {
+      final church = await ref.read(currentChurchProvider.future);
+      destination = church == null ? '/churches' : '/c/${church.slug}';
+    } catch (_) {
+      destination = '/churches';
+    }
+    if (mounted) context.go(destination);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    final selected = tabIndexFor(location);
+    final selected = tabIndexFor(widget.location);
     return Scaffold(
-      body: child,
+      body: widget.child,
       bottomNavigationBar: SafeArea(
         top: false,
         child: Padding(
@@ -53,11 +88,7 @@ class SelahShell extends ConsumerWidget {
                       icon: Icons.menu_book_outlined,
                       label: l.tabStudies,
                       selected: selected == 1,
-                      onTap: () async {
-                        final church = await ref.read(currentChurchProvider.future);
-                        if (!context.mounted) return;
-                        context.go(church == null ? '/churches' : '/c/${church.slug}');
-                      },
+                      onTap: _openStudies,
                     ),
                     _Tab(
                       icon: Icons.person_outline,

@@ -40,23 +40,30 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     // Covers email sign-in, the return from Google, and someone who opens this page already signed in.
     ref.listenManual(userIdProvider, fireImmediately: true, (_, next) async {
       if (next.value == null) return;
-      // A safe `next` wins outright, so don't wait on (or fail with) the account lookups.
+      final safe = safeNext(_next);
+      // An invite link wins outright (it skips the welcome step), so don't wait on (or fail with) the lookups.
       // Failing lookups retry for a while, so give up on them after a few seconds rather than hold up sign-in.
-      final destination = safeNext(_next) ??
-          await _destinationForAccount().timeout(_lookupLimit, onTimeout: () => '/').catchError((_) => '/');
-      if (mounted) GoRouter.of(context).go(destination);
+      final destination = safe != null && safe.startsWith('/join/')
+          ? safe
+          : await _destinationForAccount(safe)
+              .timeout(_lookupLimit, onTimeout: () => safe ?? '/')
+              .catchError((_) => safe ?? '/');
+      if (!mounted) return;
+      if (destination == '/welcome') markWelcomeShown(ref, next.value!);
+      GoRouter.of(context).go(destination);
     });
   }
 
   static const _lookupLimit = Duration(seconds: 4);
 
-  /// `/welcome` for a new account, the admin of the one church they edit, else home.
-  Future<String> _destinationForAccount() async {
+  /// `/welcome` for a new account, else [next], else the admin of the one church they edit, else home.
+  Future<String> _destinationForAccount(String? next) async {
     try {
       if (await ref.read(needsWelcomeProvider.future)) return '/welcome';
     } catch (_) {
       // Don't hold up sign-in over the question; fall back to the usual rule.
     }
+    if (next != null) return next;
     final churches = await ref.read(myChurchesProvider.future);
     final editable = churches.where((m) => m.role.canEdit).toList();
     return editable.length == 1 ? '/c/${editable.first.church.slug}/admin' : '/';

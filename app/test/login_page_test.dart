@@ -223,6 +223,89 @@ void main() {
     });
   }
 
+  for (final c in [
+    (name: 'a new account signing in from the profile goes to /welcome', churches: false, expected: 'WELCOME'),
+    (name: 'a member signing in from the profile goes back to it', churches: true, expected: 'PROFILE'),
+  ]) {
+    testWidgets(c.name, (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final router = GoRouter(initialLocation: '/login', routes: [
+        GoRoute(path: '/', builder: (_, _) => const Text('HOME')),
+        GoRoute(path: '/welcome', builder: (_, _) => const Text('WELCOME')),
+        GoRoute(path: '/profile', builder: (_, _) => const Text('PROFILE')),
+        GoRoute(
+          path: '/login',
+          builder: (_, _) =>
+              LoginPage(landing: Uri.parse('https://selah-226.pages.dev/login?next=/profile'), userAgent: ''),
+        ),
+      ]);
+      await tester.pumpWidget(ProviderScope(
+        overrides: [
+          repositoryProvider.overrideWithValue(_FakeRepository()),
+          userIdProvider.overrideWith((ref) => Stream.value('user-1')),
+          myChurchesProvider.overrideWith((ref) async => [
+                if (c.churches)
+                  const Membership(
+                    church: Church(id: 'A', slug: 'vida-nueva', name: 'Iglesia Vida Nueva'),
+                    role: ChurchRole.editor,
+                  ),
+              ]),
+          isPlatformAdminProvider.overrideWith((ref) async => false),
+          myChurchRequestProvider.overrideWith((ref) async => null),
+        ],
+        child: MaterialApp.router(
+          theme: selahLightTheme(),
+          routerConfig: router,
+          locale: const Locale('es'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
+      ));
+      await tester.pumpAndSettle();
+      expect(find.text(c.expected), findsOneWidget);
+    });
+  }
+
+  testWidgets('an invite next goes straight there without the account lookups', (tester) async {
+    var lookups = 0;
+    final router = GoRouter(initialLocation: '/login', routes: [
+      GoRoute(path: '/join/:t', builder: (_, s) => Text('JOIN ${s.pathParameters['t']}')),
+      GoRoute(
+        path: '/login',
+        builder: (_, _) =>
+            LoginPage(landing: Uri.parse('https://selah-226.pages.dev/login?next=/join/abc'), userAgent: ''),
+      ),
+    ]);
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        repositoryProvider.overrideWithValue(_FakeRepository()),
+        userIdProvider.overrideWith((ref) => Stream.value('user-1')),
+        myChurchesProvider.overrideWith((ref) async {
+          lookups++;
+          return const [];
+        }),
+        isPlatformAdminProvider.overrideWith((ref) async {
+          lookups++;
+          return false;
+        }),
+        myChurchRequestProvider.overrideWith((ref) async {
+          lookups++;
+          return null;
+        }),
+      ],
+      child: MaterialApp.router(
+        theme: selahLightTheme(),
+        routerConfig: router,
+        locale: const Locale('es'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+      ),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text('JOIN abc'), findsOneWidget);
+    expect(lookups, 0);
+  });
+
   Future<void> pumpFailingLookup(WidgetTester tester, {required bool retry, required String failing}) async {
     SharedPreferences.setMockInitialValues({});
     final router = GoRouter(initialLocation: '/login', routes: [
