@@ -1,5 +1,18 @@
+/// [next] only when it is a path on this site: it starts with `/` but not `//`
+/// (and not `/\`, which browsers also read as another host).
+String? safeNext(String? next) {
+  if (next == null || !next.startsWith('/') || next.startsWith('//') || next.startsWith('/\\')) {
+    return null;
+  }
+  return next;
+}
+
 /// Where Google sends the person back to, and how the app reads the result.
-String oauthReturnUrl(Uri base) => '${base.origin}/login';
+/// A safe [next] rides along so the login page can send them on afterwards.
+String oauthReturnUrl(Uri base, {String? next}) {
+  final safe = safeNext(next);
+  return '${base.origin}/login${safe == null ? '' : '?next=${Uri.encodeQueryComponent(safe)}'}';
+}
 
 class OAuthReturn {
   const OAuthReturn({required this.cancelled, this.description});

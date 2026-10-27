@@ -6,9 +6,9 @@ import '../../../l10n/app_localizations.dart';
 import '../../app/theme.dart';
 import '../../core/models.dart';
 import '../../data/providers.dart';
-import '../../l10n/locale.dart';
 import 'language_menu.dart';
 
+/// The front door: the person's churches, then every church on Selah.
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
@@ -16,18 +16,15 @@ class HomePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
     final text = Theme.of(context).textTheme;
-    final studies = ref.watch(publishedStudiesProvider);
-    final language = ref.watch(appLocaleProvider).languageCode;
-    final isAdmin = ref.watch(isAdminProvider).value ?? false;
+    final churches = ref.watch(publicChurchesProvider);
+    final mine = ref.watch(myChurchesProvider).value ?? const <Membership>[];
     final signedIn = ref.watch(userIdProvider).value != null;
     return Scaffold(
       appBar: AppBar(
         title: Text('Selah.', style: text.headlineMedium),
         actions: [
           const LanguageMenu(),
-          if (isAdmin)
-            TextButton(onPressed: () => context.push('/admin'), child: Text(l.admin))
-          else if (signedIn)
+          if (signedIn)
             TextButton(onPressed: () => ref.read(repositoryProvider).signOut(), child: Text(l.signOut))
           else
             TextButton(onPressed: () => context.push('/login'), child: Text(l.signIn)),
@@ -35,17 +32,27 @@ class HomePage extends ConsumerWidget {
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () => ref.refresh(publishedStudiesProvider.future),
+        onRefresh: () async {
+          ref.invalidate(myChurchesProvider);
+          ref.invalidate(publicChurchesProvider);
+          await ref.read(publicChurchesProvider.future);
+        },
         child: PageBody(
           children: [
             const SizedBox(height: 16),
             Eyebrow(l.heroEyebrow),
             const SizedBox(height: 12),
             Text('${l.tagline}.', style: text.displaySmall),
-            const SizedBox(height: 12),
-            Text(l.heroBody, style: text.bodyLarge),
             const SizedBox(height: 36),
-            ...studies.when(
+            if (signedIn && mine.isNotEmpty) ...[
+              Eyebrow(l.yourChurches),
+              const SizedBox(height: 12),
+              for (final m in mine) _ChurchTile(church: m.church, subtitle: roleLabel(l, m.role)),
+              const SizedBox(height: 24),
+            ],
+            Eyebrow(l.allChurches),
+            const SizedBox(height: 12),
+            ...churches.when(
               loading: () => [
                 const Center(
                   child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator()),
@@ -57,25 +64,23 @@ class HomePage extends ConsumerWidget {
                 Align(
                   alignment: Alignment.centerLeft,
                   child: OutlinedButton(
-                    onPressed: () => ref.invalidate(publishedStudiesProvider),
+                    onPressed: () => ref.invalidate(publicChurchesProvider),
                     child: Text(l.retry),
                   ),
                 ),
               ],
               data: (items) => items.isEmpty
                   ? [Text(l.noStudiesYet, style: text.bodyMedium)]
-                  : [
-                      Eyebrow(l.devotionalOfTheWeek),
-                      const SizedBox(height: 12),
-                      _StudyTile(items.first.localizedTo(language), featured: true),
-                      if (items.length > 1) ...[
-                        const SizedBox(height: 36),
-                        Eyebrow(l.recentStudies),
-                        const SizedBox(height: 12),
-                        for (final study in items.skip(1))
-                          Padding(padding: const EdgeInsets.only(bottom: 12), child: _StudyTile(study.localizedTo(language))),
-                      ],
-                    ],
+                  : [for (final church in items) _ChurchTile(church: church)],
+            ),
+            const SizedBox(height: 24),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.add),
+                label: Text(l.createChurch),
+                onPressed: () => context.push(signedIn ? '/churches/new' : '/login?next=/churches/new'),
+              ),
             ),
           ],
         ),
@@ -84,53 +89,30 @@ class HomePage extends ConsumerWidget {
   }
 }
 
-class _StudyTile extends StatelessWidget {
-  const _StudyTile(this.study, {this.featured = false});
+String roleLabel(AppLocalizations l, ChurchRole role) => switch (role) {
+      ChurchRole.owner => l.roleOwner,
+      ChurchRole.editor => l.roleEditor,
+      ChurchRole.member => l.roleMember,
+    };
 
-  final StudyCard study;
-  final bool featured;
+class _ChurchTile extends StatelessWidget {
+  const _ChurchTile({required this.church, this.subtitle});
+
+  final Church church;
+  final String? subtitle;
 
   @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
-    final text = Theme.of(context).textTheme;
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => context.push('/studies/${study.slug}'),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (study.thumbnailUrl != null)
-              AspectRatio(
-                aspectRatio: featured ? 16 / 9 : 21 / 9,
-                child: Image.network(
-                  study.thumbnailUrl!,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => const ColoredBox(color: SelahColors.sage),
-                ),
-              ),
-            Padding(
-              padding: const EdgeInsets.all(18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(study.title, style: featured ? text.headlineSmall : text.titleLarge),
-                  const SizedBox(height: 6),
-                  Text(
-                    [if (study.preacher != null) study.preacher!, l.daysCount(study.numberOfDays)].join(' · '),
-                    style: text.bodyMedium,
-                  ),
-                  if (featured && study.centralMessage != null) ...[
-                    const SizedBox(height: 10),
-                    Text(study.centralMessage!, style: text.bodyMedium, maxLines: 3, overflow: TextOverflow.ellipsis),
-                  ],
-                ],
-              ),
-            ),
-          ],
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Card(
+          clipBehavior: Clip.antiAlias,
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+            title: Text(church.name, style: Theme.of(context).textTheme.titleLarge),
+            subtitle: subtitle == null ? null : Text(subtitle!),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/c/${church.slug}'),
+          ),
         ),
-      ),
-    );
-  }
+      );
 }

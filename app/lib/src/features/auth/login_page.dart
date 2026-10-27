@@ -28,6 +28,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   bool _creating = false;
   bool _busy = false;
   String? _message;
+  String? get _next => (widget.landing ?? Uri.base).queryParameters['next'];
   late final bool _embedded = isEmbeddedBrowser(widget.userAgent ?? currentUserAgent());
 
   @override
@@ -38,8 +39,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     // Covers email sign-in, the return from Google, and someone who opens this page already signed in.
     ref.listenManual(userIdProvider, fireImmediately: true, (_, next) async {
       if (next.value == null) return;
-      final admin = await ref.read(isAdminProvider.future);
-      if (mounted) GoRouter.of(context).go(admin ? '/admin' : '/');
+      // A safe `next` wins outright, so don't wait on (or fail with) the memberships fetch.
+      var destination = safeNext(_next);
+      if (destination == null) {
+        try {
+          final churches = await ref.read(myChurchesProvider.future);
+          final editable = churches.where((m) => m.role.canEdit).toList();
+          destination = editable.length == 1 ? '/c/${editable.first.church.slug}/admin' : '/';
+        } catch (_) {
+          destination = '/';
+        }
+      }
+      if (mounted) GoRouter.of(context).go(destination);
     });
   }
 
@@ -95,7 +106,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       // On the web the page leaves for Google, so _busy stays set.
       await ref
           .read(repositoryProvider)
-          .signInWithProvider(OAuthProvider.google, redirectTo: oauthReturnUrl(widget.landing ?? Uri.base));
+          .signInWithProvider(OAuthProvider.google, redirectTo: oauthReturnUrl(widget.landing ?? Uri.base, next: _next));
     } catch (_) {
       if (mounted) {
         setState(() {

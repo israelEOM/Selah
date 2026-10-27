@@ -13,33 +13,35 @@ import 'study_widgets.dart';
 import 'translation_banner.dart';
 
 class StudyPage extends ConsumerWidget {
-  const StudyPage({super.key, required this.slug});
+  const StudyPage({super.key, required this.church, required this.slug});
 
+  final Church church;
   final String slug;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
     final text = Theme.of(context).textTheme;
-    final study = ref.watch(studyProvider(slug));
+    final study = ref.watch(studyProvider((churchId: church.id, slug: slug)));
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(icon: const Icon(Icons.arrow_back), tooltip: l.back, onPressed: () => context.go('/')),
+        leading: IconButton(icon: const Icon(Icons.arrow_back), tooltip: l.back, onPressed: () => context.go('/c/${church.slug}')),
         actions: const [LanguageMenu(), SizedBox(width: 8)],
       ),
       body: study.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => PageBody(children: [Text(l.loadError, style: text.bodyLarge)]),
         data: (s) =>
-            s == null ? PageBody(children: [Text(l.studyNotFound, style: text.bodyLarge)]) : _StudyBody(original: s),
+            s == null ? PageBody(children: [Text(l.studyNotFound, style: text.bodyLarge)]) : _StudyBody(church: church, original: s),
       ),
     );
   }
 }
 
 class _StudyBody extends ConsumerWidget {
-  const _StudyBody({required this.original});
+  const _StudyBody({required this.church, required this.original});
 
+  final Church church;
   final PublicStudy original;
 
   @override
@@ -99,7 +101,7 @@ class _StudyBody extends ConsumerWidget {
                       title: Text(day.title, style: text.titleLarge),
                       subtitle: day.bibleReading == null ? null : Text(day.bibleReading!),
                       trailing: const Icon(Icons.chevron_right),
-                      onTap: () => context.go('/studies/${study.slug}/day/${day.number}'),
+                      onTap: () => context.go('/c/${church.slug}/studies/${study.slug}/day/${day.number}'),
                     ),
                   ),
                 ),

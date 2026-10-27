@@ -90,10 +90,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get adminTitle => 'Predicaciones';
 
   @override
-  String get adminOnly =>
-      'Esta sección es solo para administradores de la iglesia.';
-
-  @override
   String get adminEmpty => 'Todavía no se ha importado ninguna predicación.';
 
   @override
@@ -439,4 +435,112 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get publishedWithoutTranslation =>
       'Estudio publicado, pero no se pudo iniciar la traducción. Usa «Traducir de nuevo».';
+
+  @override
+  String get churchNotFound => 'No encontramos esta iglesia.';
+
+  @override
+  String get churchAdminOnly =>
+      'Esta sección es solo para quienes administran esta iglesia.';
+
+  @override
+  String monthlyLimitReached(int limit) {
+    return 'Esta iglesia ya llegó a su límite de $limit predicaciones este mes.';
+  }
+
+  @override
+  String get yourChurches => 'Tus iglesias';
+
+  @override
+  String get allChurches => 'Iglesias en Selah';
+
+  @override
+  String get createChurch => 'Crear una iglesia';
+
+  @override
+  String get manage => 'Gestionar';
+
+  @override
+  String get followChurch => 'Seguir';
+
+  @override
+  String get roleOwner => 'Propietario';
+
+  @override
+  String get roleEditor => 'Editor';
+
+  @override
+  String get roleMember => 'Miembro';
+
+  @override
+  String get createChurchTitle => 'Crea tu iglesia';
+
+  @override
+  String get churchName => 'Nombre de la iglesia';
+
+  @override
+  String get churchAddress => 'Dirección';
+
+  @override
+  String get slugTaken => 'Esa dirección ya está en uso. Prueba con otra.';
+
+  @override
+  String get slugInvalid =>
+      'Usa de 3 a 40 letras minúsculas, números o guiones.';
+
+  @override
+  String get churchNameInvalid =>
+      'El nombre debe tener entre 2 y 80 caracteres.';
+
+  @override
+  String get people => 'Personas';
+
+  @override
+  String get churchSettings => 'Ajustes de la iglesia';
+
+  @override
+  String get inviteLinks => 'Enlaces de invitación';
+
+  @override
+  String get createLink => 'Crear enlace';
+
+  @override
+  String get revokeLink => 'Revocar';
+
+  @override
+  String get copyLink => 'Copiar enlace';
+
+  @override
+  String get linkCopied => 'Enlace copiado';
+
+  @override
+  String get removePerson => 'Quitar';
+
+  @override
+  String get lastOwner => 'La iglesia debe conservar al menos un propietario.';
+
+  @override
+  String joinChurchAs(String church, String role) {
+    return 'Únete a $church como $role';
+  }
+
+  @override
+  String get signInToJoin => 'Inicia sesión para unirte';
+
+  @override
+  String get inviteInvalid => 'Este enlace de invitación ya no es válido.';
+
+  @override
+  String get save => 'Guardar';
+
+  @override
+  String get saved => 'Guardado';
+
+  @override
+  String get churchLink => 'Enlace de la iglesia';
+
+  @override
+  String sermonsThisMonth(int used, int limit) {
+    return '$used de $limit este mes';
+  }
 }

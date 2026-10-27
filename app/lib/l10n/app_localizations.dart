@@ -238,12 +238,6 @@ abstract class AppLocalizations {
   /// **'Predicaciones'**
   String get adminTitle;
 
-  /// No description provided for @adminOnly.
-  ///
-  /// In es, this message translates to:
-  /// **'Esta sección es solo para administradores de la iglesia.'**
-  String get adminOnly;
-
   /// No description provided for @adminEmpty.
   ///
   /// In es, this message translates to:
@@ -867,6 +861,204 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Estudio publicado, pero no se pudo iniciar la traducción. Usa «Traducir de nuevo».'**
   String get publishedWithoutTranslation;
+
+  /// No description provided for @churchNotFound.
+  ///
+  /// In es, this message translates to:
+  /// **'No encontramos esta iglesia.'**
+  String get churchNotFound;
+
+  /// No description provided for @churchAdminOnly.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta sección es solo para quienes administran esta iglesia.'**
+  String get churchAdminOnly;
+
+  /// No description provided for @monthlyLimitReached.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta iglesia ya llegó a su límite de {limit} predicaciones este mes.'**
+  String monthlyLimitReached(int limit);
+
+  /// No description provided for @yourChurches.
+  ///
+  /// In es, this message translates to:
+  /// **'Tus iglesias'**
+  String get yourChurches;
+
+  /// No description provided for @allChurches.
+  ///
+  /// In es, this message translates to:
+  /// **'Iglesias en Selah'**
+  String get allChurches;
+
+  /// No description provided for @createChurch.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear una iglesia'**
+  String get createChurch;
+
+  /// No description provided for @manage.
+  ///
+  /// In es, this message translates to:
+  /// **'Gestionar'**
+  String get manage;
+
+  /// No description provided for @followChurch.
+  ///
+  /// In es, this message translates to:
+  /// **'Seguir'**
+  String get followChurch;
+
+  /// No description provided for @roleOwner.
+  ///
+  /// In es, this message translates to:
+  /// **'Propietario'**
+  String get roleOwner;
+
+  /// No description provided for @roleEditor.
+  ///
+  /// In es, this message translates to:
+  /// **'Editor'**
+  String get roleEditor;
+
+  /// No description provided for @roleMember.
+  ///
+  /// In es, this message translates to:
+  /// **'Miembro'**
+  String get roleMember;
+
+  /// No description provided for @createChurchTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Crea tu iglesia'**
+  String get createChurchTitle;
+
+  /// No description provided for @churchName.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre de la iglesia'**
+  String get churchName;
+
+  /// No description provided for @churchAddress.
+  ///
+  /// In es, this message translates to:
+  /// **'Dirección'**
+  String get churchAddress;
+
+  /// No description provided for @slugTaken.
+  ///
+  /// In es, this message translates to:
+  /// **'Esa dirección ya está en uso. Prueba con otra.'**
+  String get slugTaken;
+
+  /// No description provided for @slugInvalid.
+  ///
+  /// In es, this message translates to:
+  /// **'Usa de 3 a 40 letras minúsculas, números o guiones.'**
+  String get slugInvalid;
+
+  /// No description provided for @churchNameInvalid.
+  ///
+  /// In es, this message translates to:
+  /// **'El nombre debe tener entre 2 y 80 caracteres.'**
+  String get churchNameInvalid;
+
+  /// No description provided for @people.
+  ///
+  /// In es, this message translates to:
+  /// **'Personas'**
+  String get people;
+
+  /// No description provided for @churchSettings.
+  ///
+  /// In es, this message translates to:
+  /// **'Ajustes de la iglesia'**
+  String get churchSettings;
+
+  /// No description provided for @inviteLinks.
+  ///
+  /// In es, this message translates to:
+  /// **'Enlaces de invitación'**
+  String get inviteLinks;
+
+  /// No description provided for @createLink.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear enlace'**
+  String get createLink;
+
+  /// No description provided for @revokeLink.
+  ///
+  /// In es, this message translates to:
+  /// **'Revocar'**
+  String get revokeLink;
+
+  /// No description provided for @copyLink.
+  ///
+  /// In es, this message translates to:
+  /// **'Copiar enlace'**
+  String get copyLink;
+
+  /// No description provided for @linkCopied.
+  ///
+  /// In es, this message translates to:
+  /// **'Enlace copiado'**
+  String get linkCopied;
+
+  /// No description provided for @removePerson.
+  ///
+  /// In es, this message translates to:
+  /// **'Quitar'**
+  String get removePerson;
+
+  /// No description provided for @lastOwner.
+  ///
+  /// In es, this message translates to:
+  /// **'La iglesia debe conservar al menos un propietario.'**
+  String get lastOwner;
+
+  /// No description provided for @joinChurchAs.
+  ///
+  /// In es, this message translates to:
+  /// **'Únete a {church} como {role}'**
+  String joinChurchAs(String church, String role);
+
+  /// No description provided for @signInToJoin.
+  ///
+  /// In es, this message translates to:
+  /// **'Inicia sesión para unirte'**
+  String get signInToJoin;
+
+  /// No description provided for @inviteInvalid.
+  ///
+  /// In es, this message translates to:
+  /// **'Este enlace de invitación ya no es válido.'**
+  String get inviteInvalid;
+
+  /// No description provided for @save.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardar'**
+  String get save;
+
+  /// No description provided for @saved.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardado'**
+  String get saved;
+
+  /// No description provided for @churchLink.
+  ///
+  /// In es, this message translates to:
+  /// **'Enlace de la iglesia'**
+  String get churchLink;
+
+  /// No description provided for @sermonsThisMonth.
+  ///
+  /// In es, this message translates to:
+  /// **'{used} de {limit} este mes'**
+  String sermonsThisMonth(int used, int limit);
 }
 
 class _AppLocalizationsDelegate

@@ -14,8 +14,9 @@ import 'translation_banner.dart';
 
 /// One devotional day, laid out for reading on a phone.
 class ReaderPage extends ConsumerWidget {
-  const ReaderPage({super.key, required this.slug, required this.dayNumber});
+  const ReaderPage({super.key, required this.church, required this.slug, required this.dayNumber});
 
+  final Church church;
   final String slug;
   final int dayNumber;
 
@@ -23,14 +24,14 @@ class ReaderPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
     final text = Theme.of(context).textTheme;
-    final study = ref.watch(studyProvider(slug));
+    final study = ref.watch(studyProvider((churchId: church.id, slug: slug)));
     final language = ref.watch(appLocaleProvider).languageCode;
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           tooltip: l.backToStudy,
-          onPressed: () => context.go('/studies/$slug'),
+          onPressed: () => context.go('/c/${church.slug}/studies/$slug'),
         ),
         actions: const [LanguageMenu(), SizedBox(width: 8)],
       ),
@@ -45,7 +46,7 @@ class ReaderPage extends ConsumerWidget {
           if (original == null || s == null || day == null) {
             return PageBody(children: [Text(l.studyNotFound, style: text.bodyLarge)]);
           }
-          return _Day(study: s, original: original, language: language, day: day);
+          return _Day(church: church, study: s, original: original, language: language, day: day);
         },
       ),
     );
@@ -53,8 +54,15 @@ class ReaderPage extends ConsumerWidget {
 }
 
 class _Day extends ConsumerWidget {
-  const _Day({required this.study, required this.original, required this.language, required this.day});
+  const _Day({
+    required this.church,
+    required this.study,
+    required this.original,
+    required this.language,
+    required this.day,
+  });
 
+  final Church church;
   final PublicStudy study;
   final PublicStudy original;
   final String language;
@@ -67,7 +75,7 @@ class _Day extends ConsumerWidget {
     final read = ref.watch(readDaysProvider(study.id)).value ?? const <int>{};
     final total = study.days.length;
     final reading = text.bodyLarge?.copyWith(fontSize: 18, height: 1.7);
-    String dayPath(int n) => '/studies/${study.slug}/day/$n';
+    String dayPath(int n) => '/c/${church.slug}/studies/${study.slug}/day/$n';
     return PageBody(
       maxWidth: 680,
       children: [

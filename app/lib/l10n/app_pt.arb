@@ -30,7 +30,6 @@
   "genericError": "Não foi possível concluir esta ação.",
   "admin": "Administrar",
   "adminTitle": "Predicaciones",
-  "adminOnly": "Esta sección es solo para administradores de la iglesia.",
   "adminEmpty": "Todavía no se ha importado ninguna predicación.",
   "importSermon": "Importar sermón",
   "back": "Voltar",
@@ -189,5 +188,58 @@
   "translationPending": "Pendiente de aprobación",
   "translationLive": "Publicada",
   "stepTranslate": "Traducir al inglés y al portugués",
-  "publishedWithoutTranslation": "Estudio publicado, pero no se pudo iniciar la traducción. Usa «Traducir de nuevo»."
+  "publishedWithoutTranslation": "Estudio publicado, pero no se pudo iniciar la traducción. Usa «Traducir de nuevo».",
+  "churchNotFound": "Não encontramos esta igreja.",
+  "churchAdminOnly": "Esta sección es solo para quienes administran esta iglesia.",
+  "monthlyLimitReached": "Esta iglesia ya llegó a su límite de {limit} predicaciones este mes.",
+  "yourChurches": "Suas igrejas",
+  "allChurches": "Igrejas no Selah",
+  "createChurch": "Criar uma igreja",
+  "manage": "Gerenciar",
+  "followChurch": "Seguir",
+  "roleOwner": "Proprietário",
+  "roleEditor": "Editor",
+  "roleMember": "Membro",
+  "createChurchTitle": "Crie sua igreja",
+  "churchName": "Nome da igreja",
+  "churchAddress": "Endereço",
+  "slugTaken": "Esse endereço já está em uso. Tente outro.",
+  "slugInvalid": "Use de 3 a 40 letras minúsculas, números ou hífens.",
+  "churchNameInvalid": "O nome deve ter entre 2 e 80 caracteres.",
+  "people": "Personas",
+  "churchSettings": "Ajustes de la iglesia",
+  "inviteLinks": "Enlaces de invitación",
+  "createLink": "Crear enlace",
+  "revokeLink": "Revocar",
+  "copyLink": "Copiar enlace",
+  "linkCopied": "Enlace copiado",
+  "removePerson": "Quitar",
+  "lastOwner": "La iglesia debe conservar al menos un propietario.",
+  "joinChurchAs": "Entre em {church} como {role}",
+  "signInToJoin": "Entre para participar",
+  "inviteInvalid": "Este link de convite não é mais válido.",
+  "@joinChurchAs": {
+    "placeholders": {
+      "church": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "save": "Guardar",
+  "saved": "Guardado",
+  "churchLink": "Enlace de la iglesia",
+  "sermonsThisMonth": "{used} de {limit} este mes",
+  "@sermonsThisMonth": {
+    "placeholders": {
+      "used": {
+        "type": "int"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  }
 }

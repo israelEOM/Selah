@@ -30,7 +30,6 @@
   "genericError": "No fue posible completar esta acción.",
   "admin": "Administrar",
   "adminTitle": "Predicaciones",
-  "adminOnly": "Esta sección es solo para administradores de la iglesia.",
   "adminEmpty": "Todavía no se ha importado ninguna predicación.",
   "importSermon": "Importar sermón",
   "back": "Volver",
@@ -189,5 +188,65 @@
   "translationPending": "Pendiente de aprobación",
   "translationLive": "Publicada",
   "stepTranslate": "Traducir al inglés y al portugués",
-  "publishedWithoutTranslation": "Estudio publicado, pero no se pudo iniciar la traducción. Usa «Traducir de nuevo»."
+  "publishedWithoutTranslation": "Estudio publicado, pero no se pudo iniciar la traducción. Usa «Traducir de nuevo».",
+  "churchNotFound": "No encontramos esta iglesia.",
+  "churchAdminOnly": "Esta sección es solo para quienes administran esta iglesia.",
+  "monthlyLimitReached": "Esta iglesia ya llegó a su límite de {limit} predicaciones este mes.",
+  "@monthlyLimitReached": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "yourChurches": "Tus iglesias",
+  "allChurches": "Iglesias en Selah",
+  "createChurch": "Crear una iglesia",
+  "manage": "Gestionar",
+  "followChurch": "Seguir",
+  "roleOwner": "Propietario",
+  "roleEditor": "Editor",
+  "roleMember": "Miembro",
+  "createChurchTitle": "Crea tu iglesia",
+  "churchName": "Nombre de la iglesia",
+  "churchAddress": "Dirección",
+  "slugTaken": "Esa dirección ya está en uso. Prueba con otra.",
+  "slugInvalid": "Usa de 3 a 40 letras minúsculas, números o guiones.",
+  "churchNameInvalid": "El nombre debe tener entre 2 y 80 caracteres.",
+  "people": "Personas",
+  "churchSettings": "Ajustes de la iglesia",
+  "inviteLinks": "Enlaces de invitación",
+  "createLink": "Crear enlace",
+  "revokeLink": "Revocar",
+  "copyLink": "Copiar enlace",
+  "linkCopied": "Enlace copiado",
+  "removePerson": "Quitar",
+  "lastOwner": "La iglesia debe conservar al menos un propietario.",
+  "joinChurchAs": "Únete a {church} como {role}",
+  "signInToJoin": "Inicia sesión para unirte",
+  "inviteInvalid": "Este enlace de invitación ya no es válido.",
+  "@joinChurchAs": {
+    "placeholders": {
+      "church": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "save": "Guardar",
+  "saved": "Guardado",
+  "churchLink": "Enlace de la iglesia",
+  "sermonsThisMonth": "{used} de {limit} este mes",
+  "@sermonsThisMonth": {
+    "placeholders": {
+      "used": {
+        "type": "int"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  }
 }

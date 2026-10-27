@@ -30,7 +30,6 @@
   "genericError": "We couldn't complete this action.",
   "admin": "Manage",
   "adminTitle": "Predicaciones",
-  "adminOnly": "Esta sección es solo para administradores de la iglesia.",
   "adminEmpty": "Todavía no se ha importado ninguna predicación.",
   "importSermon": "Importar sermón",
   "back": "Back",
@@ -189,5 +188,58 @@
   "translationPending": "Pendiente de aprobación",
   "translationLive": "Publicada",
   "stepTranslate": "Traducir al inglés y al portugués",
-  "publishedWithoutTranslation": "Estudio publicado, pero no se pudo iniciar la traducción. Usa «Traducir de nuevo»."
+  "publishedWithoutTranslation": "Estudio publicado, pero no se pudo iniciar la traducción. Usa «Traducir de nuevo».",
+  "churchNotFound": "We couldn't find this church.",
+  "churchAdminOnly": "Esta sección es solo para quienes administran esta iglesia.",
+  "monthlyLimitReached": "Esta iglesia ya llegó a su límite de {limit} predicaciones este mes.",
+  "yourChurches": "Your churches",
+  "allChurches": "Churches on Selah",
+  "createChurch": "Create a church",
+  "manage": "Manage",
+  "followChurch": "Follow",
+  "roleOwner": "Owner",
+  "roleEditor": "Editor",
+  "roleMember": "Member",
+  "createChurchTitle": "Create your church",
+  "churchName": "Church name",
+  "churchAddress": "Address",
+  "slugTaken": "That address is already taken. Try another.",
+  "slugInvalid": "Use 3 to 40 lowercase letters, numbers or hyphens.",
+  "churchNameInvalid": "The name must be between 2 and 80 characters.",
+  "people": "Personas",
+  "churchSettings": "Ajustes de la iglesia",
+  "inviteLinks": "Enlaces de invitación",
+  "createLink": "Crear enlace",
+  "revokeLink": "Revocar",
+  "copyLink": "Copiar enlace",
+  "linkCopied": "Enlace copiado",
+  "removePerson": "Quitar",
+  "lastOwner": "La iglesia debe conservar al menos un propietario.",
+  "joinChurchAs": "Join {church} as {role}",
+  "signInToJoin": "Sign in to join",
+  "inviteInvalid": "This invitation link is no longer valid.",
+  "@joinChurchAs": {
+    "placeholders": {
+      "church": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "save": "Guardar",
+  "saved": "Guardado",
+  "churchLink": "Enlace de la iglesia",
+  "sermonsThisMonth": "{used} de {limit} este mes",
+  "@sermonsThisMonth": {
+    "placeholders": {
+      "used": {
+        "type": "int"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  }
 }

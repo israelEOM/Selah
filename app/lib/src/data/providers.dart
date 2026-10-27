@@ -18,18 +18,34 @@ final userIdProvider = StreamProvider<String?>((ref) {
   }).distinct();
 });
 
-final isAdminProvider = FutureProvider<bool>((ref) async {
-  final userId = ref.watch(userIdProvider).value;
-  if (userId == null) return false;
-  return ref.watch(repositoryProvider).isAdmin(userId);
+final churchProvider =
+    FutureProvider.family<Church?, String>((ref, slug) => ref.watch(repositoryProvider).churchBySlug(slug));
+
+/// Sermons started in a church this calendar month; counts toward its monthly limit.
+final sermonsThisMonthProvider = FutureProvider.autoDispose.family<int, String>(
+    (ref, churchId) => ref.watch(repositoryProvider).sermonsThisMonth(churchId));
+
+final myChurchesProvider = FutureProvider<List<Membership>>((ref) {
+  ref.watch(userIdProvider);
+  return ref.watch(repositoryProvider).myChurches();
 });
 
-final publishedStudiesProvider =
-    FutureProvider<List<StudyCard>>((ref) => ref.watch(repositoryProvider).publishedStudies());
-
-final sermonsProvider = FutureProvider<List<SermonRow>>((ref) {
+/// The signed-in user's role in a church (by id), or null.
+final churchRoleProvider = FutureProvider.family<ChurchRole?, String>((ref, churchId) {
   ref.watch(userIdProvider);
-  return ref.watch(repositoryProvider).sermons();
+  return ref.watch(repositoryProvider).roleIn(churchId);
+});
+
+final publicChurchesProvider = FutureProvider<List<Church>>((ref) => ref.watch(repositoryProvider).publicChurches());
+
+/// A church's published studies, by church id.
+final publishedStudiesProvider = FutureProvider.family<List<StudyCard>, String>(
+    (ref, churchId) => ref.watch(repositoryProvider).publishedStudies(churchId));
+
+/// A church's sermons as its editors see them, by church id.
+final sermonsProvider = FutureProvider.family<List<SermonRow>, String>((ref, churchId) {
+  ref.watch(userIdProvider);
+  return ref.watch(repositoryProvider).sermons(churchId);
 });
 
 final sermonDetailProvider = FutureProvider.autoDispose
@@ -48,17 +64,15 @@ final sermonJobsProvider = StreamProvider.autoDispose.family<Map<String, Job>, S
   }
 });
 
-final recentChannelsProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>(
-    (ref) => ref.watch(repositoryProvider).recentChannels());
-
-final churchSettingsProvider =
-    FutureProvider<Map<String, dynamic>>((ref) => ref.watch(repositoryProvider).churchSettings());
+final recentChannelsProvider = FutureProvider.autoDispose.family<List<Map<String, dynamic>>, String>(
+    (ref, churchId) => ref.watch(repositoryProvider).recentChannels(churchId));
 
 final bibleVersionsProvider =
     FutureProvider<List<Map<String, dynamic>>>((ref) => ref.watch(repositoryProvider).bibleVersions());
 
-final studyProvider = FutureProvider.autoDispose
-    .family<PublicStudy?, String>((ref, slug) => ref.watch(repositoryProvider).studyBySlug(slug));
+/// A published study, by church id and slug.
+final studyProvider = FutureProvider.autoDispose.family<PublicStudy?, ({String churchId, String slug})>(
+    (ref, key) => ref.watch(repositoryProvider).studyBySlug(key.churchId, key.slug));
 
 /// Day numbers read on this device. Members have no account, so progress stays local.
 final readDaysProvider = FutureProvider.autoDispose.family<Set<int>, String>((ref, studyId) async {

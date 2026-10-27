@@ -19,6 +19,8 @@ Map<String, dynamic> _day(int n, {String lang = 'es'}) => {
       'questions': <String>[],
     };
 
+const _church = Church(id: 'A', slug: 'vida-nueva', name: 'Iglesia Vida Nueva');
+
 final _json = {
   'id': 'study-1',
   'slug': 'retiro-espiritual',
@@ -53,16 +55,20 @@ final _json = {
 Future<void> _pump(WidgetTester tester, String language, String location) async {
   SharedPreferences.setMockInitialValues({});
   final router = GoRouter(initialLocation: location, routes: [
-    GoRoute(path: '/studies/:slug', builder: (_, s) => StudyPage(slug: s.pathParameters['slug']!)),
+    GoRoute(path: '/c/vida-nueva/studies/:slug', builder: (_, s) => StudyPage(church: _church, slug: s.pathParameters['slug']!)),
     GoRoute(
-      path: '/studies/:slug/day/:number',
-      builder: (_, s) => ReaderPage(slug: s.pathParameters['slug']!, dayNumber: int.parse(s.pathParameters['number']!)),
+      path: '/c/vida-nueva/studies/:slug/day/:number',
+      builder: (_, s) => ReaderPage(
+        church: _church,
+        slug: s.pathParameters['slug']!,
+        dayNumber: int.parse(s.pathParameters['number']!),
+      ),
     ),
   ]);
   await tester.pumpWidget(ProviderScope(
     overrides: [
       savedLanguageProvider.overrideWithValue(language),
-      studyProvider.overrideWith((ref, slug) async => PublicStudy.fromJson(_json)),
+      studyProvider.overrideWith((ref, key) async => PublicStudy.fromJson(_json)),
     ],
     child: Consumer(
       builder: (context, ref, _) => MaterialApp.router(
@@ -77,7 +83,7 @@ Future<void> _pump(WidgetTester tester, String language, String location) async 
 }
 
 void main() {
-  const reader = '/studies/retiro-espiritual/day/1';
+  const reader = '/c/vida-nueva/studies/retiro-espiritual/day/1';
 
   testWidgets('English reader shows the translated day and the notice', (tester) async {
     await _pump(tester, 'en', reader);

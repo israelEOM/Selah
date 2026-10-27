@@ -30,9 +30,9 @@ def slugify(title: str) -> str:
     return re.sub(r"-+", "-", fold(title).replace("ñ", "n").replace(" ", "-")).strip("-")[:80] or "estudio"
 
 
-def _unique_slug(title: str) -> str:
+def _unique_slug(church_id: str, title: str) -> str:
     base, slug, n = slugify(title), slugify(title), 1
-    while client().table("studies").select("id").eq("slug", slug).execute().data:
+    while client().table("studies").select("id").eq("church_id", church_id).eq("slug", slug).execute().data:
         n += 1
         slug = f"{base}-{n}"
     return slug
@@ -175,7 +175,7 @@ def summary(job: dict) -> dict:
         db.table("studies").update(fields).eq("id", existing[0]["id"]).execute()
     else:
         db.table("studies").insert(fields | {
-            "sermon_id": sermon["id"], "title": title, "slug": _unique_slug(title),
+            "church_id": sermon["church_id"], "sermon_id": sermon["id"], "title": title, "slug": _unique_slug(sermon["church_id"], title),
             "number_of_days": payload.get("number_of_days", 5),
         }).execute()
     return _usage(metrics) | {"points": len(content["points"])}
@@ -234,19 +234,23 @@ HANDLERS = {"probe": probe, "channel_search": channel_search, "channel_lives": c
             "translate": translate}
 
 
-def run_all(url: str, language: str = "es", output_language: str = "es", days: int = 5,
+def run_all(church_slug: str, url: str, language: str = "es", output_language: str = "es", days: int = 5,
             start: int = 0, end: int | None = None) -> str:
     """Runs every step for one URL without the job queue. Used from the command line."""
     db = client()
+    church = db.table("churches").select("id").eq("slug", church_slug).limit(1).execute().data
+    if not church:
+        raise RuntimeError(f"No church with slug '{church_slug}'")
+    church_id = church[0]["id"]
     found = probe({"payload": {"url": url}})
     codes = [l["language_code"] for l in found.pop("languages")]
     code = next((c for c in codes if c == language or c.startswith(language + "-")), None)
     if not code:
         raise RuntimeError(f"No hay subtítulos en '{language}'. Disponibles: {', '.join(codes)}")
     sermon = db.table("sermons").upsert(
-        found | {"original_language": language, "start_seconds": start, "end_seconds": end},
-        on_conflict="youtube_video_id").execute().data[0]
-    job = {"sermon_id": sermon["id"]}
+        found | {"church_id": church_id, "original_language": language, "start_seconds": start, "end_seconds": end},
+        on_conflict="church_id,youtube_video_id").execute().data[0]
+    job = {"sermon_id": sermon["id"], "church_id": church_id}
     steps = [
         ("transcript", {"language_code": code}),
         ("analysis", {}),
