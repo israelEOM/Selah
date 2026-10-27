@@ -18,6 +18,22 @@ final userIdProvider = StreamProvider<String?>((ref) {
   }).distinct();
 });
 
+final churchProvider =
+    FutureProvider.family<Church?, String>((ref, slug) => ref.watch(repositoryProvider).churchBySlug(slug));
+
+final myChurchesProvider = FutureProvider<List<Membership>>((ref) {
+  ref.watch(userIdProvider);
+  return ref.watch(repositoryProvider).myChurches();
+});
+
+/// The signed-in user's role in a church (by id), or null.
+final churchRoleProvider = FutureProvider.family<ChurchRole?, String>((ref, churchId) {
+  ref.watch(userIdProvider);
+  return ref.watch(repositoryProvider).roleIn(churchId);
+});
+
+final publicChurchesProvider = FutureProvider<List<Church>>((ref) => ref.watch(repositoryProvider).publicChurches());
+
 final isAdminProvider = FutureProvider<bool>((ref) async {
   final userId = ref.watch(userIdProvider).value;
   if (userId == null) return false;

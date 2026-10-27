@@ -136,6 +136,93 @@ class SelahRepository {
   Future<void> setReferenceApproved(String referenceId, bool approved) =>
       _client.from('bible_references').update({'approved': approved}).eq('id', referenceId);
 
+  // Churches ------------------------------------------------------------------
+
+  Future<Church?> churchBySlug(String slug) async {
+    final row = await _client.from('churches').select().eq('slug', slug).maybeSingle();
+    return row == null ? null : Church.fromJson(row);
+  }
+
+  /// Churches the signed-in user belongs to.
+  Future<List<Membership>> myChurches() async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return const [];
+    final rows = await _client.from('church_members').select('role, churches(*)').eq('user_id', userId);
+    return rows.map(Membership.fromJson).toList();
+  }
+
+  /// Churches with at least one published study, by name.
+  Future<List<Church>> publicChurches() async {
+    final rows = await _client
+        .from('churches')
+        .select('*, studies!inner(id)')
+        .eq('studies.status', 'published')
+        .order('name', ascending: true);
+    final seen = <String>{};
+    return [
+      for (final row in rows)
+        if (seen.add(row['id'] as String)) Church.fromJson(row),
+    ];
+  }
+
+  Future<ChurchRole?> roleIn(String churchId) async {
+    final role = await _client.rpc('church_role_of', params: {'p_church': churchId});
+    return ChurchRole.parse(role as String?);
+  }
+
+  Future<int> sermonsThisMonth(String churchId) async =>
+      (await _client.rpc('sermons_this_month', params: {'p_church': churchId}) as num).toInt();
+
+  Future<Church> createChurch(String name, String slug) async {
+    final row = await _client.rpc('create_church', params: {'p_name': name, 'p_slug': slug});
+    return Church.fromJson(row as Map<String, dynamic>);
+  }
+
+  Future<void> updateChurch(String churchId, Map<String, dynamic> fields) =>
+      _client.from('churches').update(fields).eq('id', churchId);
+
+  Future<String> createInvite(String churchId, ChurchRole role) async =>
+      await _client.rpc('create_invite', params: {'p_church': churchId, 'p_role': role.name}) as String;
+
+  Future<void> revokeInvite(String token) => _client.rpc('revoke_invite', params: {'p_token': token});
+
+  /// Active invites (not revoked) for a church. Owners only.
+  Future<List<Map<String, dynamic>>> invites(String churchId) => _client
+      .from('church_invites')
+      .select()
+      .eq('church_id', churchId)
+      .isFilter('revoked_at', null)
+      .order('created_at', ascending: false);
+
+  /// What an invite is for, or null when the link is no longer valid.
+  Future<({String churchName, String churchSlug, ChurchRole role})?> inviteInfo(String token) async {
+    final rows = await _client.rpc('invite_info', params: {'p_token': token}) as List;
+    if (rows.isEmpty) return null;
+    final row = rows.first as Map<String, dynamic>;
+    return (
+      churchName: row['church_name'] as String,
+      churchSlug: row['church_slug'] as String,
+      role: ChurchRole.parse(row['role'] as String?) ?? ChurchRole.member,
+    );
+  }
+
+  /// Returns the slug of the church joined.
+  Future<String> acceptInvite(String token) async =>
+      await _client.rpc('accept_invite', params: {'p_token': token}) as String;
+
+  Future<void> joinChurch(String churchId) => _client.rpc('join_church', params: {'p_church': churchId});
+
+  Future<List<Person>> people(String churchId) async {
+    final rows = await _client.rpc('church_people', params: {'p_church': churchId}) as List;
+    return rows.cast<Map<String, dynamic>>().map(Person.fromJson).toList();
+  }
+
+  Future<void> setMemberRole(String churchId, String userId, ChurchRole role) =>
+      _client.rpc('set_member_role', params: {'p_church': churchId, 'p_user': userId, 'p_role': role.name});
+
+  Future<void> removeMember(String churchId, String userId) =>
+      _client.rpc('remove_member', params: {'p_church': churchId, 'p_user': userId});
+
   // Auth ----------------------------------------------------------------------
 
   Future<void> signIn(String email, String password) =>

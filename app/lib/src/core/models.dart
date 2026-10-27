@@ -1,3 +1,106 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+enum ChurchRole {
+  owner,
+  editor,
+  member;
+
+  bool get canEdit => this == owner || this == editor;
+
+  static ChurchRole? parse(String? value) {
+    for (final r in values) {
+      if (r.name == value) return r;
+    }
+    return null;
+  }
+}
+
+class Church {
+  const Church({
+    required this.id,
+    required this.slug,
+    required this.name,
+    this.defaultSermonLanguage,
+    this.defaultOutputLanguage,
+    this.defaultBibleVersionCode,
+    this.defaultDevotionalDays,
+    this.monthlySermonLimit,
+  });
+
+  factory Church.fromJson(Map<String, dynamic> json) => Church(
+        id: json['id'] as String,
+        slug: json['slug'] as String,
+        name: json['name'] as String,
+        defaultSermonLanguage: json['default_sermon_language'] as String?,
+        defaultOutputLanguage: json['default_output_language'] as String?,
+        defaultBibleVersionCode: json['default_bible_version_code'] as String?,
+        defaultDevotionalDays: json['default_devotional_days'] as int?,
+        monthlySermonLimit: json['monthly_sermon_limit'] as int?,
+      );
+
+  final String id;
+  final String slug;
+  final String name;
+  final String? defaultSermonLanguage;
+  final String? defaultOutputLanguage;
+  final String? defaultBibleVersionCode;
+  final int? defaultDevotionalDays;
+  final int? monthlySermonLimit;
+}
+
+/// A church the signed-in user belongs to, with their role there.
+class Membership {
+  const Membership({required this.church, required this.role});
+
+  factory Membership.fromJson(Map<String, dynamic> json) => Membership(
+        church: Church.fromJson(json['churches'] as Map<String, dynamic>),
+        role: ChurchRole.parse(json['role'] as String?) ?? ChurchRole.member,
+      );
+
+  final Church church;
+  final ChurchRole role;
+}
+
+/// A member as listed by the `church_people` function.
+class Person {
+  const Person({required this.userId, required this.name, required this.email, required this.role, this.joinedAt});
+
+  factory Person.fromJson(Map<String, dynamic> json) => Person(
+        userId: json['user_id'] as String,
+        name: json['name'] as String?,
+        email: json['email'] as String?,
+        role: ChurchRole.parse(json['role'] as String?) ?? ChurchRole.member,
+        joinedAt: DateTime.tryParse(json['joined_at'] as String? ?? ''),
+      );
+
+  final String userId;
+  final String? name;
+  final String? email;
+  final ChurchRole role;
+  final DateTime? joinedAt;
+}
+
+/// Error codes the database raises on purpose.
+class SelahError {
+  static const codes = [
+    'church_slug_taken',
+    'church_slug_invalid',
+    'invite_invalid',
+    'last_owner',
+    'monthly_limit_reached',
+    'not_allowed',
+  ];
+
+  /// The known code in a [PostgrestException]'s message, or null.
+  static String? fromException(Object e) {
+    if (e is! PostgrestException) return null;
+    for (final code in codes) {
+      if (e.message.contains(code)) return code;
+    }
+    return null;
+  }
+}
+
 class StudyCard {
   const StudyCard({
     required this.id,
