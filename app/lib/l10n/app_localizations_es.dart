@@ -452,9 +452,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get createChurch => 'Crear una iglesia';
 
   @override
-  String get manage => 'Gestionar';
-
-  @override
   String get followChurch => 'Seguir';
 
   @override

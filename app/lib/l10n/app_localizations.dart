@@ -886,12 +886,6 @@ abstract class AppLocalizations {
   /// **'Crear una iglesia'**
   String get createChurch;
 
-  /// No description provided for @manage.
-  ///
-  /// In es, this message translates to:
-  /// **'Gestionar'**
-  String get manage;
-
   /// No description provided for @followChurch.
   ///
   /// In es, this message translates to:

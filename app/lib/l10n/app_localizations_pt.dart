@@ -451,9 +451,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get createChurch => 'Criar uma igreja';
 
   @override
-  String get manage => 'Gerenciar';
-
-  @override
   String get followChurch => 'Seguir';
 
   @override

@@ -36,8 +36,11 @@ TodayState todayFor({required PublicStudy? study, required StudyProgress progres
   final doneToday = study.days.where((d) => progress.days[d.number]?.doneOn == today).lastOrNull;
   if (doneToday != null) return DoneForToday(doneToday, next);
   if (next != null) return DayToDo(next);
-  final passage = study.summary['main_passage'] as String?;
-  final takeaways = List<String>.from(study.summary['key_takeaways'] as List? ?? const []);
+  // The summary is model output stored as JSON, so ignore fields of the wrong type.
+  final rawPassage = study.summary['main_passage'];
+  final passage = rawPassage is String ? rawPassage : null;
+  final rawTakeaways = study.summary['key_takeaways'];
+  final takeaways = rawTakeaways is List ? rawTakeaways.whereType<String>().toList() : const <String>[];
   final dayOfYear = DateTime.utc(now.year, now.month, now.day).difference(DateTime.utc(now.year)).inDays + 1; // utc: DST-proof
   return AllDone(passage, takeaways.isEmpty ? null : takeaways[dayOfYear % takeaways.length]);
 }

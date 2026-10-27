@@ -81,4 +81,17 @@ void main() {
     final circles = weekCircles({'2026-10-26', '2026-11-01'}, DateTime(2026, 11, 1));
     expect(circles, [true, false, false, false, false, false, true]);
   });
+
+  test('a malformed summary is ignored rather than crashing', () {
+    final days = {for (var i = 1; i <= 5; i++) i: finished('2026-10-27')};
+    final now = DateTime(2026, 10, 29);
+    final wrongTypes = study(summary: {'main_passage': 42, 'key_takeaways': 'not a list'});
+    final t = todayFor(study: wrongTypes, progress: StudyProgress(days), now: now) as AllDone;
+    expect(t.passage, isNull);
+    expect(t.takeaway, isNull);
+    final mixed = study(summary: {'main_passage': 'Juan 3:16', 'key_takeaways': [1, null, 'solo esta']});
+    final m = todayFor(study: mixed, progress: StudyProgress(days), now: now) as AllDone;
+    expect(m.passage, 'Juan 3:16');
+    expect(m.takeaway, 'solo esta');
+  });
 }
