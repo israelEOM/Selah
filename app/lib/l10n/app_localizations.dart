@@ -1168,6 +1168,12 @@ abstract class AppLocalizations {
   /// **'Para meditar hoy'**
   String get meditateToday;
 
+  /// No description provided for @todayMainPassage.
+  ///
+  /// In es, this message translates to:
+  /// **'Pasaje principal'**
+  String get todayMainPassage;
+
   /// No description provided for @readPassage.
   ///
   /// In es, this message translates to:

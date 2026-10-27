@@ -119,7 +119,7 @@ class _Today extends ConsumerWidget {
                           Text(l.meditateToday, style: text.headlineMedium),
                           if (passage != null || takeaway != null) ...[
                             const SizedBox(height: 20),
-                            _HeroCard(eyebrow: passage == null ? null : '${l.mainPassage} · $passage', quote: takeaway),
+                            _HeroCard(eyebrow: passage == null ? null : '${l.todayMainPassage} · $passage', quote: takeaway),
                           ],
                           if (passage != null) ...[
                             const SizedBox(height: 16),

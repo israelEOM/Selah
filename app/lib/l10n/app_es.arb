@@ -267,7 +267,7 @@
   "readNext": "Leer el siguiente",
   "sermonSummaryButton": "Resumen del sermón",
   "meditateToday": "Para meditar hoy",
-  "mainPassage": "Pasaje principal",
+  "todayMainPassage": "Pasaje principal",
   "readPassage": "Leer {reference}",
   "@readPassage": {
     "placeholders": {

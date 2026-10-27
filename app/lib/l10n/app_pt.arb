@@ -260,7 +260,7 @@
   "readNext": "Ler o próximo",
   "sermonSummaryButton": "Resumo do sermão",
   "meditateToday": "Para meditar hoje",
-  "mainPassage": "Passagem principal",
+  "todayMainPassage": "Passagem principal",
   "readPassage": "Ler {reference}",
   "noStudiesYetToday": "Sua igreja ainda não publicou estudos.",
   "goToStudies": "Ver estudos"

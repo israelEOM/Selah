@@ -600,6 +600,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meditateToday => 'Para meditar hoy';
 
   @override
+  String get todayMainPassage => 'Pasaje principal';
+
+  @override
   String readPassage(String reference) {
     return 'Leer $reference';
   }

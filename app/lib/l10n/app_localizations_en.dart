@@ -232,7 +232,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get analysisSection => 'Análisis del sermón';
 
   @override
-  String get mainPassage => 'Main passage';
+  String get mainPassage => 'Pasaje principal';
 
   @override
   String get centralTheme => 'Tema central';
@@ -598,6 +598,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get meditateToday => 'To meditate on today';
+
+  @override
+  String get todayMainPassage => 'Main passage';
 
   @override
   String readPassage(String reference) {
