@@ -30,8 +30,11 @@ Future<void> refreshChurches(WidgetRef ref) async {
 }
 
 /// The picker's list: the person's churches with their role, then every public church.
+/// Picking one makes it the app's church and opens Today, unless [onPick] says otherwise.
 class ChurchList extends ConsumerWidget {
-  const ChurchList({super.key});
+  const ChurchList({super.key, this.onPick});
+
+  final void Function(Church church)? onPick;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -46,7 +49,7 @@ class ChurchList extends ConsumerWidget {
         if (signedIn && mine.isNotEmpty) ...[
           Eyebrow(l.yourChurches),
           const SizedBox(height: 12),
-          for (final m in mine) _ChurchTile(church: m.church, subtitle: roleLabel(l, m.role)),
+          for (final m in mine) _ChurchTile(church: m.church, subtitle: roleLabel(l, m.role), onPick: onPick),
           const SizedBox(height: 24),
         ],
         Eyebrow(l.allChurches),
@@ -70,7 +73,7 @@ class ChurchList extends ConsumerWidget {
           ],
           data: (items) => items.isEmpty
               ? [Text(l.noStudiesYet, style: text.bodyMedium)]
-              : [for (final church in items) _ChurchTile(church: church)],
+              : [for (final church in items) _ChurchTile(church: church, onPick: onPick)],
         ),
       ],
     );
@@ -78,10 +81,11 @@ class ChurchList extends ConsumerWidget {
 }
 
 class _ChurchTile extends ConsumerWidget {
-  const _ChurchTile({required this.church, this.subtitle});
+  const _ChurchTile({required this.church, this.subtitle, this.onPick});
 
   final Church church;
   final String? subtitle;
+  final void Function(Church church)? onPick;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => Padding(
@@ -93,10 +97,12 @@ class _ChurchTile extends ConsumerWidget {
             title: Text(church.name, style: Theme.of(context).textTheme.titleLarge),
             subtitle: subtitle == null ? null : Text(subtitle!),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              ref.read(chosenChurchSlugProvider.notifier).choose(church.slug);
-              context.go('/');
-            },
+            onTap: onPick != null
+                ? () => onPick!(church)
+                : () {
+                    ref.read(chosenChurchSlugProvider.notifier).choose(church.slug);
+                    context.go('/');
+                  },
           ),
         ),
       );

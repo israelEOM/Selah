@@ -8,6 +8,7 @@ import '../../app/theme.dart';
 import '../../core/auth_redirect.dart';
 import '../../core/user_agent.dart';
 import '../../data/providers.dart';
+import '../welcome/welcome_state.dart';
 import 'google_button.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
@@ -41,6 +42,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       if (next.value == null) return;
       // A safe `next` wins outright, so don't wait on (or fail with) the memberships fetch.
       var destination = safeNext(_next);
+      if (destination == null) {
+        try {
+          if (await ref.read(needsWelcomeProvider.future)) destination = '/welcome';
+        } catch (_) {
+          // Don't hold up sign-in over the question; fall back to the usual rule.
+        }
+      }
       if (destination == null) {
         try {
           final churches = await ref.read(myChurchesProvider.future);

@@ -13,13 +13,21 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 const _vida = Church(id: 'A', slug: 'vida-nueva', name: 'Iglesia Vida Nueva');
 
-Future<void> _pump(WidgetTester tester, {String? userId, ChurchRole? role, bool platformAdmin = false}) async {
+Future<void> _pump(
+  WidgetTester tester, {
+  String? userId,
+  ChurchRole? role,
+  bool platformAdmin = false,
+  List<Membership>? mine,
+  ChurchRequest? request,
+}) async {
   SharedPreferences.setMockInitialValues({});
   final router = GoRouter(initialLocation: '/profile', routes: [
     GoRoute(path: '/profile', builder: (_, _) => const ProfilePage()),
     GoRoute(path: '/churches', builder: (_, _) => const Text('PICKER')),
     GoRoute(path: '/churches/new', builder: (_, _) => const Text('NEW CHURCH')),
     GoRoute(path: '/c/vida-nueva/admin', builder: (_, _) => const Text('ADMIN')),
+    GoRoute(path: '/welcome', builder: (_, s) => Text('WELCOME ${s.uri.queryParameters['step']}')),
     GoRoute(path: '/login', builder: (_, s) => Text('LOGIN ${s.uri.queryParameters['next']}')),
   ]);
   await tester.pumpWidget(ProviderScope(
@@ -28,6 +36,8 @@ Future<void> _pump(WidgetTester tester, {String? userId, ChurchRole? role, bool 
       currentChurchProvider.overrideWith((ref) async => _vida),
       churchRoleProvider('A').overrideWith((ref) async => role),
       isPlatformAdminProvider.overrideWith((ref) async => platformAdmin),
+      if (mine != null) myChurchesProvider.overrideWith((ref) async => mine),
+      if (request != null) myChurchRequestProvider.overrideWith((ref) async => request),
     ],
     child: MaterialApp.router(
       theme: selahLightTheme(),
@@ -95,5 +105,45 @@ void main() {
     await _pump(tester, userId: 'u', platformAdmin: true);
     await _tap(tester, 'Crear una iglesia');
     expect(find.text('NEW CHURCH'), findsOneWidget);
+  });
+
+  ChurchRequest requestWith(ChurchRequestStatus status) =>
+      ChurchRequest(id: 'r1', churchName: 'Iglesia Roca', status: status, createdAt: DateTime(2026, 10, 27));
+
+  testWidgets('a rejected request offers Enviar otra', (tester) async {
+    await _pump(tester, userId: 'u', mine: const [], request: requestWith(ChurchRequestStatus.rejected));
+    expect(find.text('Tu solicitud no fue aprobada'), findsOneWidget);
+    await _tap(tester, 'Enviar otra');
+    expect(find.text('WELCOME leader'), findsOneWidget);
+  });
+
+  testWidgets('a pending request shows Pendiente de aprobación', (tester) async {
+    await _pump(tester, userId: 'u', mine: const [], request: requestWith(ChurchRequestStatus.pending));
+    expect(find.text('TU SOLICITUD'), findsOneWidget);
+    expect(find.text('Pendiente de aprobación'), findsOneWidget);
+    expect(find.text('Traer mi iglesia a Selah'), findsNothing);
+  });
+
+  testWidgets('an approved request shows nothing', (tester) async {
+    await _pump(tester, userId: 'u', mine: const [], request: requestWith(ChurchRequestStatus.approved));
+    expect(find.text('TU SOLICITUD'), findsNothing);
+  });
+
+  testWidgets('someone with no church can join one', (tester) async {
+    await _pump(tester, userId: 'u', mine: const []);
+    await _tap(tester, 'Unirme a una iglesia');
+    expect(find.text('WELCOME member'), findsOneWidget);
+  });
+
+  testWidgets('someone with no church can ask to bring theirs', (tester) async {
+    await _pump(tester, userId: 'u', mine: const []);
+    await _tap(tester, 'Traer mi iglesia a Selah');
+    expect(find.text('WELCOME leader'), findsOneWidget);
+  });
+
+  testWidgets('a member is not offered to join or bring a church', (tester) async {
+    await _pump(tester, userId: 'u', role: ChurchRole.member, mine: const [Membership(church: _vida, role: ChurchRole.member)]);
+    expect(find.text('Unirme a una iglesia'), findsNothing);
+    expect(find.text('Traer mi iglesia a Selah'), findsNothing);
   });
 }

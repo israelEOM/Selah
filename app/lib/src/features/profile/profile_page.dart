@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../app/theme.dart';
 import '../../app/theme_mode.dart';
+import '../../core/models.dart';
 import '../../data/current_church.dart';
 import '../../data/providers.dart';
 import '../home/language_menu.dart';
@@ -21,6 +22,10 @@ class ProfilePage extends ConsumerWidget {
     final canEdit = church != null && (ref.watch(churchRoleProvider(church.id)).value?.canEdit ?? false);
     final signedIn = ref.watch(userIdProvider).value != null;
     final platformAdmin = ref.watch(isPlatformAdminProvider).value == true;
+    final noChurch = signedIn && ref.watch(myChurchesProvider).value?.isEmpty == true;
+    // An approved request needs no line: the church shows up as theirs.
+    final shown = signedIn ? ref.watch(myChurchRequestProvider).value : null;
+    final request = shown?.status == ChurchRequestStatus.approved ? null : shown;
     return Scaffold(
       appBar: AppBar(title: Text(l.tabProfile, style: text.titleLarge)),
       body: PageBody(
@@ -50,6 +55,43 @@ class ProfilePage extends ConsumerWidget {
               ),
             ),
           ),
+          if (noChurch) ...[
+            const SizedBox(height: 16),
+            Wrap(spacing: 8, runSpacing: 8, children: [
+              OutlinedButton(onPressed: () => context.push('/welcome?step=member'), child: Text(l.joinAChurch)),
+              // Someone waiting on a request, or told to send another, already has their way in above.
+              if (!platformAdmin && request == null)
+                OutlinedButton(onPressed: () => context.push('/welcome?step=leader'), child: Text(l.bringMyChurch)),
+            ]),
+          ],
+          if (request != null) ...[
+            const SizedBox(height: 24),
+            Eyebrow(l.yourRequest),
+            const SizedBox(height: 12),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(request.churchName, style: text.titleMedium),
+                    const SizedBox(height: 4),
+                    Text(
+                      request.status == ChurchRequestStatus.pending ? l.requestPending : l.requestRejected,
+                      style: text.bodyMedium?.copyWith(color: context.tones.muted),
+                    ),
+                    if (request.status == ChurchRequestStatus.rejected) ...[
+                      const SizedBox(height: 12),
+                      OutlinedButton(
+                        onPressed: () => context.push('/welcome?step=leader'),
+                        child: Text(l.sendAnother),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ],
           const SizedBox(height: 32),
           Eyebrow(l.theme),
           const SizedBox(height: 12),

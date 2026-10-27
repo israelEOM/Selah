@@ -20,6 +20,7 @@ import '../features/profile/profile_page.dart';
 import '../features/study/reader_page.dart';
 import '../features/study/study_page.dart';
 import '../features/today/today_page.dart';
+import '../features/welcome/welcome_page.dart';
 import '../l10n/locale.dart';
 import 'shell.dart';
 import 'theme.dart';
@@ -67,6 +68,7 @@ GoRouter createRouter({String initialLocation = '/'}) => GoRouter(
         ),
         GoRoute(path: '/churches', builder: (_, _) => const ChurchPickerPage()),
         GoRoute(path: '/login', builder: (_, _) => const LoginPage()),
+        GoRoute(path: '/welcome', builder: (_, state) => WelcomePage(step: state.uri.queryParameters['step'])),
         GoRoute(path: '/join/:token', builder: (_, state) => JoinPage(token: state.pathParameters['token']!)),
         GoRoute(path: '/churches/new', builder: (_, _) => const CreateChurchPage()),
         GoRoute(

@@ -8,6 +8,7 @@ import 'package:selah/src/core/models.dart';
 import 'package:selah/src/data/providers.dart';
 import 'package:selah/src/data/repository.dart';
 import 'package:selah/src/features/auth/login_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class _FakeRepository implements SelahRepository {
@@ -173,6 +174,72 @@ void main() {
       ],
       child: MaterialApp.router(
       theme: selahLightTheme(),
+        routerConfig: router,
+        locale: const Locale('es'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+      ),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text('HOME'), findsOneWidget);
+  });
+
+  for (final c in [
+    (name: 'a new account with no church goes to /welcome', next: '', admin: false, skipped: false, expected: 'WELCOME'),
+    (name: 'a platform admin with no church goes to /', next: '', admin: true, skipped: false, expected: 'HOME'),
+    (name: 'an invite next skips welcome', next: '?next=/join/abc', admin: false, skipped: false, expected: 'JOIN abc'),
+    (name: 'someone who skipped goes to /', next: '', admin: false, skipped: true, expected: 'HOME'),
+  ]) {
+    testWidgets(c.name, (tester) async {
+      SharedPreferences.setMockInitialValues({if (c.skipped) 'welcomeSkipped:user-1': true});
+      final router = GoRouter(initialLocation: '/login', routes: [
+        GoRoute(path: '/', builder: (_, _) => const Text('HOME')),
+        GoRoute(path: '/welcome', builder: (_, _) => const Text('WELCOME')),
+        GoRoute(path: '/join/:t', builder: (_, s) => Text('JOIN ${s.pathParameters['t']}')),
+        GoRoute(
+          path: '/login',
+          builder: (_, _) =>
+              LoginPage(landing: Uri.parse('https://selah-226.pages.dev/login${c.next}'), userAgent: ''),
+        ),
+      ]);
+      await tester.pumpWidget(ProviderScope(
+        overrides: [
+          repositoryProvider.overrideWithValue(_FakeRepository()),
+          userIdProvider.overrideWith((ref) => Stream.value('user-1')),
+          myChurchesProvider.overrideWith((ref) async => const []),
+          isPlatformAdminProvider.overrideWith((ref) async => c.admin),
+          myChurchRequestProvider.overrideWith((ref) async => null),
+        ],
+        child: MaterialApp.router(
+          theme: selahLightTheme(),
+          routerConfig: router,
+          locale: const Locale('es'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
+      ));
+      await tester.pumpAndSettle();
+      expect(find.text(c.expected), findsOneWidget);
+    });
+  }
+
+  testWidgets('a failing welcome check falls back to the usual destination', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final router = GoRouter(initialLocation: '/login', routes: [
+      GoRoute(path: '/', builder: (_, _) => const Text('HOME')),
+      GoRoute(path: '/welcome', builder: (_, _) => const Text('WELCOME')),
+      GoRoute(path: '/login', builder: (_, _) => LoginPage(landing: Uri.parse('https://x.test/login'), userAgent: '')),
+    ]);
+    await tester.pumpWidget(ProviderScope(
+      retry: (_, _) => null,
+      overrides: [
+        repositoryProvider.overrideWithValue(_FakeRepository()),
+        userIdProvider.overrideWith((ref) => Stream.value('user-1')),
+        myChurchesProvider.overrideWith((ref) async => const []),
+        isPlatformAdminProvider.overrideWith((ref) async => throw Exception('offline')),
+      ],
+      child: MaterialApp.router(
+        theme: selahLightTheme(),
         routerConfig: router,
         locale: const Locale('es'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,

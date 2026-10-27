@@ -606,4 +606,60 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get goToStudies => 'Ver estudios';
+
+  @override
+  String get welcomeTitle => '¿Cómo vas a usar Selah?';
+
+  @override
+  String get welcomeMember => 'Soy miembro de una iglesia';
+
+  @override
+  String get welcomeLeader =>
+      'Soy pastor o líder: quiero traer mi iglesia a Selah';
+
+  @override
+  String get notNow => 'Ahora no';
+
+  @override
+  String get churchNameLabel => 'Nombre de la iglesia';
+
+  @override
+  String get churchNoteLabel => 'Algo sobre tu iglesia (opcional)';
+
+  @override
+  String get churchNoteTooLong => 'Escribe 500 caracteres o menos.';
+
+  @override
+  String get sendRequest => 'Enviar solicitud';
+
+  @override
+  String get requestSent =>
+      'Solicitud enviada. Te avisaremos aquí cuando esté aprobada.';
+
+  @override
+  String get joinMeanwhile => 'Mientras tanto, unirme a una iglesia';
+
+  @override
+  String get goToToday => 'Ir a Hoy';
+
+  @override
+  String get requestPendingExists => 'Ya tienes una solicitud pendiente.';
+
+  @override
+  String get yourRequest => 'Tu solicitud';
+
+  @override
+  String get requestPending => 'Pendiente de aprobación';
+
+  @override
+  String get requestRejected => 'Tu solicitud no fue aprobada';
+
+  @override
+  String get sendAnother => 'Enviar otra';
+
+  @override
+  String get joinAChurch => 'Unirme a una iglesia';
+
+  @override
+  String get bringMyChurch => 'Traer mi iglesia a Selah';
 }

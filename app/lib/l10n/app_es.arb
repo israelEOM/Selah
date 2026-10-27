@@ -275,5 +275,23 @@
     }
   },
   "noStudiesYetToday": "Tu iglesia aún no ha publicado estudios.",
-  "goToStudies": "Ver estudios"
+  "goToStudies": "Ver estudios",
+  "welcomeTitle": "¿Cómo vas a usar Selah?",
+  "welcomeMember": "Soy miembro de una iglesia",
+  "welcomeLeader": "Soy pastor o líder: quiero traer mi iglesia a Selah",
+  "notNow": "Ahora no",
+  "churchNameLabel": "Nombre de la iglesia",
+  "churchNoteLabel": "Algo sobre tu iglesia (opcional)",
+  "churchNoteTooLong": "Escribe 500 caracteres o menos.",
+  "sendRequest": "Enviar solicitud",
+  "requestSent": "Solicitud enviada. Te avisaremos aquí cuando esté aprobada.",
+  "joinMeanwhile": "Mientras tanto, unirme a una iglesia",
+  "goToToday": "Ir a Hoy",
+  "requestPendingExists": "Ya tienes una solicitud pendiente.",
+  "yourRequest": "Tu solicitud",
+  "requestPending": "Pendiente de aprobación",
+  "requestRejected": "Tu solicitud no fue aprobada",
+  "sendAnother": "Enviar otra",
+  "joinAChurch": "Unirme a una iglesia",
+  "bringMyChurch": "Traer mi iglesia a Selah"
 }

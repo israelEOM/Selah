@@ -1179,6 +1179,114 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Ver estudios'**
   String get goToStudies;
+
+  /// No description provided for @welcomeTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Cómo vas a usar Selah?'**
+  String get welcomeTitle;
+
+  /// No description provided for @welcomeMember.
+  ///
+  /// In es, this message translates to:
+  /// **'Soy miembro de una iglesia'**
+  String get welcomeMember;
+
+  /// No description provided for @welcomeLeader.
+  ///
+  /// In es, this message translates to:
+  /// **'Soy pastor o líder: quiero traer mi iglesia a Selah'**
+  String get welcomeLeader;
+
+  /// No description provided for @notNow.
+  ///
+  /// In es, this message translates to:
+  /// **'Ahora no'**
+  String get notNow;
+
+  /// No description provided for @churchNameLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre de la iglesia'**
+  String get churchNameLabel;
+
+  /// No description provided for @churchNoteLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Algo sobre tu iglesia (opcional)'**
+  String get churchNoteLabel;
+
+  /// No description provided for @churchNoteTooLong.
+  ///
+  /// In es, this message translates to:
+  /// **'Escribe 500 caracteres o menos.'**
+  String get churchNoteTooLong;
+
+  /// No description provided for @sendRequest.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviar solicitud'**
+  String get sendRequest;
+
+  /// No description provided for @requestSent.
+  ///
+  /// In es, this message translates to:
+  /// **'Solicitud enviada. Te avisaremos aquí cuando esté aprobada.'**
+  String get requestSent;
+
+  /// No description provided for @joinMeanwhile.
+  ///
+  /// In es, this message translates to:
+  /// **'Mientras tanto, unirme a una iglesia'**
+  String get joinMeanwhile;
+
+  /// No description provided for @goToToday.
+  ///
+  /// In es, this message translates to:
+  /// **'Ir a Hoy'**
+  String get goToToday;
+
+  /// No description provided for @requestPendingExists.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya tienes una solicitud pendiente.'**
+  String get requestPendingExists;
+
+  /// No description provided for @yourRequest.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu solicitud'**
+  String get yourRequest;
+
+  /// No description provided for @requestPending.
+  ///
+  /// In es, this message translates to:
+  /// **'Pendiente de aprobación'**
+  String get requestPending;
+
+  /// No description provided for @requestRejected.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu solicitud no fue aprobada'**
+  String get requestRejected;
+
+  /// No description provided for @sendAnother.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviar otra'**
+  String get sendAnother;
+
+  /// No description provided for @joinAChurch.
+  ///
+  /// In es, this message translates to:
+  /// **'Unirme a una iglesia'**
+  String get joinAChurch;
+
+  /// No description provided for @bringMyChurch.
+  ///
+  /// In es, this message translates to:
+  /// **'Traer mi iglesia a Selah'**
+  String get bringMyChurch;
 }
 
 class _AppLocalizationsDelegate
