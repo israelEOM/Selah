@@ -15,10 +15,13 @@ import '../features/church/church_scope.dart';
 import '../features/church/create_church_page.dart';
 import '../features/church/join_page.dart';
 import '../features/church/legacy_redirects.dart';
-import '../features/home/home_page.dart';
+import '../features/home/church_picker_page.dart';
+import '../features/profile/profile_page.dart';
 import '../features/study/reader_page.dart';
 import '../features/study/study_page.dart';
+import '../features/today/today_page.dart';
 import '../l10n/locale.dart';
+import 'shell.dart';
 import 'theme.dart';
 import 'theme_mode.dart';
 
@@ -37,27 +40,35 @@ Widget _inChurchAdmin(BuildContext context, GoRouterState state, Widget Function
 GoRouter createRouter({String initialLocation = '/'}) => GoRouter(
       initialLocation: initialLocation,
       routes: [
-        GoRoute(path: '/', builder: (_, _) => const HomePage()),
+        // The member pages, under the tab bar.
+        ShellRoute(
+          builder: (_, state, child) => SelahShell(location: state.uri.path, child: child),
+          routes: [
+            GoRoute(path: '/', builder: (_, _) => const TodayPage()),
+            GoRoute(path: '/profile', builder: (_, _) => const ProfilePage()),
+            GoRoute(path: '/c/:church', builder: (_, state) => _inChurch(state, (church) => ChurchPage(church: church))),
+            GoRoute(
+              path: '/c/:church/studies/:slug',
+              builder: (_, state) =>
+                  _inChurch(state, (church) => StudyPage(church: church, slug: state.pathParameters['slug']!)),
+            ),
+            GoRoute(
+              path: '/c/:church/studies/:slug/day/:number',
+              builder: (_, state) => _inChurch(
+                state,
+                (church) => ReaderPage(
+                  church: church,
+                  slug: state.pathParameters['slug']!,
+                  dayNumber: int.tryParse(state.pathParameters['number']!) ?? 0,
+                ),
+              ),
+            ),
+          ],
+        ),
+        GoRoute(path: '/churches', builder: (_, _) => const ChurchPickerPage()),
         GoRoute(path: '/login', builder: (_, _) => const LoginPage()),
         GoRoute(path: '/join/:token', builder: (_, state) => JoinPage(token: state.pathParameters['token']!)),
         GoRoute(path: '/churches/new', builder: (_, _) => const CreateChurchPage()),
-        GoRoute(path: '/c/:church', builder: (_, state) => _inChurch(state, (church) => ChurchPage(church: church))),
-        GoRoute(
-          path: '/c/:church/studies/:slug',
-          builder: (_, state) =>
-              _inChurch(state, (church) => StudyPage(church: church, slug: state.pathParameters['slug']!)),
-        ),
-        GoRoute(
-          path: '/c/:church/studies/:slug/day/:number',
-          builder: (_, state) => _inChurch(
-            state,
-            (church) => ReaderPage(
-              church: church,
-              slug: state.pathParameters['slug']!,
-              dayNumber: int.tryParse(state.pathParameters['number']!) ?? 0,
-            ),
-          ),
-        ),
         GoRoute(
           path: '/c/:church/admin',
           builder: (context, state) => _inChurchAdmin(context, state, (church) => AdminHomePage(church: church)),

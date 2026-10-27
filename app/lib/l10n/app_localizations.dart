@@ -1065,6 +1065,72 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'{used} de {limit} este mes'**
   String sermonsThisMonth(int used, int limit);
+
+  /// No description provided for @tabToday.
+  ///
+  /// In es, this message translates to:
+  /// **'Hoy'**
+  String get tabToday;
+
+  /// No description provided for @tabStudies.
+  ///
+  /// In es, this message translates to:
+  /// **'Estudios'**
+  String get tabStudies;
+
+  /// No description provided for @tabProfile.
+  ///
+  /// In es, this message translates to:
+  /// **'Perfil'**
+  String get tabProfile;
+
+  /// No description provided for @pickChurch.
+  ///
+  /// In es, this message translates to:
+  /// **'Elige tu iglesia'**
+  String get pickChurch;
+
+  /// No description provided for @yourChurch.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu iglesia'**
+  String get yourChurch;
+
+  /// No description provided for @changeChurch.
+  ///
+  /// In es, this message translates to:
+  /// **'Cambiar de iglesia'**
+  String get changeChurch;
+
+  /// No description provided for @theme.
+  ///
+  /// In es, this message translates to:
+  /// **'Tema'**
+  String get theme;
+
+  /// No description provided for @themeSystem.
+  ///
+  /// In es, this message translates to:
+  /// **'Sistema'**
+  String get themeSystem;
+
+  /// No description provided for @themeLight.
+  ///
+  /// In es, this message translates to:
+  /// **'Claro'**
+  String get themeLight;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In es, this message translates to:
+  /// **'Oscuro'**
+  String get themeDark;
+
+  /// No description provided for @adminArea.
+  ///
+  /// In es, this message translates to:
+  /// **'Administrar la iglesia'**
+  String get adminArea;
 }
 
 class _AppLocalizationsDelegate

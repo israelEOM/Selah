@@ -6,7 +6,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../app/theme.dart';
 import '../../core/models.dart';
 import '../../data/providers.dart';
-import '../home/home_page.dart' show roleLabel;
+import 'role_label.dart';
 
 typedef InviteInfo = ({String churchName, String churchSlug, ChurchRole role});
 

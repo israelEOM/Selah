@@ -249,5 +249,16 @@
         "type": "int"
       }
     }
-  }
+  },
+  "tabToday": "Hoy",
+  "tabStudies": "Estudios",
+  "tabProfile": "Perfil",
+  "pickChurch": "Elige tu iglesia",
+  "yourChurch": "Tu iglesia",
+  "changeChurch": "Cambiar de iglesia",
+  "theme": "Tema",
+  "themeSystem": "Sistema",
+  "themeLight": "Claro",
+  "themeDark": "Oscuro",
+  "adminArea": "Administrar la iglesia"
 }

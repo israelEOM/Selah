@@ -72,11 +72,12 @@ void main() {
     expect(find.text('STUDY retiro-espiritual'), findsOneWidget);
   });
 
-  testWidgets('editors get a manage action', (tester) async {
+  testWidgets('an editor sees no manage, sign-out or language actions here', (tester) async {
     await _pump(tester, userId: 'u', role: ChurchRole.editor);
-    await tester.tap(find.text('Gestionar'));
-    await tester.pumpAndSettle();
-    expect(find.text('ADMIN'), findsOneWidget);
+    expect(find.text('Gestionar'), findsNothing);
+    expect(find.text('Seguir'), findsNothing);
+    expect(find.text('Cerrar sesión'), findsNothing);
+    expect(find.byIcon(Icons.translate), findsNothing);
   });
 
   testWidgets('a signed-in person without a role can follow', (tester) async {
@@ -101,6 +102,6 @@ void main() {
   testWidgets('a visitor is not offered follow', (tester) async {
     await _pump(tester);
     expect(find.text('Seguir'), findsNothing);
-    expect(find.text('Iniciar sesión'), findsOneWidget);
+    expect(find.text('Iniciar sesión'), findsNothing);
   });
 }

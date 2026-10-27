@@ -242,5 +242,16 @@
         "type": "int"
       }
     }
-  }
+  },
+  "tabToday": "Today",
+  "tabStudies": "Studies",
+  "tabProfile": "Profile",
+  "pickChurch": "Choose your church",
+  "yourChurch": "Your church",
+  "changeChurch": "Change church",
+  "theme": "Theme",
+  "themeSystem": "System",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "adminArea": "Manage the church"
 }

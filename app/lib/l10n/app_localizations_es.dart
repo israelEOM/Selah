@@ -547,4 +547,37 @@ class AppLocalizationsEs extends AppLocalizations {
   String sermonsThisMonth(int used, int limit) {
     return '$used de $limit este mes';
   }
+
+  @override
+  String get tabToday => 'Hoy';
+
+  @override
+  String get tabStudies => 'Estudios';
+
+  @override
+  String get tabProfile => 'Perfil';
+
+  @override
+  String get pickChurch => 'Elige tu iglesia';
+
+  @override
+  String get yourChurch => 'Tu iglesia';
+
+  @override
+  String get changeChurch => 'Cambiar de iglesia';
+
+  @override
+  String get theme => 'Tema';
+
+  @override
+  String get themeSystem => 'Sistema';
+
+  @override
+  String get themeLight => 'Claro';
+
+  @override
+  String get themeDark => 'Oscuro';
+
+  @override
+  String get adminArea => 'Administrar la iglesia';
 }

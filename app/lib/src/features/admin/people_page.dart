@@ -6,7 +6,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../app/theme.dart';
 import '../../core/models.dart';
 import '../../data/providers.dart';
-import '../home/home_page.dart' show roleLabel;
+import '../church/role_label.dart';
 import 'admin_gate.dart';
 
 /// Owners invite people with links and manage who has which role.

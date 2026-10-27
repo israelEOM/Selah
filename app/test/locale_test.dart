@@ -10,7 +10,7 @@ import 'package:selah/src/core/models.dart';
 import 'package:selah/src/data/providers.dart';
 import 'package:selah/src/app/app.dart';
 import 'package:selah/src/features/admin/admin_home_page.dart';
-import 'package:selah/src/features/home/home_page.dart';
+import 'package:selah/src/features/profile/profile_page.dart';
 import 'package:selah/src/l10n/locale.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -46,7 +46,7 @@ void main() {
   testWidgets('choosing English changes the interface and is remembered', (tester) async {
     SharedPreferences.setMockInitialValues({});
     await tester.pumpWidget(_app(
-      const HomePage(),
+      const ProfilePage(),
       overrides: [savedLanguageProvider.overrideWithValue('es')],
     ));
     await tester.pumpAndSettle();
