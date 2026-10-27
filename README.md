@@ -57,7 +57,7 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 
 ## Churches and roles
 
-Only platform admins create churches (see below); everyone else joins one through an invite link. Each church has members with one of three roles:
+Only platform admins create churches (see below); everyone else joins one through an invite link, or a pastor asks for one to be created. Each church has members with one of three roles:
 
 | Role | Can |
 |---|---|
@@ -65,17 +65,21 @@ Only platform admins create churches (see below); everyone else joins one throug
 | Editor | Import sermons, review, edit, publish and unpublish studies |
 | Member | Follow the church and read its published studies, like anyone else (no access to drafts) |
 
-People join by invite link. A link can be used many times and can be revoked by an Owner from the church's people page. Each church can add a limited number of new sermons per month (default 4).
+New accounts choose what they are: a member joins a church (Unirme a una iglesia), or a pastor requests one (Traer mi iglesia a Selah) with the church's name and an optional note. A request only creates a church once a platform admin approves it. Nobody becomes Owner or Editor without a person approving it.
+
+People join by invite link. A link can be used many times and can be revoked by an Owner from the church's people page. Owners can also promote an Editor from the same People page. The Hoy tab shows today's reading across the churches a member follows, and the app has a light and a dark theme (Perfil → Tema, which follows the device by default). Each church can add a limited number of new sermons per month (default 4).
 
 ## Platform admin
 
-A platform admin is above all churches (not tied to one) and is the only kind of user who can create one. Create an account in the app (Iniciar sesión → No tengo cuenta), confirm the email, then:
+A platform admin is above all churches (not tied to one) and is the only kind of user who can create one, directly or by approving a request. Create an account in the app (Iniciar sesión → No tengo cuenta), confirm the email, then:
 
 ```sh
 cd worker && .venv/bin/python -m selah_worker make-admin you@example.com
 ```
 
-This sets `profiles.is_platform_admin`. To change a church's monthly sermon limit:
+This sets `profiles.is_platform_admin`. Platform admins see church requests in the app, under Perfil → Solicitudes de iglesias: each request shows the church, the requester and a suggested address, and the admin approves it (which creates the church and makes the requester its Owner) or rejects it.
+
+To change a church's monthly sermon limit:
 
 ```sh
 cd worker && .venv/bin/python -m selah_worker set-limit <church-slug> <n>
@@ -115,3 +119,7 @@ The migrations and the new app must go out together: the old app does not unders
 5. Build and deploy the web app with the commands under "Live app". Then open `https://selah-226.pages.dev/studies/<an existing slug>` and confirm it lands on `/c/<church>/studies/<slug>`.
 6. Restart the worker: `.venv/bin/python -m selah_worker run`.
 7. Smoke test on the live site: sign in with a second Google account, check it is not offered to create a church, open an Editor invite link from the first account's church, and confirm that account only sees its own churches' drafts.
+
+## Releasing church requests and the Today page
+
+Migration `202610300001_church_requests.sql` (a table and functions only) must be pushed (`npx supabase db push --linked`) before deploying this app version, because the new app calls the request functions at sign-up and from Perfil → Solicitudes de iglesias. The old app keeps working against the new schema.

@@ -4,7 +4,7 @@ Written 2026-10-12 after reviewing the original brief, the original scaffold, an
 
 **Confirmed decisions:** Flutter client; Supabase for data and auth; Gemini for AI (model set in `.env`); the worker runs on the admin's Mac and polls Supabase for jobs.
 
-**Status:** Phases 0, 1, 2 and 4 are done, except Android in Phase 0. Phase 3 has publish/unpublish, reference approval and regeneration, but not the content editor or preview yet. Google sign-in for the web is live (Apple deferred). Multi-church support (churches, roles Owner/Editor/Member, invite links, monthly sermon limit per church) is released; only platform admins (set with `make-admin`) create churches.
+**Status:** Phases 0, 1, 2 and 4 are done, except Android in Phase 0. Phase 3 has publish/unpublish, reference approval and regeneration, but not the content editor or preview yet. Google sign-in for the web is live (Apple deferred). Multi-church support (churches, roles Owner/Editor/Member, invite links, monthly sermon limit per church) is released; only platform admins (set with `make-admin`) create churches. The app has a Today page and light/dark themes, new accounts choose between joining a church and requesting one, and platform admins approve requests in Perfil → Solicitudes de iglesias (needs migration `202610300001`; pending release).
 
 ## 1. Goal
 
