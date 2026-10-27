@@ -122,6 +122,32 @@ void main() {
     });
   }
 
+  testWidgets('next still works when the memberships fetch fails', (tester) async {
+    final router = GoRouter(initialLocation: '/login', routes: [
+      GoRoute(path: '/join/:t', builder: (_, s) => Text('JOIN ${s.pathParameters['t']}')),
+      GoRoute(
+        path: '/login',
+        builder: (_, _) =>
+            LoginPage(landing: Uri.parse('https://selah-226.pages.dev/login?next=/join/abc'), userAgent: ''),
+      ),
+    ]);
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        repositoryProvider.overrideWithValue(_FakeRepository()),
+        userIdProvider.overrideWith((ref) => Stream.value('user-1')),
+        myChurchesProvider.overrideWith((ref) async => throw Exception('network')),
+      ],
+      child: MaterialApp.router(
+        routerConfig: router,
+        locale: const Locale('es'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+      ),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text('JOIN abc'), findsOneWidget);
+  });
+
   testWidgets('Google sign-in carries next in the return url', (tester) async {
     final fake = await _pump(tester, landing: Uri.parse('https://selah-226.pages.dev/login?next=/join/abc'));
     await tester.tap(find.text('Continuar con Google'));

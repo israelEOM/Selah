@@ -491,4 +491,42 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get churchNameInvalid =>
       'The name must be between 2 and 80 characters.';
+
+  @override
+  String get people => 'Personas';
+
+  @override
+  String get churchSettings => 'Ajustes de la iglesia';
+
+  @override
+  String get inviteLinks => 'Enlaces de invitación';
+
+  @override
+  String get createLink => 'Crear enlace';
+
+  @override
+  String get revokeLink => 'Revocar';
+
+  @override
+  String get copyLink => 'Copiar enlace';
+
+  @override
+  String get linkCopied => 'Enlace copiado';
+
+  @override
+  String get removePerson => 'Quitar';
+
+  @override
+  String get lastOwner => 'La iglesia debe conservar al menos un propietario.';
+
+  @override
+  String joinChurchAs(String church, String role) {
+    return 'Join $church as $role';
+  }
+
+  @override
+  String get signInToJoin => 'Sign in to join';
+
+  @override
+  String get inviteInvalid => 'This invitation link is no longer valid.';
 }

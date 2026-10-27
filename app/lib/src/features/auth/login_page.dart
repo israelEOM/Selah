@@ -39,9 +39,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     // Covers email sign-in, the return from Google, and someone who opens this page already signed in.
     ref.listenManual(userIdProvider, fireImmediately: true, (_, next) async {
       if (next.value == null) return;
-      final churches = await ref.read(myChurchesProvider.future);
-      final editable = churches.where((m) => m.role.canEdit).toList();
-      final destination = safeNext(_next) ?? (editable.length == 1 ? '/c/${editable.first.church.slug}/admin' : '/');
+      // A safe `next` wins outright, so don't wait on (or fail with) the memberships fetch.
+      var destination = safeNext(_next);
+      if (destination == null) {
+        final churches = await ref.read(myChurchesProvider.future);
+        final editable = churches.where((m) => m.role.canEdit).toList();
+        destination = editable.length == 1 ? '/c/${editable.first.church.slug}/admin' : '/';
+      }
       if (mounted) GoRouter.of(context).go(destination);
     });
   }

@@ -5,12 +5,14 @@ import 'package:go_router/go_router.dart';
 import '../../l10n/app_localizations.dart';
 import '../features/admin/admin_home_page.dart';
 import '../features/admin/import_page.dart';
+import '../features/admin/people_page.dart';
 import '../features/admin/sermon_page.dart';
 import '../core/models.dart';
 import '../features/auth/login_page.dart';
 import '../features/church/church_page.dart';
 import '../features/church/church_scope.dart';
 import '../features/church/create_church_page.dart';
+import '../features/church/join_page.dart';
 import '../features/church/legacy_redirects.dart';
 import '../features/home/home_page.dart';
 import '../features/study/reader_page.dart';
@@ -35,6 +37,7 @@ GoRouter createRouter({String initialLocation = '/'}) => GoRouter(
       routes: [
         GoRoute(path: '/', builder: (_, _) => const HomePage()),
         GoRoute(path: '/login', builder: (_, _) => const LoginPage()),
+        GoRoute(path: '/join/:token', builder: (_, state) => JoinPage(token: state.pathParameters['token']!)),
         GoRoute(path: '/churches/new', builder: (_, _) => const CreateChurchPage()),
         GoRoute(path: '/c/:church', builder: (_, state) => _inChurch(state, (church) => ChurchPage(church: church))),
         GoRoute(
@@ -61,6 +64,10 @@ GoRouter createRouter({String initialLocation = '/'}) => GoRouter(
         GoRoute(
           path: '/c/:church/admin/settings',
           builder: (context, state) => _inChurchAdmin(context, state, (church) => AdminHomePage(church: church)),
+        ),
+        GoRoute(
+          path: '/c/:church/admin/people',
+          builder: (context, state) => _inChurchAdmin(context, state, (church) => PeoplePage(church: church)),
         ),
         GoRoute(
           path: '/c/:church/admin/sermons/new',

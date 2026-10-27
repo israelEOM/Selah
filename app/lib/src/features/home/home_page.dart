@@ -47,7 +47,7 @@ class HomePage extends ConsumerWidget {
             if (signedIn && mine.isNotEmpty) ...[
               Eyebrow(l.yourChurches),
               const SizedBox(height: 12),
-              for (final m in mine) _ChurchTile(church: m.church, subtitle: _roleLabel(l, m.role)),
+              for (final m in mine) _ChurchTile(church: m.church, subtitle: roleLabel(l, m.role)),
               const SizedBox(height: 24),
             ],
             Eyebrow(l.allChurches),
@@ -89,7 +89,7 @@ class HomePage extends ConsumerWidget {
   }
 }
 
-String _roleLabel(AppLocalizations l, ChurchRole role) => switch (role) {
+String roleLabel(AppLocalizations l, ChurchRole role) => switch (role) {
       ChurchRole.owner => l.roleOwner,
       ChurchRole.editor => l.roleEditor,
       ChurchRole.member => l.roleMember,

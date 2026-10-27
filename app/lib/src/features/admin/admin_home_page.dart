@@ -18,16 +18,18 @@ class AdminHomePage extends ConsumerWidget {
     final l = AppLocalizations.of(context)!;
     final text = Theme.of(context).textTheme;
     final sermons = ref.watch(sermonsProvider(church.id));
+    final isOwner = ref.watch(churchRoleProvider(church.id)).value == ChurchRole.owner;
     final base = '/c/${church.slug}/admin';
     return AdminPage(church: church, backTo: '/c/${church.slug}', children: [
       Eyebrow(l.admin),
       const SizedBox(height: 8),
       Text(l.adminTitle, style: text.headlineMedium),
       const SizedBox(height: 20),
-      Align(
-        alignment: Alignment.centerLeft,
-        child: FilledButton(onPressed: () => context.go('$base/sermons/new'), child: Text(l.importSermon)),
-      ),
+      Wrap(spacing: 12, runSpacing: 8, children: [
+        FilledButton(onPressed: () => context.go('$base/sermons/new'), child: Text(l.importSermon)),
+        if (isOwner) OutlinedButton(onPressed: () => context.go('$base/people'), child: Text(l.people)),
+        if (isOwner) OutlinedButton(onPressed: () => context.go('$base/settings'), child: Text(l.churchSettings)),
+      ]),
       const SizedBox(height: 24),
       ...sermons.when(
         loading: () => [const Center(child: CircularProgressIndicator())],

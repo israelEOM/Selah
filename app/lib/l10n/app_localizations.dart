@@ -963,6 +963,78 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'El nombre debe tener entre 2 y 80 caracteres.'**
   String get churchNameInvalid;
+
+  /// No description provided for @people.
+  ///
+  /// In es, this message translates to:
+  /// **'Personas'**
+  String get people;
+
+  /// No description provided for @churchSettings.
+  ///
+  /// In es, this message translates to:
+  /// **'Ajustes de la iglesia'**
+  String get churchSettings;
+
+  /// No description provided for @inviteLinks.
+  ///
+  /// In es, this message translates to:
+  /// **'Enlaces de invitación'**
+  String get inviteLinks;
+
+  /// No description provided for @createLink.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear enlace'**
+  String get createLink;
+
+  /// No description provided for @revokeLink.
+  ///
+  /// In es, this message translates to:
+  /// **'Revocar'**
+  String get revokeLink;
+
+  /// No description provided for @copyLink.
+  ///
+  /// In es, this message translates to:
+  /// **'Copiar enlace'**
+  String get copyLink;
+
+  /// No description provided for @linkCopied.
+  ///
+  /// In es, this message translates to:
+  /// **'Enlace copiado'**
+  String get linkCopied;
+
+  /// No description provided for @removePerson.
+  ///
+  /// In es, this message translates to:
+  /// **'Quitar'**
+  String get removePerson;
+
+  /// No description provided for @lastOwner.
+  ///
+  /// In es, this message translates to:
+  /// **'La iglesia debe conservar al menos un propietario.'**
+  String get lastOwner;
+
+  /// No description provided for @joinChurchAs.
+  ///
+  /// In es, this message translates to:
+  /// **'Únete a {church} como {role}'**
+  String joinChurchAs(String church, String role);
+
+  /// No description provided for @signInToJoin.
+  ///
+  /// In es, this message translates to:
+  /// **'Inicia sesión para unirte'**
+  String get signInToJoin;
+
+  /// No description provided for @inviteInvalid.
+  ///
+  /// In es, this message translates to:
+  /// **'Este enlace de invitación ya no es válido.'**
+  String get inviteInvalid;
 }
 
 class _AppLocalizationsDelegate

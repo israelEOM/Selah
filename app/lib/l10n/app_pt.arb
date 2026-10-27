@@ -205,5 +205,27 @@
   "churchAddress": "Endereço",
   "slugTaken": "Esse endereço já está em uso. Tente outro.",
   "slugInvalid": "Use de 3 a 40 letras minúsculas, números ou hífens.",
-  "churchNameInvalid": "O nome deve ter entre 2 e 80 caracteres."
+  "churchNameInvalid": "O nome deve ter entre 2 e 80 caracteres.",
+  "people": "Personas",
+  "churchSettings": "Ajustes de la iglesia",
+  "inviteLinks": "Enlaces de invitación",
+  "createLink": "Crear enlace",
+  "revokeLink": "Revocar",
+  "copyLink": "Copiar enlace",
+  "linkCopied": "Enlace copiado",
+  "removePerson": "Quitar",
+  "lastOwner": "La iglesia debe conservar al menos un propietario.",
+  "joinChurchAs": "Entre em {church} como {role}",
+  "signInToJoin": "Entre para participar",
+  "inviteInvalid": "Este link de convite não é mais válido.",
+  "@joinChurchAs": {
+    "placeholders": {
+      "church": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  }
 }
