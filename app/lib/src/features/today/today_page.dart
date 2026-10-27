@@ -15,6 +15,7 @@ import '../../l10n/locale.dart';
 import '../home/church_picker_page.dart';
 import '../study/translation_banner.dart';
 import 'part_tick.dart';
+import 'today_refresh.dart';
 import 'today_state.dart';
 
 /// The Hoy tab: today's part of the church's newest study, or the church list when none is chosen yet.
@@ -24,10 +25,9 @@ class TodayPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
-    final text = Theme.of(context).textTheme;
     return ref.watch(currentChurchProvider).when(
           loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
-          error: (_, _) => Scaffold(body: PageBody(children: [Text(l.loadError, style: text.bodyLarge)])),
+          error: (_, _) => Scaffold(body: _LoadError(onRetry: () => ref.invalidate(currentChurchProvider))),
           data: (church) => church == null
               ? Scaffold(
                   appBar: AppBar(title: Text(l.pickChurch)),
@@ -36,7 +36,15 @@ class TodayPage extends ConsumerWidget {
                     child: const PageBody(children: [ChurchList()]),
                   ),
                 )
-              : Scaffold(body: _Today(church: church)),
+              : Scaffold(
+                  body: TodayRefresher(
+                    churchId: church.id,
+                    child: RefreshIndicator(
+                      onRefresh: () => refreshToday(ref, church.id),
+                      child: _Today(church: church),
+                    ),
+                  ),
+                ),
         );
   }
 }
@@ -50,6 +58,8 @@ class _Today extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
     final text = Theme.of(context).textTheme;
+    // Rebuilt with a fresh `now` on resume, at midnight and on pull to refresh.
+    ref.watch(todayRefreshProvider);
     final now = ref.watch(clockProvider)();
     final language = ref.watch(appLocaleProvider).languageCode;
     final header = [
@@ -65,10 +75,9 @@ class _Today extends ConsumerWidget {
     ];
     Widget page(List<Widget> children) => PageBody(children: [...header, ...children]);
     const loading = Center(child: CircularProgressIndicator());
-    final error = PageBody(children: [Text(l.loadError, style: text.bodyLarge)]);
     return ref.watch(newestStudyProvider(church.id)).when(
           loading: () => loading,
-          error: (_, _) => error,
+          error: (_, _) => _LoadError(onRetry: () => ref.invalidate(newestStudyProvider(church.id))),
           data: (original) {
             if (original == null) {
               return page([
@@ -83,7 +92,7 @@ class _Today extends ConsumerWidget {
             }
             return ref.watch(studyProgressProvider(original.id)).when(
                   loading: () => loading,
-                  error: (_, _) => error,
+                  error: (_, _) => _LoadError(onRetry: () => ref.invalidate(studyProgressProvider(original.id))),
                   data: (progress) {
                     final study = studyToShow(original, language, showOriginal: ref.watch(showOriginalProvider(original.id)));
                     final state = todayFor(study: study, progress: progress, now: now);
@@ -180,6 +189,23 @@ class _Today extends ConsumerWidget {
           ),
         ),
     ];
+  }
+}
+
+/// The load error with a button to try again.
+class _LoadError extends StatelessWidget {
+  const _LoadError({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    return PageBody(children: [
+      Text(l.loadError, style: Theme.of(context).textTheme.bodyLarge),
+      const SizedBox(height: 12),
+      Align(alignment: Alignment.centerLeft, child: OutlinedButton(onPressed: onRetry, child: Text(l.retry))),
+    ]);
   }
 }
 

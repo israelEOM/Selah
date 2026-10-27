@@ -54,6 +54,8 @@ Future<void> _pump(
   bool noStudy = false,
   Map<String, Object> prefs = const {},
   String language = 'es',
+  DateTime Function()? clock,
+  Future<PublicStudy?> Function()? newest,
 }) async {
   SharedPreferences.setMockInitialValues(prefs);
   final router = GoRouter(initialLocation: '/', routes: [
@@ -69,8 +71,9 @@ Future<void> _pump(
     overrides: [
       savedLanguageProvider.overrideWithValue(language),
       currentChurchProvider.overrideWith((ref) async => _church),
-      newestStudyProvider.overrideWith((ref, churchId) async => noStudy ? null : PublicStudy.fromJson(study ?? _json())),
-      clockProvider.overrideWithValue(() => _now),
+      newestStudyProvider.overrideWith(
+          (ref, churchId) async => newest != null ? newest() : noStudy ? null : PublicStudy.fromJson(study ?? _json())),
+      clockProvider.overrideWithValue(clock ?? () => _now),
     ],
     child: Consumer(
       builder: (context, ref, _) => MaterialApp.router(
@@ -178,5 +181,54 @@ void main() {
     expect(find.text('Seguir Jesus'), findsOneWidget);
     expect(find.text('DIA 1 EM PORTUGUÊS'), findsOneWidget);
     expect(find.text('Leitura bíblica'), findsOneWidget);
+  });
+
+  group('the next day', () {
+    const doneDay1 = {'progress:study-1': '{"1":{"parts":["reading","reflection","prayer"],"doneOn":"2026-10-27"}}'};
+
+    testWidgets('shows after the app comes back the next morning', (tester) async {
+      var now = DateTime(2026, 10, 27, 23, 59);
+      await _pump(tester, prefs: doneDay1, clock: () => now);
+      expect(find.text('Hecho por hoy'), findsOneWidget);
+      now = DateTime(2026, 10, 28, 7);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pumpAndSettle();
+      expect(find.text('Hecho por hoy'), findsNothing);
+      expect(find.text('DEVOCIONAL DE HOY · DÍA 2 DE 5'), findsOneWidget);
+      expect(find.text('MIÉRCOLES, 28 DE OCTUBRE'), findsOneWidget);
+    });
+
+    testWidgets('shows at midnight with the app open', (tester) async {
+      var now = DateTime(2026, 10, 27, 23, 59);
+      await _pump(tester, prefs: doneDay1, clock: () => now);
+      expect(find.text('Hecho por hoy'), findsOneWidget);
+      now = DateTime(2026, 10, 28, 0, 0, 1);
+      await tester.pump(const Duration(minutes: 1, seconds: 1));
+      await tester.pumpAndSettle();
+      expect(find.text('DEVOCIONAL DE HOY · DÍA 2 DE 5'), findsOneWidget);
+    });
+
+    testWidgets('shows after a pull to refresh', (tester) async {
+      var now = DateTime(2026, 10, 27, 23, 59);
+      await _pump(tester, prefs: doneDay1, clock: () => now);
+      now = DateTime(2026, 10, 28, 7);
+      await tester.fling(find.byType(Scrollable).first, const Offset(0, 400), 1000);
+      await tester.pumpAndSettle();
+      expect(find.text('DEVOCIONAL DE HOY · DÍA 2 DE 5'), findsOneWidget);
+    });
+  });
+
+  testWidgets('a failed load offers a retry', (tester) async {
+    var fail = true;
+    await _pump(tester, newest: () async {
+      if (fail) throw Exception('offline');
+      return PublicStudy.fromJson(_json());
+    });
+    expect(find.text('Reintentar'), findsOneWidget);
+    fail = false;
+    await tester.tap(find.text('Reintentar'));
+    await tester.pumpAndSettle();
+    expect(find.text('Seguir a Jesús'), findsOneWidget);
   });
 }
