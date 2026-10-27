@@ -223,20 +223,22 @@ void main() {
     });
   }
 
-  testWidgets('a failing welcome check falls back to the usual destination', (tester) async {
+  Future<void> pumpFailingLookup(WidgetTester tester, {required bool retry, required String failing}) async {
     SharedPreferences.setMockInitialValues({});
     final router = GoRouter(initialLocation: '/login', routes: [
       GoRoute(path: '/', builder: (_, _) => const Text('HOME')),
       GoRoute(path: '/welcome', builder: (_, _) => const Text('WELCOME')),
       GoRoute(path: '/login', builder: (_, _) => LoginPage(landing: Uri.parse('https://x.test/login'), userAgent: '')),
     ]);
+    Never offline() => throw Exception('offline');
     await tester.pumpWidget(ProviderScope(
-      retry: (_, _) => null,
+      retry: retry ? null : (_, _) => null,
       overrides: [
         repositoryProvider.overrideWithValue(_FakeRepository()),
         userIdProvider.overrideWith((ref) => Stream.value('user-1')),
-        myChurchesProvider.overrideWith((ref) async => const []),
-        isPlatformAdminProvider.overrideWith((ref) async => throw Exception('offline')),
+        myChurchesProvider.overrideWith((ref) async => failing == 'churches' ? offline() : const []),
+        isPlatformAdminProvider.overrideWith((ref) async => failing == 'admin' ? offline() : false),
+        myChurchRequestProvider.overrideWith((ref) async => failing == 'request' ? offline() : null),
       ],
       child: MaterialApp.router(
         theme: selahLightTheme(),
@@ -246,7 +248,23 @@ void main() {
         supportedLocales: AppLocalizations.supportedLocales,
       ),
     ));
+  }
+
+  testWidgets('a failing welcome check falls back to the usual destination', (tester) async {
+    await pumpFailingLookup(tester, retry: false, failing: 'admin');
     await tester.pumpAndSettle();
     expect(find.text('HOME'), findsOneWidget);
   });
+
+  for (final failing in ['admin', 'request', 'churches']) {
+    testWidgets('the $failing fetch keeps retrying and still lets sign-in through within seconds', (tester) async {
+      await pumpFailingLookup(tester, retry: true, failing: failing);
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+      expect(find.text('HOME'), findsOneWidget);
+      // Let Riverpod's pending retries run out before the test ends.
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(minutes: 2));
+    });
+  }
 }

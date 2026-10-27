@@ -40,26 +40,26 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     // Covers email sign-in, the return from Google, and someone who opens this page already signed in.
     ref.listenManual(userIdProvider, fireImmediately: true, (_, next) async {
       if (next.value == null) return;
-      // A safe `next` wins outright, so don't wait on (or fail with) the memberships fetch.
-      var destination = safeNext(_next);
-      if (destination == null) {
-        try {
-          if (await ref.read(needsWelcomeProvider.future)) destination = '/welcome';
-        } catch (_) {
-          // Don't hold up sign-in over the question; fall back to the usual rule.
-        }
-      }
-      if (destination == null) {
-        try {
-          final churches = await ref.read(myChurchesProvider.future);
-          final editable = churches.where((m) => m.role.canEdit).toList();
-          destination = editable.length == 1 ? '/c/${editable.first.church.slug}/admin' : '/';
-        } catch (_) {
-          destination = '/';
-        }
-      }
+      // A safe `next` wins outright, so don't wait on (or fail with) the account lookups.
+      // Failing lookups retry for a while, so give up on them after a few seconds rather than hold up sign-in.
+      final destination = safeNext(_next) ??
+          await _destinationForAccount().timeout(_lookupLimit, onTimeout: () => '/').catchError((_) => '/');
       if (mounted) GoRouter.of(context).go(destination);
     });
+  }
+
+  static const _lookupLimit = Duration(seconds: 4);
+
+  /// `/welcome` for a new account, the admin of the one church they edit, else home.
+  Future<String> _destinationForAccount() async {
+    try {
+      if (await ref.read(needsWelcomeProvider.future)) return '/welcome';
+    } catch (_) {
+      // Don't hold up sign-in over the question; fall back to the usual rule.
+    }
+    final churches = await ref.read(myChurchesProvider.future);
+    final editable = churches.where((m) => m.role.canEdit).toList();
+    return editable.length == 1 ? '/c/${editable.first.church.slug}/admin' : '/';
   }
 
   /// True for a cancelled Google sign-in, false for any other provider error, null for none.
