@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'src/app/app.dart';
 import 'src/app/theme_mode.dart';
 import 'src/core/config.dart';
+import 'src/data/current_church.dart';
 import 'src/data/providers.dart';
 import 'src/data/repository.dart';
 import 'src/l10n/locale.dart';
@@ -20,10 +21,12 @@ Future<void> main() async {
   await Supabase.initialize(url: config.supabaseUrl, publishableKey: config.supabaseAnonKey);
   final savedLanguage = await loadSavedLanguage();
   final savedTheme = await loadSavedThemeMode();
+  final savedChurch = await loadSavedChurch();
   runApp(ProviderScope(
     overrides: [
       savedLanguageProvider.overrideWithValue(savedLanguage),
-      savedThemeModeProvider.overrideWithValue(savedTheme),repositoryProvider.overrideWithValue(SelahRepository(Supabase.instance.client))],
+      savedThemeModeProvider.overrideWithValue(savedTheme),
+      savedChurchProvider.overrideWithValue(savedChurch),repositoryProvider.overrideWithValue(SelahRepository(Supabase.instance.client))],
     child: const SelahApp(),
   ));
 }
