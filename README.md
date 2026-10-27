@@ -54,12 +54,18 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 .venv/bin/python -m selah_worker run      # polls for jobs
 ```
 
-## First admin
+## Platform admin
 
 Create an account in the app (Iniciar sesión → No tengo cuenta), confirm the email, then:
 
 ```sh
 cd worker && .venv/bin/python -m selah_worker make-admin you@example.com
+```
+
+This sets `profiles.is_platform_admin`. To change a church's monthly sermon limit:
+
+```sh
+cd worker && .venv/bin/python -m selah_worker set-limit <church-slug> <n>
 ```
 
 ## Database changes

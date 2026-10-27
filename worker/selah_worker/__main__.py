@@ -1,8 +1,9 @@
 """Selah worker.
 
     python -m selah_worker run                 poll Supabase for jobs
-    python -m selah_worker pipeline <url> [days]  run every step for one sermon now
-    python -m selah_worker make-admin <email>  give an existing account the admin role
+    python -m selah_worker pipeline <church-slug> <url> [days]  run every step for one sermon now
+    python -m selah_worker make-admin <email>  make an existing account a platform admin
+    python -m selah_worker set-limit <church-slug> <n>  set a church's monthly sermon limit
     python -m selah_worker check               verify the Supabase connection
 """
 import logging
@@ -27,13 +28,20 @@ def make_admin(email: str) -> None:
         page += 1
     if not match:
         sys.exit(f"No account found for {email}. Create it in the app first, then run this again.")
-    db.table("profiles").update({"role": "admin"}).eq("id", match.id).execute()
-    print(f"{email} is now an admin.")
+    db.table("profiles").update({"is_platform_admin": True}).eq("id", match.id).execute()
+    print(f"{email} is now a platform admin.")
+
+
+def set_limit(church_slug: str, limit: int) -> None:
+    rows = client().table("churches").update({"monthly_sermon_limit": limit}).eq("slug", church_slug).execute().data
+    if not rows:
+        sys.exit(f"No church with slug '{church_slug}'.")
+    print(f"{rows[0]['name']}: {limit} sermons a month")
 
 
 def check() -> None:
-    row = client().table("church_settings").select("church_name").single().execute()
-    print(f"Connected to Supabase. Church: {row.data['church_name']}")
+    result = client().table("churches").select("id", count="exact").execute()
+    print(f"Connected to Supabase. Churches: {result.count}")
 
 
 def next_job(job: dict) -> dict | None:
@@ -42,7 +50,7 @@ def next_job(job: dict) -> dict | None:
     if not chain:
         return None
     return {
-        "sermon_id": job["sermon_id"], "created_by": job.get("created_by"), "step": chain[0]["step"],
+        "sermon_id": job["sermon_id"], "church_id": job["church_id"], "created_by": job.get("created_by"), "step": chain[0]["step"],
         "payload": (chain[0].get("payload") or {}) | {"chain": chain[1:]},
     }
 
@@ -94,8 +102,10 @@ def main() -> None:
         run()
     elif len(args) == 2 and args[0] == "make-admin":
         make_admin(args[1])
-    elif len(args) in (2, 3) and args[0] == "pipeline":
-        run_all(args[1], days=int(args[2]) if len(args) == 3 else 5)
+    elif len(args) == 3 and args[0] == "set-limit" and args[2].isdigit():
+        set_limit(args[1], int(args[2]))
+    elif len(args) in (3, 4) and args[0] == "pipeline":
+        run_all(args[1], args[2], days=int(args[3]) if len(args) == 4 else 5)
     elif args == ["check"]:
         check()
     else:
