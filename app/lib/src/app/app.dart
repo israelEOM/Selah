@@ -20,6 +20,7 @@ import '../features/study/reader_page.dart';
 import '../features/study/study_page.dart';
 import '../l10n/locale.dart';
 import 'theme.dart';
+import 'theme_mode.dart';
 
 /// Admin screens are always Spanish, whatever language the member picked.
 Widget inSpanish(BuildContext context, Widget page) =>
@@ -105,6 +106,7 @@ class SelahApp extends ConsumerWidget {
         debugShowCheckedModeBanner: false,
         theme: selahLightTheme(),
         darkTheme: selahDarkTheme(),
+        themeMode: ref.watch(themeModeProvider),
         routerConfig: _router,
         locale: ref.watch(appLocaleProvider),
         localizationsDelegates: AppLocalizations.localizationsDelegates,

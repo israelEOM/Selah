@@ -4,6 +4,7 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'src/app/app.dart';
+import 'src/app/theme_mode.dart';
 import 'src/core/config.dart';
 import 'src/data/providers.dart';
 import 'src/data/repository.dart';
@@ -18,9 +19,11 @@ Future<void> main() async {
   }
   await Supabase.initialize(url: config.supabaseUrl, publishableKey: config.supabaseAnonKey);
   final savedLanguage = await loadSavedLanguage();
+  final savedTheme = await loadSavedThemeMode();
   runApp(ProviderScope(
     overrides: [
-      savedLanguageProvider.overrideWithValue(savedLanguage),repositoryProvider.overrideWithValue(SelahRepository(Supabase.instance.client))],
+      savedLanguageProvider.overrideWithValue(savedLanguage),
+      savedThemeModeProvider.overrideWithValue(savedTheme),repositoryProvider.overrideWithValue(SelahRepository(Supabase.instance.client))],
     child: const SelahApp(),
   ));
 }
