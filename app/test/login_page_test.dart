@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:selah/l10n/app_localizations.dart';
+import 'package:selah/src/core/models.dart';
 import 'package:selah/src/data/providers.dart';
 import 'package:selah/src/data/repository.dart';
 import 'package:selah/src/features/auth/login_page.dart';
@@ -25,7 +26,7 @@ Future<_FakeRepository> _pump(WidgetTester tester, {Uri? landing, String? userAg
     overrides: [
       repositoryProvider.overrideWithValue(fake),
       userIdProvider.overrideWith((ref) => Stream.value(null)),
-      isAdminProvider.overrideWith((ref) async => false),
+      myChurchesProvider.overrideWith((ref) async => const []),
     ],
     child: MaterialApp(
       locale: const Locale('es'),
@@ -96,7 +97,12 @@ void main() {
         overrides: [
           repositoryProvider.overrideWithValue(_FakeRepository()),
           userIdProvider.overrideWith((ref) => Stream.value('user-1')),
-          isAdminProvider.overrideWith((ref) async => admin),
+          myChurchesProvider.overrideWith((ref) async => [
+                Membership(
+                  church: const Church(id: 'A', slug: 'vida-nueva', name: 'Iglesia Vida Nueva'),
+                  role: admin ? ChurchRole.editor : ChurchRole.member,
+                ),
+              ]),
         ],
         child: MaterialApp.router(
           routerConfig: router,

@@ -30,7 +30,6 @@
   "genericError": "No fue posible completar esta acción.",
   "admin": "Administrar",
   "adminTitle": "Predicaciones",
-  "adminOnly": "Esta sección es solo para administradores de la iglesia.",
   "adminEmpty": "Todavía no se ha importado ninguna predicación.",
   "importSermon": "Importar sermón",
   "back": "Volver",
@@ -189,5 +188,15 @@
   "translationPending": "Pendiente de aprobación",
   "translationLive": "Publicada",
   "stepTranslate": "Traducir al inglés y al portugués",
-  "publishedWithoutTranslation": "Estudio publicado, pero no se pudo iniciar la traducción. Usa «Traducir de nuevo»."
+  "publishedWithoutTranslation": "Estudio publicado, pero no se pudo iniciar la traducción. Usa «Traducir de nuevo».",
+  "churchNotFound": "No encontramos esta iglesia.",
+  "churchAdminOnly": "Esta sección es solo para quienes administran esta iglesia.",
+  "monthlyLimitReached": "Esta iglesia ya llegó a su límite de {limit} predicaciones este mes.",
+  "@monthlyLimitReached": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      }
+    }
+  }
 }

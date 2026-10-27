@@ -7,6 +7,9 @@ enum ChurchRole {
 
   bool get canEdit => this == owner || this == editor;
 
+  /// Owner > editor > member.
+  bool isAtLeast(ChurchRole other) => index <= other.index;
+
   static ChurchRole? parse(String? value) {
     for (final r in values) {
       if (r.name == value) return r;

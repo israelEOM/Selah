@@ -90,10 +90,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get adminTitle => 'Predicaciones';
 
   @override
-  String get adminOnly =>
-      'Esta sección es solo para administradores de la iglesia.';
-
-  @override
   String get adminEmpty => 'Todavía no se ha importado ninguna predicación.';
 
   @override
@@ -439,4 +435,16 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get publishedWithoutTranslation =>
       'Estudio publicado, pero no se pudo iniciar la traducción. Usa «Traducir de nuevo».';
+
+  @override
+  String get churchNotFound => 'No encontramos esta iglesia.';
+
+  @override
+  String get churchAdminOnly =>
+      'Esta sección es solo para quienes administran esta iglesia.';
+
+  @override
+  String monthlyLimitReached(int limit) {
+    return 'Esta iglesia ya llegó a su límite de $limit predicaciones este mes.';
+  }
 }

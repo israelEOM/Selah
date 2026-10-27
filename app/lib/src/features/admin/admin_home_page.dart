@@ -4,25 +4,29 @@ import 'package:go_router/go_router.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../app/theme.dart';
+import '../../core/models.dart';
 import '../../data/providers.dart';
 import 'admin_gate.dart';
 
 class AdminHomePage extends ConsumerWidget {
-  const AdminHomePage({super.key});
+  const AdminHomePage({super.key, required this.church});
+
+  final Church church;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
     final text = Theme.of(context).textTheme;
-    final sermons = ref.watch(sermonsProvider);
-    return AdminPage(backTo: '/', children: [
+    final sermons = ref.watch(sermonsProvider(church.id));
+    final base = '/c/${church.slug}/admin';
+    return AdminPage(church: church, backTo: '/c/${church.slug}', children: [
       Eyebrow(l.admin),
       const SizedBox(height: 8),
       Text(l.adminTitle, style: text.headlineMedium),
       const SizedBox(height: 20),
       Align(
         alignment: Alignment.centerLeft,
-        child: FilledButton(onPressed: () => context.go('/admin/sermons/new'), child: Text(l.importSermon)),
+        child: FilledButton(onPressed: () => context.go('$base/sermons/new'), child: Text(l.importSermon)),
       ),
       const SizedBox(height: 24),
       ...sermons.when(
@@ -44,7 +48,7 @@ class AdminHomePage extends ConsumerWidget {
                           child: Eyebrow(studyStatusLabel(l, sermon.studyStatus)),
                         ),
                         trailing: const Icon(Icons.chevron_right),
-                        onTap: () => context.go('/admin/sermons/${sermon.id}'),
+                        onTap: () => context.go('$base/sermons/${sermon.id}'),
                       ),
                     ),
                   ),

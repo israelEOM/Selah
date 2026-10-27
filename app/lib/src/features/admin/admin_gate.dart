@@ -4,13 +4,24 @@ import 'package:go_router/go_router.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../app/theme.dart';
+import '../../core/models.dart';
 import '../../data/providers.dart';
 
-/// Frame for every admin screen. Shows the content only to admins; the database
-/// enforces the same rule, this just gives everyone else a clear message.
+/// Frame for every admin screen of a church. Shows the content only to people whose role in
+/// [church] is at least [minRole]; the database enforces the same rule, this just gives
+/// everyone else a clear message.
 class AdminPage extends ConsumerWidget {
-  const AdminPage({super.key, required this.backTo, required this.children, this.maxWidth = 900});
+  const AdminPage({
+    super.key,
+    required this.church,
+    required this.backTo,
+    required this.children,
+    this.minRole = ChurchRole.editor,
+    this.maxWidth = 900,
+  });
 
+  final Church church;
+  final ChurchRole minRole;
   final String backTo;
   final List<Widget> children;
   final double maxWidth;
@@ -19,17 +30,17 @@ class AdminPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
     final userId = ref.watch(userIdProvider);
-    final isAdmin = ref.watch(isAdminProvider);
+    final role = ref.watch(churchRoleProvider(church.id));
 
-    if (userId.isLoading || isAdmin.isLoading) {
+    if (userId.isLoading || role.isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     final signedIn = userId.value != null;
-    if (!(isAdmin.value ?? false)) {
+    if (!(role.value?.isAtLeast(minRole) ?? false)) {
       return Scaffold(
         appBar: AppBar(),
         body: PageBody(maxWidth: 440, children: [
-          Text(l.adminOnly, style: Theme.of(context).textTheme.bodyLarge),
+          Text(l.churchAdminOnly, style: Theme.of(context).textTheme.bodyLarge),
           const SizedBox(height: 20),
           FilledButton(
             onPressed: () async {

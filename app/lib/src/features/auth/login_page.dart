@@ -38,8 +38,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     // Covers email sign-in, the return from Google, and someone who opens this page already signed in.
     ref.listenManual(userIdProvider, fireImmediately: true, (_, next) async {
       if (next.value == null) return;
-      final admin = await ref.read(isAdminProvider.future);
-      if (mounted) GoRouter.of(context).go(admin ? '/admin' : '/');
+      final churches = await ref.read(myChurchesProvider.future);
+      final editsAny = churches.any((m) => m.role.canEdit);
+      if (mounted) GoRouter.of(context).go(editsAny ? '/admin' : '/');
     });
   }
 

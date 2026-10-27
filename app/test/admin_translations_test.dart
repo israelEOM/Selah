@@ -8,6 +8,8 @@ import 'package:selah/src/data/providers.dart';
 import 'package:selah/src/data/repository.dart';
 import 'package:selah/src/features/admin/sermon_page.dart';
 
+const _church = Church(id: 'A', slug: 'vida-nueva', name: 'Iglesia Vida Nueva');
+
 class _FakeRepository implements SelahRepository {
   bool failJob = false;
   final calls = <String>[];
@@ -16,9 +18,9 @@ class _FakeRepository implements SelahRepository {
   Future<void> setStudyPublished(String studyId, bool published) async => calls.add('published:$studyId:$published');
 
   @override
-  Future<String> createJob(String step, Map<String, dynamic> payload, {String? sermonId}) async {
+  Future<String> createJob(String step, Map<String, dynamic> payload, {required String churchId, String? sermonId}) async {
     if (failJob) throw Exception('network');
-    calls.add('job:$step:$payload:$sermonId');
+    calls.add('job:$churchId:$step:$payload:$sermonId');
     return 'job-1';
   }
 
@@ -82,7 +84,7 @@ Future<_FakeRepository> _pump(
     overrides: [
       repositoryProvider.overrideWithValue(fake),
       userIdProvider.overrideWith((ref) => Stream.value('admin')),
-      isAdminProvider.overrideWith((ref) async => true),
+      churchRoleProvider('A').overrideWith((ref) async => ChurchRole.editor),
       sermonDetailProvider('s1').overrideWith((ref) async {
         // After the first read, a failed-job scenario shows the study as published, as the database now has it.
         reads++;
@@ -95,7 +97,7 @@ Future<_FakeRepository> _pump(
       locale: const Locale('es'),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: Builder(builder: (context) => inSpanish(context, const SermonPage(sermonId: 's1'))),
+      home: Builder(builder: (context) => inSpanish(context, const SermonPage(church: _church, sermonId: 's1'))),
     ),
   ));
   await tester.pumpAndSettle();
@@ -109,7 +111,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(fake.calls, [
       'published:st1:true',
-      "job:translate:{languages: [en, pt]}:s1",
+      "job:A:translate:{languages: [en, pt]}:s1",
     ]);
   });
 

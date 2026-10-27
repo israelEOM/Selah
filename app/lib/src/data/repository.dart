@@ -8,38 +8,54 @@ class SelahRepository {
 
   final SupabaseClient _client;
 
-  Future<List<StudyCard>> publishedStudies() async {
+  /// A church's published studies, newest first.
+  Future<List<StudyCard>> publishedStudies(String churchId) async {
     final rows = await _client
         .from('studies')
         .select('id, slug, title, number_of_days, central_message, published_at, '
             'sermons(thumbnail_url, preacher, channel, sermon_date), '
             'study_translations(language, title, central_message)')
+        .eq('church_id', churchId)
         .eq('status', 'published')
         .order('published_at', ascending: false);
     return rows.map(StudyCard.fromJson).toList();
   }
 
   /// A published study with its sermon and days, or null when there is none to show.
-  Future<PublicStudy?> studyBySlug(String slug) async {
+  Future<PublicStudy?> studyBySlug(String churchId, String slug) async {
     final row = await _client
         .from('studies')
         .select('id, slug, title, number_of_days, bible_version_code, output_language, summary, central_message, published_at, '
             'sermons(youtube_video_id, title, preacher, channel, thumbnail_url, sermon_date), devotional_days(*), study_translations(*)')
+        .eq('church_id', churchId)
         .eq('slug', slug)
         .eq('status', 'published')
         .maybeSingle();
     return row == null ? null : PublicStudy.fromJson(row);
   }
 
-  Future<bool> isAdmin(String userId) async {
-    final row = await _client.from('profiles').select('role').eq('id', userId).maybeSingle();
-    return row?['role'] == 'admin';
+  /// The slug of the church that owns the oldest study with [slug], for links made before churches existed.
+  Future<String?> legacyStudyChurch(String slug) async {
+    final row = await _client
+        .from('studies')
+        .select('churches(slug)')
+        .eq('slug', slug)
+        .order('created_at', ascending: true)
+        .limit(1)
+        .maybeSingle();
+    return (row?['churches'] as Map<String, dynamic>?)?['slug'] as String?;
   }
 
-  Future<List<SermonRow>> sermons() async {
+  Future<bool> isPlatformAdmin(String userId) async {
+    final row = await _client.from('profiles').select('is_platform_admin').eq('id', userId).maybeSingle();
+    return row?['is_platform_admin'] == true;
+  }
+
+  Future<List<SermonRow>> sermons(String churchId) async {
     final rows = await _client
         .from('sermons')
         .select('id, title, youtube_url, thumbnail_url, studies(status)')
+        .eq('church_id', churchId)
         .order('created_at', ascending: false);
     return rows.map(SermonRow.fromJson).toList();
   }
@@ -86,37 +102,47 @@ class SelahRepository {
   Future<Job> job(String id) async => Job.fromJson(await _client.from('jobs').select().eq('id', id).single());
 
   /// Queues work for the worker. The database allows one active job per sermon and step.
-  Future<String> createJob(String step, Map<String, dynamic> payload, {String? sermonId}) async {
+  Future<String> createJob(String step, Map<String, dynamic> payload, {required String churchId, String? sermonId}) async {
     final row = await _client
         .from('jobs')
-        .insert({'step': step, 'payload': payload, 'sermon_id': sermonId, 'created_by': _client.auth.currentUser!.id})
+        .insert({
+          'church_id': churchId,
+          'step': step,
+          'payload': payload,
+          'sermon_id': sermonId,
+          'created_by': _client.auth.currentUser!.id,
+        })
         .select('id')
         .single();
     return row['id'] as String;
   }
 
-  Future<String> saveSermon(Map<String, dynamic> fields) async {
+  Future<String> saveSermon(String churchId, Map<String, dynamic> fields) async {
     final row = await _client
         .from('sermons')
-        .upsert({...fields, 'created_by': _client.auth.currentUser!.id}, onConflict: 'youtube_video_id')
+        .upsert({...fields, 'church_id': churchId, 'created_by': _client.auth.currentUser!.id},
+            onConflict: 'church_id,youtube_video_id')
         .select('id')
         .single();
     return row['id'] as String;
   }
 
-  /// Channels imported from before, most recently used first.
-  Future<List<Map<String, dynamic>>> recentChannels() =>
-      _client.from('youtube_channels').select().order('last_used_at', ascending: false).limit(8);
+  /// Channels a church imported from before, most recently used first.
+  Future<List<Map<String, dynamic>>> recentChannels(String churchId) => _client
+      .from('youtube_channels')
+      .select()
+      .eq('church_id', churchId)
+      .order('last_used_at', ascending: false)
+      .limit(8);
 
-  Future<void> rememberChannel(Map<String, dynamic> channel) => _client.from('youtube_channels').upsert({
+  Future<void> rememberChannel(String churchId, Map<String, dynamic> channel) => _client.from('youtube_channels').upsert({
+        'church_id': churchId,
         'channel_id': channel['channel_id'],
         'title': channel['title'],
         'handle': channel['handle'],
         'thumbnail_url': channel['thumbnail_url'],
         'last_used_at': DateTime.now().toUtc().toIso8601String(),
       });
-
-  Future<Map<String, dynamic>> churchSettings() => _client.from('church_settings').select().single();
 
   Future<List<Map<String, dynamic>>> bibleVersions() =>
       _client.from('bible_versions').select('code, name, language').eq('active', true).order('name', ascending: true);

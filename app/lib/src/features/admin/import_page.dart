@@ -6,13 +6,16 @@ import 'package:intl/intl.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../app/theme.dart';
 import '../../core/format.dart';
+import '../../core/models.dart';
 import '../../data/providers.dart';
 import 'admin_gate.dart';
 
 const _languageNames = {'es': 'Español', 'pt': 'Português', 'en': 'English'};
 
 class ImportPage extends ConsumerStatefulWidget {
-  const ImportPage({super.key});
+  const ImportPage({super.key, required this.church});
+
+  final Church church;
 
   @override
   ConsumerState<ImportPage> createState() => _ImportPageState();
@@ -37,10 +40,10 @@ class _ImportPageState extends ConsumerState<ImportPage> {
   bool _loadingLives = false;
 
   String? _captionCode;
-  String _outputLanguage = 'es';
-  String _bibleVersion = 'RVR1960';
+  late String _outputLanguage = widget.church.defaultOutputLanguage ?? 'es';
+  late String _bibleVersion = widget.church.defaultBibleVersionCode ?? 'RVR1960';
   bool _customRange = false;
-  int _days = 5;
+  late int _days = widget.church.defaultDevotionalDays ?? 5;
 
   @override
   void dispose() {
@@ -62,7 +65,7 @@ class _ImportPageState extends ConsumerState<ImportPage> {
       _error = null;
     });
     try {
-      final jobId = await repo.createJob(step, payload);
+      final jobId = await repo.createJob(step, payload, churchId: widget.church.id);
       final started = DateTime.now();
       while (true) {
         await Future<void>.delayed(const Duration(seconds: 1));
@@ -91,18 +94,18 @@ class _ImportPageState extends ConsumerState<ImportPage> {
       _video = null;
     });
     try {
-      final settings = await ref.read(churchSettingsProvider.future);
+      final church = widget.church;
       final result = await _runJob('probe', {'url': _url.text.trim()});
       if (result == null || !mounted) return;
-      final sermonLanguage = settings['default_sermon_language'] as String;
+      final sermonLanguage = church.defaultSermonLanguage ?? 'es';
       setState(() {
         _video = result;
         // YouTube also lists auto-translated tracks, so prefer the church's language over the first track.
         final match = _captions.where((c) => (c['language_code'] as String).split('-').first == sermonLanguage);
         _captionCode = (match.isNotEmpty ? match.first : _captions.first)['language_code'] as String;
-        _outputLanguage = settings['default_output_language'] as String;
-        _bibleVersion = settings['default_bible_version_code'] as String;
-        _days = settings['default_devotional_days'] as int;
+        _outputLanguage = church.defaultOutputLanguage ?? _outputLanguage;
+        _bibleVersion = church.defaultBibleVersionCode ?? _bibleVersion;
+        _days = church.defaultDevotionalDays ?? _days;
       });
     } catch (_) {
       if (mounted) setState(() => _error = AppLocalizations.of(context)!.genericError);
@@ -133,8 +136,11 @@ class _ImportPageState extends ConsumerState<ImportPage> {
       _nextLivesPage = null;
     });
     // Remembering is a convenience; the lives still load if it fails.
-    ref.read(repositoryProvider).rememberChannel(channel).then((_) => ref.invalidate(recentChannelsProvider),
-        onError: (_) {});
+    final churchId = widget.church.id;
+    ref
+        .read(repositoryProvider)
+        .rememberChannel(churchId, channel)
+        .then((_) => ref.invalidate(recentChannelsProvider(churchId)), onError: (_) {});
     await _loadLives();
   }
 
@@ -177,7 +183,8 @@ class _ImportPageState extends ConsumerState<ImportPage> {
     });
     try {
       final video = Map<String, dynamic>.from(_video!)..remove('languages');
-      final sermonId = await repo.saveSermon({
+      final church = widget.church;
+      final sermonId = await repo.saveSermon(church.id, {
         ...video,
         'original_language': _captionCode!.split('-').first,
         'start_seconds': start,
@@ -199,12 +206,17 @@ class _ImportPageState extends ConsumerState<ImportPage> {
             },
           ],
         },
+        churchId: church.id,
         sermonId: sermonId,
       );
-      ref.invalidate(sermonsProvider);
-      if (mounted) context.go('/admin/sermons/$sermonId');
-    } catch (_) {
-      if (mounted) setState(() => _error = l.jobAlreadyRunning);
+      ref.invalidate(sermonsProvider(church.id));
+      if (mounted) context.go('/c/${church.slug}/admin/sermons/$sermonId');
+    } catch (e) {
+      if (mounted) {
+        setState(() => _error = SelahError.fromException(e) == 'monthly_limit_reached'
+            ? l.monthlyLimitReached(widget.church.monthlySermonLimit ?? 0)
+            : l.jobAlreadyRunning);
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -218,7 +230,7 @@ class _ImportPageState extends ConsumerState<ImportPage> {
         .where((v) => v['language'] == _outputLanguage)
         .toList();
     final video = _video;
-    return AdminPage(backTo: '/admin', maxWidth: 640, children: [
+    return AdminPage(church: widget.church, backTo: '/c/${widget.church.slug}/admin', maxWidth: 640, children: [
       Eyebrow(l.importSermon),
       const SizedBox(height: 8),
       Text(l.newSermonTitle, style: text.headlineMedium),
@@ -351,7 +363,7 @@ class _ImportPageState extends ConsumerState<ImportPage> {
 
   /// Search a church's channel, or reopen a recent one, then pick one of its finished lives.
   List<Widget> _channelPicker(AppLocalizations l, TextTheme text) {
-    final recent = ref.watch(recentChannelsProvider).value ?? const [];
+    final recent = ref.watch(recentChannelsProvider(widget.church.id)).value ?? const [];
     final found = _foundChannels;
     final channel = _channel;
     final date = DateFormat.MMMEd(l.localeName);

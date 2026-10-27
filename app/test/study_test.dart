@@ -23,6 +23,8 @@ Map<String, dynamic> _day(int n) => {
       'end_seconds': 100.0 * n + 50,
     };
 
+const _church = Church(id: 'A', slug: 'vida-nueva', name: 'Iglesia Vida Nueva');
+
 final _json = {
   'id': 'study-1',
   'slug': 'retiro-espiritual',
@@ -55,15 +57,21 @@ Future<GoRouter> _pump(WidgetTester tester, String location) async {
   SharedPreferences.setMockInitialValues({});
   final router = GoRouter(initialLocation: location, routes: [
     GoRoute(path: '/', builder: (_, _) => const Text('HOME')),
-    GoRoute(path: '/studies/:slug', builder: (_, s) => StudyPage(slug: s.pathParameters['slug']!)),
+    GoRoute(path: '/c/vida-nueva', builder: (_, _) => const Text('CHURCH')),
+    GoRoute(path: '/c/vida-nueva/studies/:slug', builder: (_, s) => StudyPage(church: _church, slug: s.pathParameters['slug']!)),
     GoRoute(
-      path: '/studies/:slug/day/:number',
-      builder: (_, s) => ReaderPage(slug: s.pathParameters['slug']!, dayNumber: int.parse(s.pathParameters['number']!)),
+      path: '/c/vida-nueva/studies/:slug/day/:number',
+      builder: (_, s) => ReaderPage(
+        church: _church,
+        slug: s.pathParameters['slug']!,
+        dayNumber: int.parse(s.pathParameters['number']!),
+      ),
     ),
   ]);
   await tester.pumpWidget(ProviderScope(
     overrides: [
-      studyProvider.overrideWith((ref, slug) async => slug == 'retiro-espiritual' ? PublicStudy.fromJson(_json) : null),
+      studyProvider.overrideWith((ref, key) async =>
+          key == (churchId: 'A', slug: 'retiro-espiritual') ? PublicStudy.fromJson(_json) : null),
     ],
     child: MaterialApp.router(
       routerConfig: router,
@@ -91,42 +99,42 @@ void main() {
   });
 
   testWidgets('study page lists the days and opens one', (tester) async {
-    final router = await _pump(tester, '/studies/retiro-espiritual');
+    final router = await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual');
     expect(find.text('La necesidad del retiro espiritual'), findsOneWidget);
     await tester.scrollUntilVisible(find.text('Título día 2'), 300);
     await tester.tap(find.text('Título día 2'));
     await tester.pumpAndSettle();
-    expect(router.routerDelegate.currentConfiguration.uri.path, '/studies/retiro-espiritual/day/2');
+    expect(router.routerDelegate.currentConfiguration.uri.path, '/c/vida-nueva/studies/retiro-espiritual/day/2');
   });
 
   testWidgets('unknown study says it is not available', (tester) async {
-    await _pump(tester, '/studies/no-existe');
+    await _pump(tester, '/c/vida-nueva/studies/no-existe');
     expect(find.text('Este estudio no está disponible.'), findsOneWidget);
   });
 
   testWidgets('reader shows the day and its position', (tester) async {
-    await _pump(tester, '/studies/retiro-espiritual/day/2');
+    await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/2');
     expect(find.text('DÍA 2 DE 3'), findsOneWidget);
     expect(find.text('Título día 2'), findsOneWidget);
     expect(find.text('Reflexión 2'), findsOneWidget);
   });
 
   testWidgets('reader moves to the next day', (tester) async {
-    final router = await _pump(tester, '/studies/retiro-espiritual/day/2');
+    final router = await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/2');
     await tester.scrollUntilVisible(find.text('Día siguiente'), 300);
     await tester.tap(find.text('Día siguiente'));
     await tester.pumpAndSettle();
-    expect(router.routerDelegate.currentConfiguration.uri.path, '/studies/retiro-espiritual/day/3');
+    expect(router.routerDelegate.currentConfiguration.uri.path, '/c/vida-nueva/studies/retiro-espiritual/day/3');
   });
 
   testWidgets('last day has no next day', (tester) async {
-    await _pump(tester, '/studies/retiro-espiritual/day/3');
+    await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/3');
     await tester.scrollUntilVisible(find.text('Día anterior'), 300);
     expect(find.text('Día siguiente'), findsNothing);
   });
 
   testWidgets('marking a day as read is remembered on the device', (tester) async {
-    await _pump(tester, '/studies/retiro-espiritual/day/1');
+    await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/1');
     await tester.scrollUntilVisible(find.text('Marcar como leído'), 300);
     await tester.tap(find.text('Marcar como leído'));
     await tester.pumpAndSettle();

@@ -13,8 +13,9 @@ const _translateTargets = {'languages': ['en', 'pt']};
 const _steps = ['transcript', 'analysis', 'summary', 'devotional'];
 
 class SermonPage extends ConsumerWidget {
-  const SermonPage({super.key, required this.sermonId});
+  const SermonPage({super.key, required this.church, required this.sermonId});
 
+  final Church church;
   final String sermonId;
 
   @override
@@ -29,14 +30,15 @@ class SermonPage extends ConsumerWidget {
       String signature(Map<String, Job>? m) => (m ?? const {}).values.map((j) => '${j.id}:${j.status}').join(',');
       if (signature(previous?.value) != signature(next.value)) {
         ref.invalidate(sermonDetailProvider(sermonId));
-        ref.invalidate(sermonsProvider);
+        ref.invalidate(sermonsProvider(church.id));
         final studyId = detail.value?.study?['id'] as String?;
         if (studyId != null) ref.invalidate(adminTranslationsProvider(studyId));
       }
     });
 
     return AdminPage(
-      backTo: '/admin',
+      church: church,
+      backTo: '/c/${church.slug}/admin',
       children: detail.when(
         skipLoadingOnReload: true,
         loading: () => [const Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator()))],
@@ -53,16 +55,21 @@ class SermonPage extends ConsumerWidget {
           const SizedBox(height: 6),
           _Link(label: l.watchSermon, uri: youtubeAt(d.videoId, null)),
           const SizedBox(height: 28),
-          _Progress(detail: d, jobs: jobs, sermonId: sermonId),
+          _Progress(detail: d, jobs: jobs, churchId: church.id, sermonId: sermonId),
           const SizedBox(height: 32),
           _Analysis(detail: d),
           const SizedBox(height: 32),
           _References(detail: d, sermonId: sermonId),
           const SizedBox(height: 32),
-          _Study(detail: d, jobs: jobs, sermonId: sermonId),
+          _Study(detail: d, jobs: jobs, churchId: church.id, sermonId: sermonId),
           if (d.study?['status'] == 'published') ...[
             const SizedBox(height: 32),
-            _Translations(studyId: d.study!['id'] as String, sermonId: sermonId, job: jobs['translate']),
+            _Translations(
+              studyId: d.study!['id'] as String,
+              churchId: church.id,
+              sermonId: sermonId,
+              job: jobs['translate'],
+            ),
           ],
         ],
       ),
@@ -89,10 +96,11 @@ class _Link extends StatelessWidget {
 }
 
 class _Progress extends ConsumerWidget {
-  const _Progress({required this.detail, required this.jobs, required this.sermonId});
+  const _Progress({required this.detail, required this.jobs, required this.churchId, required this.sermonId});
 
   final SermonDetail detail;
   final Map<String, Job> jobs;
+  final String churchId;
   final String sermonId;
 
   bool _hasOutput(String step) => switch (step) {
@@ -145,7 +153,7 @@ class _Progress extends ConsumerWidget {
                     TextButton(
                       style: TextButton.styleFrom(padding: EdgeInsets.zero),
                       // The failed job's payload carries the remaining steps, so a retry resumes the chain.
-                      onPressed: () => ref.read(repositoryProvider).createJob(step, job!.payload, sermonId: sermonId),
+                      onPressed: () => ref.read(repositoryProvider).createJob(step, job!.payload, churchId: churchId, sermonId: sermonId),
                       child: Text(l.retryStep),
                     ),
                   ],
@@ -256,10 +264,11 @@ class _References extends ConsumerWidget {
 }
 
 class _Study extends ConsumerStatefulWidget {
-  const _Study({required this.detail, required this.jobs, required this.sermonId});
+  const _Study({required this.detail, required this.jobs, required this.churchId, required this.sermonId});
 
   final SermonDetail detail;
   final Map<String, Job> jobs;
+  final String churchId;
   final String sermonId;
 
   @override
@@ -275,8 +284,8 @@ class _StudyState extends ConsumerState<_Study> {
     try {
       await action();
       ref.invalidate(sermonDetailProvider(widget.sermonId));
-      ref.invalidate(sermonsProvider);
-      ref.invalidate(publishedStudiesProvider);
+      ref.invalidate(sermonsProvider(widget.churchId));
+      ref.invalidate(publishedStudiesProvider(widget.churchId));
       if (mounted) setState(() => _notice = notice);
     } catch (_) {
       if (mounted) setState(() => _notice = l.jobAlreadyRunning);
@@ -295,13 +304,13 @@ class _StudyState extends ConsumerState<_Study> {
     }
     var notice = l.published;
     try {
-      await repo.createJob('translate', _translateTargets, sermonId: widget.sermonId);
+      await repo.createJob('translate', _translateTargets, churchId: widget.churchId, sermonId: widget.sermonId);
     } catch (_) {
       notice = l.publishedWithoutTranslation;
     }
     ref.invalidate(sermonDetailProvider(widget.sermonId));
-    ref.invalidate(sermonsProvider);
-    ref.invalidate(publishedStudiesProvider);
+    ref.invalidate(sermonsProvider(widget.churchId));
+    ref.invalidate(publishedStudiesProvider(widget.churchId));
     if (mounted) setState(() => _notice = notice);
   }
 
@@ -383,7 +392,7 @@ class _StudyState extends ConsumerState<_Study> {
         OutlinedButton(
           onPressed: busy
               ? null
-              : () => _run(() => repo.createJob('devotional', {'days': _days}, sermonId: widget.sermonId)),
+              : () => _run(() => repo.createJob('devotional', {'days': _days}, churchId: widget.churchId, sermonId: widget.sermonId)),
           child: Text(l.regenerateDevotional),
         ),
         TextButton(
@@ -400,6 +409,7 @@ class _StudyState extends ConsumerState<_Study> {
                         },
                       ],
                     },
+                    churchId: widget.churchId,
                     sermonId: widget.sermonId,
                   )),
           child: Text(l.regenerateAll),
@@ -422,9 +432,10 @@ class _StudyState extends ConsumerState<_Study> {
 const _languageNames = {'en': 'Inglés', 'pt': 'Portugués (Brasil)'};
 
 class _Translations extends ConsumerWidget {
-  const _Translations({required this.studyId, required this.sermonId, required this.job});
+  const _Translations({required this.studyId, required this.churchId, required this.sermonId, required this.job});
 
   final String studyId;
+  final String churchId;
   final String sermonId;
   final Job? job;
 
@@ -519,7 +530,7 @@ class _Translations extends ConsumerWidget {
                   ? null
                   : () async {
                       try {
-                        await repo.createJob('translate', _translateTargets, sermonId: sermonId);
+                        await repo.createJob('translate', _translateTargets, churchId: churchId, sermonId: sermonId);
                         ref.invalidate(sermonJobsProvider(sermonId));
                       } catch (_) {
                         if (context.mounted) {

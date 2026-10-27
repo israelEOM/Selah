@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:selah/l10n/app_localizations.dart';
+import 'package:selah/src/core/models.dart';
 import 'package:selah/src/data/providers.dart';
 import 'package:selah/src/app/app.dart';
 import 'package:selah/src/features/admin/admin_home_page.dart';
@@ -13,11 +14,14 @@ import 'package:selah/src/features/home/home_page.dart';
 import 'package:selah/src/l10n/locale.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+const _church = Church(id: 'A', slug: 'vida-nueva', name: 'Iglesia Vida Nueva');
+
 Widget _app(Widget home, {List<Override> overrides = const [], bool admin = false}) => ProviderScope(
       overrides: [
         userIdProvider.overrideWith((ref) => Stream.value(admin ? 'admin-1' : null)),
-        isAdminProvider.overrideWith((ref) async => admin),
-        publishedStudiesProvider.overrideWith((ref) async => const []),
+        myChurchesProvider.overrideWith((ref) async => const []),
+        churchRoleProvider('A').overrideWith((ref) async => admin ? ChurchRole.editor : null),
+        publicChurchesProvider.overrideWith((ref) async => const []),
         ...overrides,
       ],
       child: Consumer(
@@ -61,11 +65,11 @@ void main() {
 
   testWidgets('admin screens stay in Spanish', (tester) async {
     await tester.pumpWidget(_app(
-      Builder(builder: (context) => inSpanish(context, const AdminHomePage())),
+      Builder(builder: (context) => inSpanish(context, const AdminHomePage(church: _church))),
       admin: true,
       overrides: [
         savedLanguageProvider.overrideWithValue('en'),
-        sermonsProvider.overrideWith((ref) async => const []),
+        sermonsProvider('A').overrideWith((ref) async => const []),
       ],
     ));
     await tester.pumpAndSettle();

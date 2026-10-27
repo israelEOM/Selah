@@ -238,12 +238,6 @@ abstract class AppLocalizations {
   /// **'Predicaciones'**
   String get adminTitle;
 
-  /// No description provided for @adminOnly.
-  ///
-  /// In es, this message translates to:
-  /// **'Esta sección es solo para administradores de la iglesia.'**
-  String get adminOnly;
-
   /// No description provided for @adminEmpty.
   ///
   /// In es, this message translates to:
@@ -867,6 +861,24 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Estudio publicado, pero no se pudo iniciar la traducción. Usa «Traducir de nuevo».'**
   String get publishedWithoutTranslation;
+
+  /// No description provided for @churchNotFound.
+  ///
+  /// In es, this message translates to:
+  /// **'No encontramos esta iglesia.'**
+  String get churchNotFound;
+
+  /// No description provided for @churchAdminOnly.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta sección es solo para quienes administran esta iglesia.'**
+  String get churchAdminOnly;
+
+  /// No description provided for @monthlyLimitReached.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta iglesia ya llegó a su límite de {limit} predicaciones este mes.'**
+  String monthlyLimitReached(int limit);
 }
 
 class _AppLocalizationsDelegate
