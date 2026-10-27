@@ -31,6 +31,8 @@ Future<void> refreshChurches(WidgetRef ref) async {
 
 /// The picker's list: the person's churches with their role, then every public church.
 /// Picking one makes it the app's church and opens Today, unless [onPick] says otherwise.
+/// A member who picks a church they don't belong to gets its page instead, where they can follow it:
+/// the app only shows a member's own churches.
 class ChurchList extends ConsumerWidget {
   const ChurchList({super.key, this.onPick});
 
@@ -43,10 +45,11 @@ class ChurchList extends ConsumerWidget {
     final churches = ref.watch(publicChurchesProvider);
     final mine = ref.watch(myChurchesProvider).value ?? const <Membership>[];
     final signedIn = ref.watch(userIdProvider).value != null;
+    final mineOnly = signedIn && mine.isNotEmpty;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (signedIn && mine.isNotEmpty) ...[
+        if (mineOnly) ...[
           Eyebrow(l.yourChurches),
           const SizedBox(height: 12),
           for (final m in mine) _ChurchTile(church: m.church, subtitle: roleLabel(l, m.role), onPick: onPick),
@@ -73,7 +76,14 @@ class ChurchList extends ConsumerWidget {
           ],
           data: (items) => items.isEmpty
               ? [Text(l.noStudiesYet, style: text.bodyMedium)]
-              : [for (final church in items) _ChurchTile(church: church, onPick: onPick)],
+              : [
+                  for (final church in items)
+                    _ChurchTile(
+                      church: church,
+                      onPick: onPick,
+                      opensPage: mineOnly && !mine.any((m) => m.church.id == church.id),
+                    ),
+                ],
         ),
       ],
     );
@@ -81,11 +91,14 @@ class ChurchList extends ConsumerWidget {
 }
 
 class _ChurchTile extends ConsumerWidget {
-  const _ChurchTile({required this.church, this.subtitle, this.onPick});
+  const _ChurchTile({required this.church, this.subtitle, this.onPick, this.opensPage = false});
 
   final Church church;
   final String? subtitle;
   final void Function(Church church)? onPick;
+
+  /// Open the church's page rather than choosing it.
+  final bool opensPage;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => Padding(
@@ -99,7 +112,9 @@ class _ChurchTile extends ConsumerWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: onPick != null
                 ? () => onPick!(church)
-                : () {
+                : opensPage
+                    ? () => context.go('/c/${church.slug}')
+                    : () {
                     ref.read(chosenChurchSlugProvider.notifier).choose(church.slug);
                     context.go('/');
                   },

@@ -17,6 +17,7 @@ Future<void> _pump(WidgetTester tester, {String? userId, ChurchRole? role}) asyn
   final router = GoRouter(initialLocation: '/churches', routes: [
     GoRoute(path: '/', builder: (_, _) => const Text('HOME')),
     GoRoute(path: '/churches', builder: (_, _) => const ChurchPickerPage()),
+    GoRoute(path: '/c/:church', builder: (_, s) => Text('CHURCH ${s.pathParameters['church']}')),
   ]);
   await tester.pumpWidget(ProviderScope(
     overrides: [
@@ -56,5 +57,29 @@ void main() {
     await _pump(tester, userId: 'user-1', role: ChurchRole.editor);
     expect(find.text('TUS IGLESIAS'), findsOneWidget);
     expect(find.text('Editor'), findsOneWidget);
+  });
+
+  testWidgets('a member tapping a church they belong to chooses it and goes to Hoy', (tester) async {
+    await _pump(tester, userId: 'user-1', role: ChurchRole.member);
+    await tester.tap(find.text('Iglesia Vida Nueva').last);
+    await tester.pumpAndSettle();
+    expect(find.text('HOME'), findsOneWidget);
+    expect((await SharedPreferences.getInstance()).getString('church'), 'vida-nueva');
+  });
+
+  testWidgets('a member tapping a church they don\'t belong to opens its page', (tester) async {
+    await _pump(tester, userId: 'user-1', role: ChurchRole.member);
+    await tester.tap(find.text('Otra Iglesia'));
+    await tester.pumpAndSettle();
+    expect(find.text('CHURCH otra'), findsOneWidget);
+    expect((await SharedPreferences.getInstance()).getString('church'), isNull);
+  });
+
+  testWidgets('signed in with no church, tapping a church still chooses it', (tester) async {
+    await _pump(tester, userId: 'user-1');
+    await tester.tap(find.text('Otra Iglesia'));
+    await tester.pumpAndSettle();
+    expect(find.text('HOME'), findsOneWidget);
+    expect((await SharedPreferences.getInstance()).getString('church'), 'otra');
   });
 }
