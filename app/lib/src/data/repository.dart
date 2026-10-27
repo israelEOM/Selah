@@ -13,7 +13,7 @@ class SelahRepository {
     final rows = await _client
         .from('studies')
         .select('id, slug, title, number_of_days, central_message, published_at, '
-            'sermons(thumbnail_url, preacher, channel, sermon_date), '
+            'sermons!studies_sermon_id_fkey(thumbnail_url, preacher, channel, sermon_date), '
             'study_translations(language, title, central_message)')
         .eq('church_id', churchId)
         .eq('status', 'published')
@@ -26,7 +26,7 @@ class SelahRepository {
     final row = await _client
         .from('studies')
         .select('id, slug, title, number_of_days, bible_version_code, output_language, summary, central_message, published_at, '
-            'sermons(youtube_video_id, title, preacher, channel, thumbnail_url, sermon_date), devotional_days(*), study_translations(*)')
+            'sermons!studies_sermon_id_fkey(youtube_video_id, title, preacher, channel, thumbnail_url, sermon_date), devotional_days(*), study_translations(*)')
         .eq('church_id', churchId)
         .eq('slug', slug)
         .eq('status', 'published')
@@ -55,7 +55,7 @@ class SelahRepository {
   Future<List<SermonRow>> sermons(String churchId) async {
     final rows = await _client
         .from('sermons')
-        .select('id, title, youtube_url, thumbnail_url, studies(status)')
+        .select('id, title, youtube_url, thumbnail_url, studies!studies_sermon_id_fkey(status)')
         .eq('church_id', churchId)
         .order('created_at', ascending: false);
     return rows.map(SermonRow.fromJson).toList();
