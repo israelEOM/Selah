@@ -208,6 +208,7 @@
   "roleEditor": "Editor",
   "roleMember": "Miembro",
   "createChurchTitle": "Crea tu iglesia",
+  "createChurchAdminOnly": "Solo los administradores de Selah pueden crear iglesias.",
   "churchName": "Nombre de la iglesia",
   "churchAddress": "Dirección",
   "slugTaken": "Esa dirección ya está en uso. Prueba con otra.",

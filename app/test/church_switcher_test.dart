@@ -10,7 +10,7 @@ import 'package:selah/src/features/church/church_switcher.dart';
 const _a = Church(id: 'A', slug: 'a', name: 'Iglesia A');
 const _b = Church(id: 'B', slug: 'b', name: 'Iglesia B');
 
-Future<void> _pump(WidgetTester tester, List<Membership> memberships, {bool admin = true}) async {
+Future<void> _pump(WidgetTester tester, List<Membership> memberships, {bool admin = true, bool platformAdmin = true}) async {
   final router = GoRouter(initialLocation: '/start', routes: [
     GoRoute(
       path: '/start',
@@ -21,7 +21,10 @@ Future<void> _pump(WidgetTester tester, List<Membership> memberships, {bool admi
     GoRoute(path: '/churches/new', builder: (_, _) => const Text('NEW')),
   ]);
   await tester.pumpWidget(ProviderScope(
-    overrides: [myChurchesProvider.overrideWith((ref) async => memberships)],
+    overrides: [
+      myChurchesProvider.overrideWith((ref) async => memberships),
+      isPlatformAdminProvider.overrideWith((ref) async => platformAdmin),
+    ],
     child: MaterialApp.router(
       routerConfig: router,
       locale: const Locale('es'),
@@ -72,6 +75,14 @@ void main() {
     await tester.tap(find.text('Crear una iglesia'));
     await tester.pumpAndSettle();
     expect(find.text('NEW'), findsOneWidget);
+  });
+
+  testWidgets('only platform admins are offered to create a church', (tester) async {
+    await _pump(tester, two, platformAdmin: false);
+    await tester.tap(find.byType(PopupMenuButton<String>));
+    await tester.pumpAndSettle();
+    expect(find.text('Iglesia B'), findsWidgets);
+    expect(find.text('Crear una iglesia'), findsNothing);
   });
 
   testWidgets('hidden with one church', (tester) async {

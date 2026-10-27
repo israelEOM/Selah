@@ -73,15 +73,17 @@ class HomePage extends ConsumerWidget {
                   ? [Text(l.noStudiesYet, style: text.bodyMedium)]
                   : [for (final church in items) _ChurchTile(church: church)],
             ),
-            const SizedBox(height: 24),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: OutlinedButton.icon(
-                icon: const Icon(Icons.add),
-                label: Text(l.createChurch),
-                onPressed: () => context.push(signedIn ? '/churches/new' : '/login?next=/churches/new'),
+            if (ref.watch(isPlatformAdminProvider).value == true) ...[
+              const SizedBox(height: 24),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: OutlinedButton.icon(
+                  icon: const Icon(Icons.add),
+                  label: Text(l.createChurch),
+                  onPressed: () => context.push('/churches/new'),
+                ),
               ),
-            ),
+            ],
           ],
         ),
       ),

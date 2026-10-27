@@ -10,7 +10,7 @@ import 'package:selah/src/features/home/home_page.dart';
 const _vida = Church(id: 'A', slug: 'vida-nueva', name: 'Iglesia Vida Nueva');
 const _otra = Church(id: 'B', slug: 'otra', name: 'Otra Iglesia');
 
-Future<void> _pump(WidgetTester tester, {String? userId, ChurchRole? role}) async {
+Future<void> _pump(WidgetTester tester, {String? userId, ChurchRole? role, bool platformAdmin = false}) async {
   final router = GoRouter(routes: [
     GoRoute(path: '/', builder: (_, _) => const HomePage()),
     GoRoute(path: '/c/:church', builder: (_, s) => Text('CHURCH ${s.pathParameters['church']}')),
@@ -22,6 +22,7 @@ Future<void> _pump(WidgetTester tester, {String? userId, ChurchRole? role}) asyn
       userIdProvider.overrideWith((ref) => Stream.value(userId)),
       myChurchesProvider.overrideWith((ref) async => [if (role != null) Membership(church: _vida, role: role)]),
       publicChurchesProvider.overrideWith((ref) async => const [_vida, _otra]),
+      isPlatformAdminProvider.overrideWith((ref) async => platformAdmin),
     ],
     child: MaterialApp.router(
       routerConfig: router,
@@ -57,16 +58,15 @@ void main() {
     expect(find.text('Iniciar sesión'), findsNothing);
   });
 
-  testWidgets('creating a church signed out goes through login', (tester) async {
+  testWidgets('visitors and signed-in non-admins are not offered to create a church', (tester) async {
     await _pump(tester);
-    await tester.ensureVisible(find.text('Crear una iglesia'));
-    await tester.tap(find.text('Crear una iglesia'));
-    await tester.pumpAndSettle();
-    expect(find.text('LOGIN /churches/new'), findsOneWidget);
+    expect(find.text('Crear una iglesia'), findsNothing);
+    await _pump(tester, userId: 'user-1', role: ChurchRole.owner);
+    expect(find.text('Crear una iglesia'), findsNothing);
   });
 
-  testWidgets('creating a church signed in goes to the form', (tester) async {
-    await _pump(tester, userId: 'user-1');
+  testWidgets('a platform admin creating a church goes to the form', (tester) async {
+    await _pump(tester, userId: 'user-1', platformAdmin: true);
     await tester.ensureVisible(find.text('Crear una iglesia'));
     await tester.tap(find.text('Crear una iglesia'));
     await tester.pumpAndSettle();

@@ -476,6 +476,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get createChurchTitle => 'Crea tu iglesia';
 
   @override
+  String get createChurchAdminOnly =>
+      'Solo los administradores de Selah pueden crear iglesias.';
+
+  @override
   String get churchName => 'Nombre de la iglesia';
 
   @override

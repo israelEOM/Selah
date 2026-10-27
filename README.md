@@ -57,7 +57,7 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 
 ## Churches and roles
 
-Anyone signed in can create a church. Each church has members with one of three roles:
+Only platform admins create churches (see below); everyone else joins one through an invite link. Each church has members with one of three roles:
 
 | Role | Can |
 |---|---|
@@ -69,7 +69,7 @@ People join by invite link. A link can be used many times and can be revoked by 
 
 ## Platform admin
 
-A platform admin is above all churches (not tied to one). Create an account in the app (Iniciar sesión → No tengo cuenta), confirm the email, then:
+A platform admin is above all churches (not tied to one) and is the only kind of user who can create one. Create an account in the app (Iniciar sesión → No tengo cuenta), confirm the email, then:
 
 ```sh
 cd worker && .venv/bin/python -m selah_worker make-admin you@example.com
@@ -114,4 +114,4 @@ The migrations and the new app must go out together: the old app does not unders
    Optional: adjust that church's limit, which starts at 30: `.venv/bin/python -m selah_worker set-limit <slug> <n>`.
 5. Build and deploy the web app with the commands under "Live app". Then open `https://selah-226.pages.dev/studies/<an existing slug>` and confirm it lands on `/c/<church>/studies/<slug>`.
 6. Restart the worker: `.venv/bin/python -m selah_worker run`.
-7. Smoke test on the live site: sign in with a second Google account, create a church, open an Editor invite link from the first account's church, and confirm that account only sees its own churches' drafts.
+7. Smoke test on the live site: sign in with a second Google account, check it is not offered to create a church, open an Editor invite link from the first account's church, and confirm that account only sees its own churches' drafts.

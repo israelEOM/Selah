@@ -30,6 +30,12 @@ final myChurchesProvider = FutureProvider<List<Membership>>((ref) {
   return ref.watch(repositoryProvider).myChurches();
 });
 
+/// Whether the signed-in user is a platform admin, the only people who create churches.
+final isPlatformAdminProvider = FutureProvider<bool>((ref) async {
+  final userId = await ref.watch(userIdProvider.future);
+  return userId != null && await ref.watch(repositoryProvider).isPlatformAdmin(userId);
+});
+
 /// The signed-in user's role in a church (by id), or null.
 final churchRoleProvider = FutureProvider.family<ChurchRole?, String>((ref, churchId) {
   ref.watch(userIdProvider);

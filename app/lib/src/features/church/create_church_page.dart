@@ -6,6 +6,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../app/theme.dart';
 import '../../core/models.dart';
 import '../../data/providers.dart';
+import 'church_scope.dart';
 
 final _slugPattern = RegExp(r'^[a-z0-9](?:[a-z0-9-]{1,38})[a-z0-9]$');
 
@@ -33,7 +34,7 @@ String slugFromName(String name) {
   return s;
 }
 
-/// Any signed-in person names a church and picks its address.
+/// A platform admin names a church and picks its address.
 class CreateChurchPage extends ConsumerStatefulWidget {
   const CreateChurchPage({super.key});
 
@@ -74,6 +75,7 @@ class _CreateChurchPageState extends ConsumerState<CreateChurchPage> {
           _error = switch (code) {
             'church_slug_taken' => l.slugTaken,
             'church_slug_invalid' => l.slugInvalid,
+            'not_allowed' => l.createChurchAdminOnly,
             _ => l.loadError,
           };
         });
@@ -91,9 +93,11 @@ class _CreateChurchPageState extends ConsumerState<CreateChurchPage> {
         if (mounted) context.go('/login?next=${Uri.encodeQueryComponent('/churches/new')}');
       });
     }
-    if (user.value == null) {
+    final admin = ref.watch(isPlatformAdminProvider);
+    if (user.value == null || !admin.hasValue) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
+    if (!admin.value!) return ChurchMessage(text: l.createChurchAdminOnly, style: text.bodyLarge);
     return Scaffold(
       appBar: AppBar(title: Text(l.createChurchTitle, style: text.titleLarge)),
       body: PageBody(

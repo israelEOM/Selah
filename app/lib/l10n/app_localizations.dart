@@ -934,6 +934,12 @@ abstract class AppLocalizations {
   /// **'Crea tu iglesia'**
   String get createChurchTitle;
 
+  /// No description provided for @createChurchAdminOnly.
+  ///
+  /// In es, this message translates to:
+  /// **'Solo los administradores de Selah pueden crear iglesias.'**
+  String get createChurchAdminOnly;
+
   /// No description provided for @churchName.
   ///
   /// In es, this message translates to:

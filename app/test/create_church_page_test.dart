@@ -25,7 +25,7 @@ class _FakeRepository implements SelahRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-Future<_FakeRepository> _pump(WidgetTester tester, {String? userId = 'user-1', String? failWith}) async {
+Future<_FakeRepository> _pump(WidgetTester tester, {String? userId = 'user-1', String? failWith, bool platformAdmin = true}) async {
   final fake = _FakeRepository()..failWith = failWith;
   final router = GoRouter(initialLocation: '/churches/new', routes: [
     GoRoute(path: '/churches/new', builder: (_, _) => const CreateChurchPage()),
@@ -37,6 +37,7 @@ Future<_FakeRepository> _pump(WidgetTester tester, {String? userId = 'user-1', S
       repositoryProvider.overrideWithValue(fake),
       userIdProvider.overrideWith((ref) => Stream.value(userId)),
       myChurchesProvider.overrideWith((ref) async => const []),
+      isPlatformAdminProvider.overrideWith((ref) async => platformAdmin),
     ],
     child: MaterialApp.router(
       routerConfig: router,
@@ -65,6 +66,19 @@ void main() {
   testWidgets('signed out goes to login', (tester) async {
     await _pump(tester, userId: null);
     expect(find.text('LOGIN /churches/new'), findsOneWidget);
+  });
+
+  testWidgets('a signed-in non-admin is told only admins create churches', (tester) async {
+    await _pump(tester, platformAdmin: false);
+    expect(find.text(AppLocalizationsEs().createChurchAdminOnly), findsOneWidget);
+    expect(find.byType(TextFormField), findsNothing);
+  });
+
+  testWidgets('a refusal from the database is reported', (tester) async {
+    await _pump(tester, failWith: 'not_allowed');
+    await tester.enterText(find.byType(TextFormField).first, 'Iglesia X');
+    await _submit(tester);
+    expect(find.text(AppLocalizationsEs().createChurchAdminOnly), findsOneWidget);
   });
 
   testWidgets('typing a name fills the slug until it is edited', (tester) async {

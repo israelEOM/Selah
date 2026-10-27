@@ -24,6 +24,7 @@ class ChurchSwitcher extends ConsumerWidget {
     final memberships = ref.watch(myChurchesProvider).value ?? const <Membership>[];
     if (memberships.length < 2) return const SizedBox.shrink();
     final l = AppLocalizations.of(context)!;
+    final canCreate = ref.watch(isPlatformAdminProvider).value == true;
     return PopupMenuButton<String>(
       onSelected: (value) {
         if (value == _create) {
@@ -36,8 +37,10 @@ class ChurchSwitcher extends ConsumerWidget {
       },
       itemBuilder: (_) => [
         for (final m in memberships) PopupMenuItem(value: m.church.slug, child: Text(m.church.name)),
-        const PopupMenuDivider(),
-        PopupMenuItem(value: _create, child: Text(l.createChurch)),
+        if (canCreate) ...[
+          const PopupMenuDivider(),
+          PopupMenuItem(value: _create, child: Text(l.createChurch)),
+        ],
       ],
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

@@ -1,5 +1,5 @@
 begin;
-select plan(32);
+select plan(33);
 
 create temp table u as
 select tests.create_user('pastor@example.com') as owner,
@@ -10,6 +10,12 @@ create temp table t (k text primary key, v uuid);
 grant all on t to public;
 
 -- create_church
+select tests.act_as((select stranger from u));
+select throws_ok($$select public.create_church('Mine', 'mine')$$,
+  'P0001', 'not_allowed', 'only a platform admin can create a church');
+-- The owner creates the church as a platform admin, then is an ordinary owner again.
+select tests.reset();
+update public.profiles set is_platform_admin = true where id = (select owner from u);
 select tests.act_as((select owner from u));
 select lives_ok($$select public.create_church('Vida Nueva', 'vida-nueva')$$,
   'create_church returns a church');
@@ -21,6 +27,8 @@ select throws_ok($$select public.create_church('Other', 'vida-nueva')$$,
   'P0001', 'church_slug_taken', 'a taken slug is refused');
 select throws_ok($$select public.create_church('Tiny', 'VN')$$,
   'P0001', 'church_slug_invalid', 'an invalid slug is refused');
+select tests.reset();
+update public.profiles set is_platform_admin = false where id = (select owner from u);
 select tests.act_as_anon();
 select throws_ok($$select public.create_church('Anon', 'anon-church')$$,
   '42501', null, 'anon cannot create a church');
