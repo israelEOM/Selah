@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:selah/l10n/app_localizations.dart';
 import 'package:selah/src/app/app.dart';
+import 'package:selah/src/app/design/adaptive_tab_bar.dart';
 import 'package:selah/src/app/theme.dart';
 import 'package:selah/src/core/models.dart';
 import 'package:selah/src/data/current_church.dart';
@@ -128,6 +129,9 @@ Future<void> _onIos(Future<void> Function() body) async {
   }
 }
 
+/// The Hoy tab in the tab bar, apart from Hoy's own large title.
+Finder _hoyTab() => find.descendant(of: find.byType(AdaptiveTabBar), matching: find.text('Hoy'));
+
 void main() {
   testWidgets('back from a reader opened on Hoy returns to Hoy', (tester) async {
     final router = await _pump(tester, '/');
@@ -135,7 +139,7 @@ void main() {
     expect(_path(router), _reader1);
     await _back(tester, 'Volver al estudio');
     expect(_path(router), '/');
-    expect(find.text('Seguir a Jesús'), findsOneWidget);
+    expect(find.text('SEGUIR A JESÚS · DÍA 1 DE 5'), findsOneWidget);
     expect(find.text('Idea principal 1'), findsOneWidget);
   });
 
@@ -199,14 +203,14 @@ void main() {
 
   testWidgets('the reader and study page cover the tab bar', (tester) async {
     final router = await _pump(tester, '/');
-    expect(find.text('Hoy').hitTestable(), findsOneWidget);
+    expect(_hoyTab().hitTestable(), findsOneWidget);
     await _tap(tester, find.text('Reflexión'));
     expect(_path(router), _reader1);
-    expect(find.text('Hoy').hitTestable(), findsNothing);
+    expect(_hoyTab().hitTestable(), findsNothing);
     await _back(tester, 'Volver al estudio');
     router.push('/c/vida-nueva/studies/seguir');
     await tester.pumpAndSettle();
-    expect(find.text('Hoy').hitTestable(), findsNothing);
+    expect(_hoyTab().hitTestable(), findsNothing);
   });
 
   testWidgets('a tab keeps its scroll position when you come back', (tester) async {

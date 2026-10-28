@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -56,6 +59,8 @@ Future<void> _pump(
   String language = 'es',
   DateTime Function()? clock,
   Future<PublicStudy?> Function()? newest,
+  bool settle = true,
+  double textScale = 1,
 }) async {
   SharedPreferences.setMockInitialValues(prefs);
   final router = GoRouter(initialLocation: '/', routes: [
@@ -80,12 +85,16 @@ Future<void> _pump(
         theme: selahLightTheme(),
         routerConfig: router,
         locale: ref.watch(appLocaleProvider),
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(textScale)),
+          child: child!,
+        ),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
       ),
     ),
   ));
-  await tester.pumpAndSettle();
+  if (settle) await tester.pumpAndSettle();
 }
 
 Future<void> _tap(WidgetTester tester, Finder finder) async {
@@ -102,8 +111,8 @@ void main() {
   testWidgets('shows day 1 of a fresh study', (tester) async {
     await _pump(tester);
     expect(find.text('Iglesia Vida Nueva'), findsOneWidget);
-    expect(find.text('Seguir a Jesús'), findsOneWidget);
-    expect(find.text('DEVOCIONAL DE HOY · DÍA 1 DE 5'), findsOneWidget);
+    expect(find.text('SEGUIR A JESÚS · DÍA 1 DE 5'), findsOneWidget);
+    expect(find.text('Día 1 del camino'), findsOneWidget);
     expect(find.text('Idea principal 1'), findsOneWidget);
     expect(find.text('Lectura bíblica'), findsOneWidget);
     expect(find.text('Reflexión'), findsOneWidget);
@@ -178,8 +187,8 @@ void main() {
 
   testWidgets('shows the study in the chosen language', (tester) async {
     await _pump(tester, language: 'pt');
-    expect(find.text('Seguir Jesus'), findsOneWidget);
-    expect(find.text('DIA 1 EM PORTUGUÊS'), findsOneWidget);
+    expect(find.text('SEGUIR JESUS · DIA 1 DE 5'), findsOneWidget);
+    expect(find.text('Dia 1 em português'), findsOneWidget);
     expect(find.text('Leitura bíblica'), findsOneWidget);
   });
 
@@ -195,7 +204,7 @@ void main() {
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
       await tester.pumpAndSettle();
       expect(find.text('Hecho por hoy'), findsNothing);
-      expect(find.text('DEVOCIONAL DE HOY · DÍA 2 DE 5'), findsOneWidget);
+      expect(find.text('SEGUIR A JESÚS · DÍA 2 DE 5'), findsOneWidget);
       expect(find.text('MIÉRCOLES, 28 DE OCTUBRE'), findsOneWidget);
     });
 
@@ -206,7 +215,7 @@ void main() {
       now = DateTime(2026, 10, 28, 0, 0, 1);
       await tester.pump(const Duration(minutes: 1, seconds: 1));
       await tester.pumpAndSettle();
-      expect(find.text('DEVOCIONAL DE HOY · DÍA 2 DE 5'), findsOneWidget);
+      expect(find.text('SEGUIR A JESÚS · DÍA 2 DE 5'), findsOneWidget);
     });
 
     testWidgets('shows after a pull to refresh', (tester) async {
@@ -215,7 +224,7 @@ void main() {
       now = DateTime(2026, 10, 28, 7);
       await tester.fling(find.byType(Scrollable).first, const Offset(0, 400), 1000);
       await tester.pumpAndSettle();
-      expect(find.text('DEVOCIONAL DE HOY · DÍA 2 DE 5'), findsOneWidget);
+      expect(find.text('SEGUIR A JESÚS · DÍA 2 DE 5'), findsOneWidget);
     });
   });
 
@@ -229,6 +238,48 @@ void main() {
     fail = false;
     await tester.tap(find.text('Reintentar'));
     await tester.pumpAndSettle();
-    expect(find.text('Seguir a Jesús'), findsOneWidget);
+    expect(find.text('SEGUIR A JESÚS · DÍA 1 DE 5'), findsOneWidget);
+  });
+
+  testWidgets('while the study loads Hoy shows skeletons, not a spinner', (tester) async {
+    await _pump(tester, newest: () => Completer<PublicStudy?>().future, settle: false);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.byType(Skeleton), findsWidgets);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+  });
+
+  testWidgets('the hero card carries the day\'s hero tag', (tester) async {
+    await _pump(tester);
+    expect(find.byWidgetPredicate((w) => w is Hero && w.tag == dayHeroTag('study-1', 1)), findsOneWidget);
+  });
+
+  testWidgets('tapping the hero card opens the day in the reader', (tester) async {
+    await _pump(tester);
+    await _tap(tester, find.byType(HeroCard));
+    expect(find.text('READER seguir 1'), findsOneWidget);
+  });
+
+  testWidgets('ticking a part plays a tick haptic and finishing the day plays success', (tester) async {
+    final haptics = <String>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+      if (call.method == 'HapticFeedback.vibrate') haptics.add((call.arguments as String).split('.').last);
+      return null;
+    });
+    addTearDown(() => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, null));
+    await _pump(tester);
+    await _tap(tester, find.byKey(const ValueKey('tick-reading')));
+    await _tap(tester, find.byKey(const ValueKey('tick-reflection')));
+    expect(haptics.where((h) => h == 'lightImpact'), hasLength(2));
+    expect(haptics, isNot(contains('mediumImpact')));
+    await _tap(tester, find.byKey(const ValueKey('tick-prayer')));
+    expect(haptics.where((h) => h == 'mediumImpact'), hasLength(1));
+  });
+
+  testWidgets('Hoy fits at 200% text size', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await _pump(tester, textScale: 2);
+    expect(tester.takeException(), isNull);
   });
 }

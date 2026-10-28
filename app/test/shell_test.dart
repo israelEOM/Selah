@@ -92,7 +92,7 @@ void main() {
 
   testWidgets('Hoy without a church shows the church list', (tester) async {
     await _pump(tester, '/', current: null);
-    expect(find.text('Elige tu iglesia'), findsOneWidget);
+    expect(find.text('Elige tu iglesia'), findsWidgets);
     expect(find.text('Iglesia Vida Nueva'), findsWidgets);
     expect(find.text('Hoy'), findsOneWidget);
   });

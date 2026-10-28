@@ -18,6 +18,13 @@ import 'part_tick.dart';
 import 'today_refresh.dart';
 import 'today_state.dart';
 
+/// Ticks [part] and, when that finishes the day, plays the success haptic. Hoy and the reader both tick through this.
+Future<void> tickWithFeedback(WidgetRef ref, String progressId, DevotionalDay day, DayPart part, DateTime now) async {
+  await tickPart(ref, progressId, day, part, now);
+  // A toggle can only finish the day by adding its last part, so done now means it just became done.
+  if ((await loadProgress(progressId)).isDone(day)) await SelahHaptics.success();
+}
+
 /// The Hoy tab: today's part of the church's newest study, or the church list when none is chosen yet.
 class TodayPage extends ConsumerWidget {
   const TodayPage({super.key});
@@ -26,25 +33,14 @@ class TodayPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
     return ref.watch(currentChurchProvider).when(
-          loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
-          error: (_, _) => Scaffold(body: _LoadError(onRetry: () => ref.invalidate(currentChurchProvider))),
+          loading: () => SelahPage(title: l.tabToday, children: const [SkeletonList(hero: true, rows: 3)]),
+          error: (_, _) => SelahPage(
+            title: l.tabToday,
+            children: [_LoadError(onRetry: () => ref.invalidate(currentChurchProvider))],
+          ),
           data: (church) => church == null
-              ? Scaffold(
-                  appBar: AppBar(title: Text(l.pickChurch)),
-                  body: RefreshIndicator(
-                    onRefresh: () => refreshChurches(ref),
-                    child: const PageBody(children: [ChurchList()]),
-                  ),
-                )
-              : Scaffold(
-                  body: TodayRefresher(
-                    churchId: church.id,
-                    child: RefreshIndicator(
-                      onRefresh: () => refreshToday(ref, church.id),
-                      child: _Today(church: church),
-                    ),
-                  ),
-                ),
+              ? SelahPage(title: l.pickChurch, onRefresh: () => refreshChurches(ref), children: const [ChurchList()])
+              : TodayRefresher(churchId: church.id, child: _Today(church: church)),
         );
   }
 }
@@ -62,28 +58,34 @@ class _Today extends ConsumerWidget {
     ref.watch(todayRefreshProvider);
     final now = ref.watch(clockProvider)();
     final language = ref.watch(appLocaleProvider).languageCode;
+    final eyebrowStyle = text.labelMedium?.copyWith(color: context.tones.muted, fontWeight: FontWeight.w600, letterSpacing: 1);
     final header = [
-      Text(church.name, style: text.titleMedium?.copyWith(color: context.tones.muted, fontWeight: FontWeight.w600)),
-      const SizedBox(height: 16),
-      _WeekRow(doneDates: ref.watch(doneDatesProvider).value ?? const {}, now: now),
-      const SizedBox(height: 16),
-      Text(
-        DateFormat.MMMMEEEEd(l.localeName).format(now).toUpperCase(),
-        style: text.labelMedium?.copyWith(color: context.tones.muted, letterSpacing: 1),
+      Wrap(
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          Text(DateFormat.MMMMEEEEd(l.localeName).format(now).toUpperCase(), style: eyebrowStyle),
+          Text('  ·  ', style: eyebrowStyle),
+          Text(church.name, style: eyebrowStyle),
+        ],
       ),
-      const SizedBox(height: 6),
+      const SizedBox(height: Space.l),
+      _WeekRow(doneDates: ref.watch(doneDatesProvider).value ?? const {}, now: now),
+      const SizedBox(height: Space.xl),
     ];
-    Widget page(List<Widget> children) => PageBody(children: [...header, ...children]);
-    const loading = Center(child: CircularProgressIndicator());
+    Widget page(List<Widget> children) => SelahPage(
+          title: l.tabToday,
+          onRefresh: () => refreshToday(ref, church.id),
+          children: [...header, ...children],
+        );
+    final loading = page(const [SkeletonList(hero: true, rows: 3)]);
     return ref.watch(newestStudyProvider(church.id)).when(
           loading: () => loading,
-          error: (_, _) => _LoadError(onRetry: () => ref.invalidate(newestStudyProvider(church.id))),
+          error: (_, _) => page([_LoadError(onRetry: () => ref.invalidate(newestStudyProvider(church.id)))]),
           data: (original) {
             if (original == null) {
               return page([
-                const SizedBox(height: 20),
                 Text(l.noStudiesYetToday, style: text.bodyLarge),
-                const SizedBox(height: 16),
+                const SizedBox(height: Space.l),
                 Align(
                   alignment: Alignment.centerLeft,
                   child: FilledButton(onPressed: () => context.go('/c/${church.slug}'), child: Text(l.goToStudies)),
@@ -92,12 +94,12 @@ class _Today extends ConsumerWidget {
             }
             return ref.watch(studyProgressProvider(original.id)).when(
                   loading: () => loading,
-                  error: (_, _) => _LoadError(onRetry: () => ref.invalidate(studyProgressProvider(original.id))),
+                  error: (_, _) => page([_LoadError(onRetry: () => ref.invalidate(studyProgressProvider(original.id)))]),
                   data: (progress) {
                     final study = studyToShow(original, language, showOriginal: ref.watch(showOriginalProvider(original.id)));
                     final state = todayFor(study: study, progress: progress, now: now);
                     final summary = Padding(
-                      padding: const EdgeInsets.only(top: 24),
+                      padding: const EdgeInsets.only(top: Space.xl),
                       child: Align(
                         alignment: Alignment.centerLeft,
                         child: OutlinedButton(
@@ -109,11 +111,11 @@ class _Today extends ConsumerWidget {
                     return page(switch (state) {
                       NoStudy() => const [],
                       DayToDo(:final day) => [
-                          ..._devotional(context, ref, study, original.id, day, progress, now, done: false),
+                          ..._devotional(context, ref, study, original.id, day, progress, done: false),
                           summary,
                         ],
                       DoneForToday(:final day, :final next) => [
-                          ..._devotional(context, ref, study, original.id, day, progress, now, done: true),
+                          ..._devotional(context, ref, study, original.id, day, progress, done: true),
                           if (next != null)
                             Align(
                               alignment: Alignment.centerLeft,
@@ -125,15 +127,14 @@ class _Today extends ConsumerWidget {
                           summary,
                         ],
                       AllDone(:final passage, :final takeaway) => [
-                          const SizedBox(height: 6),
                           Text(l.meditateToday, style: text.headlineMedium),
                           if (passage != null || takeaway != null) ...[
-                            const SizedBox(height: 20),
-                            _HeroCard(eyebrow: passage == null ? null : '${l.todayMainPassage} · $passage', quote: takeaway),
+                            const SizedBox(height: Space.l),
+                            HeroCard(eyebrow: passage == null ? null : '${l.todayMainPassage} · $passage', quote: takeaway),
                           ],
                           if (passage != null) ...[
-                            const SizedBox(height: 16),
-                            _Row(
+                            const SizedBox(height: Space.l),
+                            SelahRow(
                               label: l.readPassage(passage),
                               onOpen: () => _openBible(passage, study.bibleVersionCode),
                             ),
@@ -155,37 +156,50 @@ class _Today extends ConsumerWidget {
     PublicStudy study,
     String progressId,
     DevotionalDay day,
-    StudyProgress progress,
-    DateTime now, {
+    StudyProgress progress, {
     required bool done,
   }) {
     final l = AppLocalizations.of(context)!;
-    final text = Theme.of(context).textTheme;
     final ticked = progress.days[day.number]?.parts ?? const <DayPart>{};
+    void openDay() => context.push(_dayPath(study, day.number));
     String label(DayPart part) => switch (part) {
           DayPart.reading => l.bibleReading,
           DayPart.reflection => l.reflection,
           DayPart.prayer => l.prayer,
         };
+    final parts = partsFor(day);
     return [
-      Text(study.title, style: text.headlineMedium),
-      const SizedBox(height: 10),
-      Eyebrow('${l.todayDevotional} · ${l.dayOfTotal(day.number, study.days.length)}'),
-      const SizedBox(height: 16),
-      _HeroCard(eyebrow: day.title, quote: day.mainIdea, badge: done ? l.doneForToday : null),
-      const SizedBox(height: 16),
-      for (final part in partsFor(day))
+      Pressable(
+        onPressed: openDay,
+        haptic: true,
+        borderRadius: BorderRadius.circular(Radii.card),
+        child: Hero(
+          tag: dayHeroTag(progressId, day.number),
+          child: HeroCard(
+            eyebrow: '${study.title} · ${l.dayOfTotal(day.number, study.days.length)}',
+            title: day.title,
+            quote: day.mainIdea,
+            badge: done ? l.doneForToday : null,
+          ),
+        ),
+      ),
+      const SizedBox(height: Space.l),
+      for (var i = 0; i < parts.length; i++)
         Padding(
-          padding: const EdgeInsets.only(bottom: 10),
-          child: _Row(
-            label: label(part),
-            detail: part == DayPart.reading ? day.bibleReading : null,
-            tickKey: ValueKey('tick-${part.name}'),
-            ticked: ticked.contains(part),
-            onTick: () => tickPart(ref, progressId, day, part, ref.read(clockProvider)()),
-            onOpen: part == DayPart.reading
-                ? () => _openBible(day.bibleReading!, study.bibleVersionCode)
-                : () => context.push(_dayPath(study, day.number)),
+          padding: const EdgeInsets.only(bottom: Space.s + 2),
+          child: Entrance(
+            index: i,
+            child: SelahRow(
+              label: label(parts[i]),
+              detail: parts[i] == DayPart.reading ? day.bibleReading : null,
+              trailing: PartTick(
+                key: ValueKey('tick-${parts[i].name}'),
+                label: label(parts[i]),
+                ticked: ticked.contains(parts[i]),
+                onTap: () => tickWithFeedback(ref, progressId, day, parts[i], ref.read(clockProvider)()),
+              ),
+              onOpen: parts[i] == DayPart.reading ? () => _openBible(day.bibleReading!, study.bibleVersionCode) : openDay,
+            ),
           ),
         ),
     ];
@@ -201,10 +215,10 @@ class _LoadError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    return PageBody(children: [
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text(l.loadError, style: Theme.of(context).textTheme.bodyLarge),
-      const SizedBox(height: 12),
-      Align(alignment: Alignment.centerLeft, child: OutlinedButton(onPressed: onRetry, child: Text(l.retry))),
+      const SizedBox(height: Space.m),
+      OutlinedButton(onPressed: onRetry, child: Text(l.retry)),
     ]);
   }
 }
@@ -212,7 +226,7 @@ class _LoadError extends StatelessWidget {
 void _openBible(String reference, String versionCode) =>
     launchUrl(bibleReaderUrl(reference, versionCode), mode: LaunchMode.externalApplication);
 
-/// Monday to Sunday, today ringed and finished days filled with a check.
+/// Monday to Sunday, today ringed and finished days filled with a check that springs in.
 class _WeekRow extends StatelessWidget {
   const _WeekRow({required this.doneDates, required this.now});
 
@@ -238,115 +252,23 @@ class _WeekRow extends StatelessWidget {
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(color: tones.muted),
               ),
               const SizedBox(height: 6),
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: done[i] ? tones.done : tones.surface,
-                  border: i == now.weekday - 1 ? Border.all(color: tones.today, width: 2) : null,
+              SpringIn(
+                active: done[i],
+                child: AnimatedContainer(
+                  duration: reduceMotion(context) ? Duration.zero : Motion.medium,
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: done[i] ? tones.done : tones.surface,
+                    border: i == now.weekday - 1 ? Border.all(color: tones.today, width: 2) : null,
+                  ),
+                  child: done[i] ? Icon(Icons.check, size: 18, color: Theme.of(context).colorScheme.onPrimary) : null,
                 ),
-                child: done[i] ? Icon(Icons.check, size: 18, color: Theme.of(context).colorScheme.onPrimary) : null,
               ),
             ],
           ),
       ],
-    );
-  }
-}
-
-/// The gradient card with the day's main idea in a serif quote.
-class _HeroCard extends StatelessWidget {
-  const _HeroCard({this.eyebrow, this.quote, this.badge});
-
-  final String? eyebrow;
-  final String? quote;
-  final String? badge;
-
-  @override
-  Widget build(BuildContext context) {
-    final tones = context.tones;
-    final scheme = Theme.of(context).colorScheme;
-    // The hero is dark in both themes: white on the light theme's green, the dark theme's light text on brown.
-    final onHero = Theme.of(context).brightness == Brightness.light ? scheme.onPrimary : scheme.onSurface;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [tones.heroStart, tones.heroEnd],
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (badge != null) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: ShapeDecoration(shape: const StadiumBorder(), color: onHero.withValues(alpha: 0.16)),
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                Icon(Icons.check, size: 14, color: onHero),
-                const SizedBox(width: 4),
-                Text(badge!, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: onHero)),
-              ]),
-            ),
-            const SizedBox(height: 14),
-          ],
-          if (eyebrow != null)
-            Text(
-              eyebrow!.toUpperCase(),
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(color: onHero.withValues(alpha: 0.8)),
-            ),
-          if (eyebrow != null && quote != null) const SizedBox(height: 12),
-          if (quote != null) Text(quote!, style: serifQuote(context).copyWith(color: onHero)),
-        ],
-      ),
-    );
-  }
-}
-
-/// A row that opens its part, with an optional round tick on the right.
-class _Row extends StatelessWidget {
-  const _Row({required this.label, required this.onOpen, this.detail, this.tickKey, this.ticked, this.onTick});
-
-  final String label;
-  final String? detail;
-  final VoidCallback onOpen;
-  final Key? tickKey;
-
-  /// Null for a row without a tick.
-  final bool? ticked;
-  final VoidCallback? onTick;
-
-  @override
-  Widget build(BuildContext context) {
-    final tones = context.tones;
-    final text = Theme.of(context).textTheme;
-    return Material(
-      color: tones.surface,
-      borderRadius: BorderRadius.circular(18),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onOpen,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(18, 8, 8, 8),
-          child: Row(children: [
-            Expanded(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(label, style: text.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
-                if (detail != null) Text(detail!, style: text.bodyMedium?.copyWith(color: tones.muted)),
-              ]),
-            ),
-            if (ticked == null)
-              Icon(Icons.chevron_right, color: tones.muted)
-            else
-              PartTick(key: tickKey, label: label, ticked: ticked!, onTap: onTick!),
-          ]),
-        ),
-      ),
     );
   }
 }
