@@ -39,7 +39,12 @@ class TodayPage extends ConsumerWidget {
             children: [_LoadError(onRetry: () => ref.invalidate(currentChurchProvider))],
           ),
           data: (church) => church == null
-              ? SelahPage(title: l.pickChurch, onRefresh: () => refreshChurches(ref), children: const [ChurchList()])
+              ? SelahPage(
+                  title: l.pickChurch,
+                  onRefresh: () => refreshChurches(ref),
+                  lazy: true,
+                  children: churchListChildren(context, ref),
+                )
               : TodayRefresher(churchId: church.id, child: _Today(church: church)),
         );
   }

@@ -25,6 +25,7 @@ class ChurchPage extends ConsumerWidget {
     return SelahPage(
       title: church.name,
       onRefresh: () => ref.refresh(publishedStudiesProvider(church.id).future),
+      lazy: true,
       actions: [
         if (signedIn && roleState.hasValue && roleState.value == null)
           TextButton(

@@ -17,7 +17,8 @@ class ChurchPickerPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) => SelahPage(
         title: AppLocalizations.of(context)!.pickChurch,
         onRefresh: () => refreshChurches(ref),
-        children: const [ChurchList()],
+        lazy: true,
+        children: churchListChildren(context, ref),
       );
 }
 
@@ -37,53 +38,54 @@ class ChurchList extends ConsumerWidget {
   final void Function(Church church)? onPick;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l = AppLocalizations.of(context)!;
-    final text = Theme.of(context).textTheme;
-    final churches = ref.watch(publicChurchesProvider);
-    final mine = ref.watch(myChurchesProvider).value ?? const <Membership>[];
-    final signedIn = ref.watch(userIdProvider).value != null;
-    final mineOnly = signedIn && mine.isNotEmpty;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (mineOnly) ...[
-          Eyebrow(l.yourChurches),
-          const SizedBox(height: 12),
-          for (final (i, m) in mine.indexed)
-            _ChurchTile(index: i, church: m.church, subtitle: roleLabel(l, m.role), onPick: onPick),
-          const SizedBox(height: 24),
-        ],
-        Eyebrow(l.allChurches),
+  Widget build(BuildContext context, WidgetRef ref) =>
+      Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: churchListChildren(context, ref, onPick: onPick));
+}
+
+/// [ChurchList]'s rows, for a lazy [SelahPage] to build as they scroll into view.
+List<Widget> churchListChildren(BuildContext context, WidgetRef ref, {void Function(Church church)? onPick}) {
+  final l = AppLocalizations.of(context)!;
+  final text = Theme.of(context).textTheme;
+  final churches = ref.watch(publicChurchesProvider);
+  final mine = ref.watch(myChurchesProvider).value ?? const <Membership>[];
+  final signedIn = ref.watch(userIdProvider).value != null;
+  final mineOnly = signedIn && mine.isNotEmpty;
+  return [
+    if (mineOnly) ...[
+      Eyebrow(l.yourChurches),
+      const SizedBox(height: 12),
+      for (final (i, m) in mine.indexed)
+        _ChurchTile(index: i, church: m.church, subtitle: roleLabel(l, m.role), onPick: onPick),
+      const SizedBox(height: 24),
+    ],
+    Eyebrow(l.allChurches),
+    const SizedBox(height: 12),
+    ...churches.when(
+      loading: () => [const SkeletonList(rows: 4)],
+      error: (_, _) => [
+        Text(l.loadError, style: text.bodyMedium),
         const SizedBox(height: 12),
-        ...churches.when(
-          loading: () => [const SkeletonList(rows: 4)],
-          error: (_, _) => [
-            Text(l.loadError, style: text.bodyMedium),
-            const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: OutlinedButton(
-                onPressed: () => ref.invalidate(publicChurchesProvider),
-                child: Text(l.retry),
-              ),
-            ),
-          ],
-          data: (items) => items.isEmpty
-              ? [Text(l.noStudiesYet, style: text.bodyMedium)]
-              : [
-                  for (final (i, church) in items.indexed)
-                    _ChurchTile(
-                      index: mine.length + i,
-                      church: church,
-                      onPick: onPick,
-                      opensPage: mineOnly && !mine.any((m) => m.church.id == church.id),
-                    ),
-                ],
+        Align(
+          alignment: Alignment.centerLeft,
+          child: OutlinedButton(
+            onPressed: () => ref.invalidate(publicChurchesProvider),
+            child: Text(l.retry),
+          ),
         ),
       ],
-    );
-  }
+      data: (items) => items.isEmpty
+          ? [Text(l.noStudiesYet, style: text.bodyMedium)]
+          : [
+              for (final (i, church) in items.indexed)
+                _ChurchTile(
+                  index: mine.length + i,
+                  church: church,
+                  onPick: onPick,
+                  opensPage: mineOnly && !mine.any((m) => m.church.id == church.id),
+                ),
+            ],
+    ),
+  ];
 }
 
 class _ChurchTile extends ConsumerWidget {

@@ -349,6 +349,34 @@ void main() {
     }
   });
 
+  testWidgets('a lazy SelahPage builds only the children on screen', (tester) async {
+    await tester.pumpWidget(
+      pageApp(
+        SelahPage(
+          title: 'Long',
+          lazy: true,
+          children: [for (var i = 0; i < 200; i++) SizedBox(height: 50, child: Text('item $i'))],
+        ),
+      ),
+    );
+    expect(find.text('item 0'), findsOneWidget);
+    expect(find.text('item 150', skipOffstage: false), findsNothing);
+    await tester.scrollUntilVisible(find.text('item 150'), 500, scrollable: find.byType(Scrollable).first);
+    expect(find.text('item 150'), findsOneWidget);
+  });
+
+  testWidgets('a lazy SelahPage keeps the body centred at its max width', (tester) async {
+    tester.view.physicalSize = const Size(1200, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      pageApp(SelahPage(title: 'Wide', lazy: true, children: const [SizedBox(height: 50, child: Text('item'))])),
+    );
+    final row = tester.getRect(find.ancestor(of: find.text('item'), matching: find.byType(SizedBox)).first);
+    expect(row.width, 760 - 2 * (Space.xl - 4));
+    expect(row.center.dx, 600);
+  });
+
   testWidgets('SelahPage on Android uses a large Material app bar', (tester) async {
     debugDefaultTargetPlatformOverride = TargetPlatform.android;
     try {

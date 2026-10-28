@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -19,6 +21,7 @@ class SelahPage extends StatelessWidget {
     required this.children,
     this.onRefresh,
     this.maxWidth = 760,
+    this.lazy = false,
   });
 
   /// Null means no large title, only the slim bar (the reader).
@@ -34,6 +37,10 @@ class SelahPage extends StatelessWidget {
   final List<Widget> children;
   final Future<void> Function()? onRefresh;
   final double maxWidth;
+
+  /// Builds [children] only as they scroll into view, for long lists (a church's studies, the church list). Short
+  /// pages keep every child laid out.
+  final bool lazy;
 
   @override
   Widget build(BuildContext context) {
@@ -97,20 +104,23 @@ class SelahPage extends StatelessWidget {
             );
     }
 
-    final body = SliverToBoxAdapter(
-      child: SafeArea(
-        top: false,
-        bottom: false,
-        child: Align(
-          alignment: Alignment.topCenter,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: maxWidth),
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(Space.xl - 4, Space.l, Space.xl - 4, 40 + MediaQuery.paddingOf(context).bottom),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children),
-            ),
-          ),
-        ),
+    // The side padding centres the body at [maxWidth] on wide windows, with the gutter inside.
+    final bottom = 40 + MediaQuery.paddingOf(context).bottom;
+    final body = SliverSafeArea(
+      top: false,
+      bottom: false,
+      sliver: SliverLayoutBuilder(
+        builder: (context, constraints) {
+          final side = Space.xl - 4 + max(0.0, (constraints.crossAxisExtent - maxWidth) / 2);
+          return SliverPadding(
+            padding: EdgeInsets.fromLTRB(side, Space.l, side, bottom),
+            sliver: lazy
+                ? SliverList.list(children: children)
+                : SliverToBoxAdapter(
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children),
+                  ),
+          );
+        },
       ),
     );
 
