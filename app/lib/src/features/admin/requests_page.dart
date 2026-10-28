@@ -17,21 +17,19 @@ class RequestsPage extends ConsumerWidget {
     final l = AppLocalizations.of(context)!;
     final text = Theme.of(context).textTheme;
     final admin = ref.watch(isPlatformAdminProvider);
-    if (!admin.hasValue) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (!admin.hasValue) return const SelahPage(backTo: '/profile', children: [SkeletonList(rows: 3)]);
     if (!admin.value!) return ChurchMessage(text: l.createChurchAdminOnly, style: text.bodyLarge);
     final requests = ref.watch(pendingChurchRequestsProvider);
-    return Scaffold(
-      appBar: AppBar(title: Text(l.churchRequests, style: text.titleLarge)),
-      body: requests.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, _) => Center(child: Text(l.loadError, style: text.bodyLarge)),
-        data: (items) => PageBody(
-          children: [
-            const SizedBox(height: 16),
-            if (items.isEmpty) Text(l.noPendingRequests, style: text.bodyLarge),
-            for (final r in items) _RequestCard(key: ValueKey(r.id), request: r),
-          ],
-        ),
+    return SelahPage(
+      title: l.churchRequests,
+      backTo: '/profile',
+      children: requests.when(
+        loading: () => const [SkeletonList(rows: 3)],
+        error: (_, _) => [Text(l.loadError, style: text.bodyLarge)],
+        data: (items) => [
+          if (items.isEmpty) Text(l.noPendingRequests, style: text.bodyLarge),
+          for (final r in items) _RequestCard(key: ValueKey(r.id), request: r),
+        ],
       ),
     );
   }

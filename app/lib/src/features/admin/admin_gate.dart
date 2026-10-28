@@ -38,9 +38,10 @@ class AdminPage extends ConsumerWidget {
     }
     final signedIn = userId.value != null;
     if (!(role.value?.isAtLeast(minRole) ?? false)) {
-      return Scaffold(
-        appBar: AppBar(),
-        body: PageBody(maxWidth: 440, children: [
+      return SelahPage(
+        backTo: '/',
+        maxWidth: 440,
+        children: [
           Text(l.churchAdminOnly, style: Theme.of(context).textTheme.bodyLarge),
           const SizedBox(height: 20),
           FilledButton(
@@ -54,25 +55,24 @@ class AdminPage extends ConsumerWidget {
             },
             child: Text(signedIn ? l.signOut : l.signIn),
           ),
-        ]),
+        ],
       );
     }
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(icon: const Icon(Icons.arrow_back), tooltip: l.back, onPressed: () => context.go(backTo)),
-        actions: [
-          ChurchSwitcher(current: church, admin: true),
-          TextButton(
-            onPressed: () async {
-              await ref.read(repositoryProvider).signOut();
-              if (context.mounted) context.go('/');
-            },
-            child: Text(l.signOut),
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: PageBody(maxWidth: maxWidth, children: children),
+    return SelahPage(
+      backTo: backTo,
+      maxWidth: maxWidth,
+      actions: [
+        ChurchSwitcher(current: church, admin: true),
+        TextButton(
+          onPressed: () async {
+            await ref.read(repositoryProvider).signOut();
+            if (context.mounted) context.go('/');
+          },
+          child: Text(l.signOut),
+        ),
+        const SizedBox(width: 8),
+      ],
+      children: children,
     );
   }
 }

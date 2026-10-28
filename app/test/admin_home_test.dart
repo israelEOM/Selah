@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:selah/src/app/theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -60,5 +61,19 @@ void main() {
     final button = tester.widget<FilledButton>(find.widgetWithText(FilledButton, es.importSermon));
     expect(button.onPressed, isNull);
     expect(find.text(es.monthlyLimitReached(4)), findsOneWidget);
+  });
+
+  testWidgets('the admin home builds on iOS in portrait', (tester) async {
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    try {
+      await _pump(tester, 1);
+      expect(tester.takeException(), isNull);
+      expect(find.text('1 de 4 este mes'), findsOneWidget);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
   });
 }
