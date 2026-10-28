@@ -221,6 +221,56 @@ void main() {
     expect(find.text('Reading'), findsOneWidget);
   });
 
+  testWidgets('SelahRow can be focused with Tab and opened with Enter on Android', (tester) async {
+    var opens = 0;
+    await tester.pumpWidget(host(platform: TargetPlatform.android, SelahRow(label: 'Reading', onOpen: () => opens++)));
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pump();
+    expect(opens, 1);
+    await tester.pump(Motion.tapDebounce);
+  });
+
+  testWidgets('Pressable can be focused with Tab and activated with Enter on iOS', (tester) async {
+    var taps = 0;
+    await tester.pumpWidget(host(platform: TargetPlatform.iOS, Pressable(onPressed: () => taps++, child: box())));
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pump();
+    expect(taps, 1);
+    await tester.pump(Motion.tapDebounce);
+  });
+
+  testWidgets('Pressable springs back once a scroll starts under the finger', (tester) async {
+    await tester.pumpWidget(
+      host(
+        SizedBox(
+          height: 400,
+          child: ListView(
+            children: [
+              Pressable(onPressed: () {}, child: const SizedBox(height: 120)),
+              const SizedBox(height: 2000),
+            ],
+          ),
+        ),
+      ),
+    );
+    final g = await tester.startGesture(tester.getCenter(find.byType(Pressable)));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(scaleOf(tester), lessThan(1));
+    for (var i = 0; i < 10; i++) {
+      await g.moveBy(const Offset(0, -10));
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(scaleOf(tester), 1, reason: 'the finger is still down, but the press became a scroll');
+    await g.up();
+    await tester.pumpAndSettle();
+  });
+
   Widget pageApp(Widget home, {GoRouter? router}) {
     final theme = selahLightTheme();
     if (router != null) {

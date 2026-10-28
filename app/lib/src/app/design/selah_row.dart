@@ -37,13 +37,13 @@ class SelahRow extends StatelessWidget {
             Icon(ios ? CupertinoIcons.chevron_forward : Icons.chevron_right, color: tones.muted, size: ios ? 18 : 24),
       ],
     );
-    // Android paints the fill as ink on Pressable's own Material so the ripple shows above it; elsewhere a plain box
+    // Android and web paint the fill as ink on Pressable's own Material so the ripple shows above it; iOS a plain box
     // keeps the fill independent of any ancestor Material.
     return Pressable(
       onPressed: onOpen,
       borderRadius: radius,
       haptic: true,
-      child: uiPlatformOf(context) == UiPlatform.android
+      child: !ios
           ? Ink(decoration: decoration, padding: padding, child: content)
           : DecoratedBox(
               decoration: decoration,

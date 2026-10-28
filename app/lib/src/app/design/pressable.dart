@@ -1,10 +1,11 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 
 import '../theme.dart';
 
-/// Wraps a tappable surface with a spring press scale, an Android ripple, an optional haptic tick and double-tap
-/// protection. Does not paint a background; give the [child] its own.
+/// Wraps a tappable surface with a spring press scale, an Android and web ripple, keyboard activation, an optional
+/// haptic tick and double-tap protection. Does not paint a background; give the [child] its own.
 class Pressable extends StatefulWidget {
   const Pressable({
     super.key,
@@ -62,24 +63,57 @@ class _PressableState extends State<Pressable> with TickerProviderStateMixin {
     onPressed();
   }
 
+  /// Where the finger went down, so a press that turns into a scroll or drag can let go of the shrink.
+  Offset? _downAt;
+
+  void _down(PointerDownEvent event) {
+    _downAt = event.position;
+    _springTo(Motion.pressScale);
+  }
+
+  void _move(PointerMoveEvent event) {
+    final downAt = _downAt;
+    // Past touch slop a drag wins the gesture arena, so this is no longer a press.
+    if (downAt == null || (event.position - downAt).distance <= kTouchSlop) return;
+    _downAt = null;
+    _springTo(1);
+  }
+
+  void _release(PointerEvent _) {
+    _downAt = null;
+    _springTo(1);
+  }
+
+  late final Map<Type, Action<Intent>> _actions = {
+    ActivateIntent: CallbackAction<ActivateIntent>(onInvoke: (_) => _tap()),
+    ButtonActivateIntent: CallbackAction<ButtonActivateIntent>(onInvoke: (_) => _tap()),
+  };
+
   @override
   Widget build(BuildContext context) {
     final enabled = widget.onPressed != null;
-    final android = uiPlatformOf(context) == UiPlatform.android;
-    final Widget target = android
-        ? Material(
+    final ios = uiPlatformOf(context) == UiPlatform.ios;
+    // Android and web get the ink ripple; iOS a plain press. Both can be focused and activated from a keyboard.
+    final Widget target = ios
+        ? FocusableActionDetector(
+            enabled: enabled,
+            actions: _actions,
+            mouseCursor: enabled ? SystemMouseCursors.click : MouseCursor.defer,
+            child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: enabled ? _tap : null, child: widget.child),
+          )
+        : Material(
             type: MaterialType.transparency,
             child: InkWell(borderRadius: widget.borderRadius, onTap: enabled ? _tap : null, child: widget.child),
-          )
-        : GestureDetector(behavior: HitTestBehavior.opaque, onTap: enabled ? _tap : null, child: widget.child);
+          );
     return Semantics(
       button: true,
       enabled: enabled,
       label: widget.semanticLabel,
       child: Listener(
-        onPointerDown: enabled ? (_) => _springTo(Motion.pressScale) : null,
-        onPointerUp: enabled ? (_) => _springTo(1) : null,
-        onPointerCancel: enabled ? (_) => _springTo(1) : null,
+        onPointerDown: enabled ? _down : null,
+        onPointerMove: enabled ? _move : null,
+        onPointerUp: enabled ? _release : null,
+        onPointerCancel: enabled ? _release : null,
         child: AnimatedBuilder(
           animation: _scale,
           child: target,
