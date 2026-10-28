@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:selah/src/app/design/transitions.dart';
 import 'package:selah/src/app/theme.dart';
 
 void main() {
@@ -42,38 +41,36 @@ void main() {
 
   test('iOS pages slide and Android pages use predictive back', () {
     final builders = selahLightTheme().pageTransitionsTheme.builders;
-    final ios =
-        builders[TargetPlatform.iOS]! as ReduceMotionPageTransitionsBuilder;
-    final android =
-        builders[TargetPlatform.android]! as ReduceMotionPageTransitionsBuilder;
-    expect(ios.inner, isA<CupertinoPageTransitionsBuilder>());
-    expect(android.inner, isA<PredictiveBackPageTransitionsBuilder>());
+    expect(
+      builders[TargetPlatform.iOS],
+      isA<CupertinoPageTransitionsBuilder>(),
+    );
+    expect(
+      builders[TargetPlatform.android],
+      isA<PredictiveBackPageTransitionsBuilder>(),
+    );
   });
 
-  testWidgets('Reduce Motion turns page transitions into a fade', (
+  testWidgets('Reduce Motion keeps the platform page transition', (
     tester,
   ) async {
-    final builder =
-        selahLightTheme().pageTransitionsTheme.builders[TargetPlatform.iOS]!;
-    final route = PageRouteBuilder<void>(
-      pageBuilder: (_, _, _) => const SizedBox(),
-    );
+    final navigator = GlobalKey<NavigatorState>();
     await tester.pumpWidget(
-      MediaQuery(
-        data: const MediaQueryData(disableAnimations: true),
-        child: Builder(
-          builder: (context) => builder.buildTransitions<void>(
-            route,
-            context,
-            const AlwaysStoppedAnimation(1),
-            const AlwaysStoppedAnimation(0),
-            const SizedBox(),
-          ),
+      MaterialApp(
+        navigatorKey: navigator,
+        theme: selahLightTheme().copyWith(platform: TargetPlatform.iOS),
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(disableAnimations: true),
+          child: child!,
         ),
+        home: const SizedBox(),
       ),
     );
-    expect(find.byType(FadeTransition), findsOneWidget);
-    expect(find.byType(CupertinoPageTransition), findsNothing);
+    navigator.currentState!.push(
+      MaterialPageRoute<void>(builder: (_) => const Text('next')),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(CupertinoPageTransition), findsOneWidget);
   });
 
   testWidgets('tick, selection and success haptics call the platform', (
