@@ -26,7 +26,7 @@ class DayHero extends StatelessWidget {
             alignment: Alignment.topCenter,
             minHeight: 0,
             maxHeight: double.infinity,
-            child: (direction == HeroFlightDirection.push ? to : from).widget,
+            child: ((direction == HeroFlightDirection.push ? to : from).widget as Hero).child,
           ),
         ),
       ),

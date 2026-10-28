@@ -192,6 +192,29 @@ void main() {
     expect(opacity(), 1);
   });
 
+  testWidgets('DayHero flies its child, not a second Hero with the same tag', (tester) async {
+    final nav = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(
+      MaterialApp(
+        navigatorKey: nav,
+        theme: selahLightTheme(),
+        home: const Scaffold(body: DayHero(tag: 'day', child: SizedBox(width: 100, height: 50, child: Text('card')))),
+      ),
+    );
+    nav.currentState!.push(
+      MaterialPageRoute<void>(
+        builder: (_) => const Scaffold(body: DayHero(tag: 'day', child: SizedBox(width: 300, height: 90, child: Text('page')))),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    final shuttle = find.byType(OverflowBox);
+    expect(shuttle, findsOneWidget, reason: 'the hero is mid-flight');
+    expect(find.descendant(of: shuttle, matching: find.byType(Hero)), findsNothing);
+    expect(find.descendant(of: shuttle, matching: find.text('page')), findsOneWidget);
+    await tester.pumpAndSettle();
+  });
+
   testWidgets('SkeletonList with a hero draws rows + 1 blocks', (tester) async {
     await tester.pumpWidget(host(reduce: true, const SkeletonList(rows: 3, hero: true)));
     expect(find.byType(Skeleton), findsNWidgets(4));
