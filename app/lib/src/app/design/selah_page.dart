@@ -55,6 +55,7 @@ class SelahPage extends StatelessWidget {
         trailing: actions.isEmpty ? null : Row(mainAxisSize: MainAxisSize.min, children: actions),
         backgroundColor: theme.scaffoldBackgroundColor.withValues(alpha: 0.85),
         border: null,
+        transitionBetweenRoutes: false,
       );
     } else {
       final titleText = title == null ? null : Text(title!);
@@ -98,8 +99,8 @@ class SelahPage extends StatelessWidget {
           ? const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics())
           : const AlwaysScrollableScrollPhysics(),
       slivers: [
-        if (ios && onRefresh != null) CupertinoSliverRefreshControl(onRefresh: onRefresh),
         header,
+        if (ios && onRefresh != null) CupertinoSliverRefreshControl(onRefresh: onRefresh),
         body,
       ],
     );

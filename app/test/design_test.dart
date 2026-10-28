@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -343,6 +346,60 @@ void main() {
       } finally {
         debugDefaultTargetPlatformOverride = null;
       }
+    }
+  });
+
+  testWidgets('SelahPage on iOS draws the refresh spinner below the nav bar', (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    try {
+      final done = Completer<void>();
+      await tester.pumpWidget(
+        pageApp(SelahPage(title: 'Today', onRefresh: () => done.future, children: const [Text('body')])),
+      );
+      final gesture = await tester.startGesture(tester.getCenter(find.text('body')));
+      await gesture.moveBy(const Offset(0, 120));
+      await tester.pump();
+      await gesture.moveBy(const Offset(0, 120));
+      await tester.pump();
+      // The bar is a sliver, so read its extent rather than a box rect. It is pinned at the top.
+      final barBottom = tester.renderObject<RenderSliver>(find.byType(CupertinoSliverNavigationBar)).geometry!.paintExtent;
+      final spinner = tester.getRect(find.byType(CupertinoActivityIndicator));
+      expect(spinner.top, greaterThanOrEqualTo(barBottom));
+      await gesture.up();
+      done.complete();
+      await tester.pump(const Duration(seconds: 2));
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
+  testWidgets('SelahPage navigation bars do not share a hero tag on iOS', (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    try {
+      final router = GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (_, _) => const IndexedStack(
+              children: [
+                SelahPage(title: 'One', children: [Text('one body')]),
+                SelahPage(title: 'Two', children: [Text('two body')]),
+              ],
+            ),
+          ),
+          GoRoute(
+            path: '/third',
+            builder: (_, _) => const SelahPage(title: 'Third', backTo: '/', children: [Text('third body')]),
+          ),
+        ],
+      );
+      await tester.pumpWidget(pageApp(const SizedBox(), router: router));
+      router.push('/third');
+      await tester.pumpAndSettle();
+      expect(find.text('third body'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
     }
   });
 }
