@@ -26,9 +26,8 @@ class ProfilePage extends ConsumerWidget {
     // An approved request needs no line: the church shows up as theirs.
     final shown = signedIn ? ref.watch(myChurchRequestProvider).value : null;
     final request = shown?.status == ChurchRequestStatus.approved ? null : shown;
-    return Scaffold(
-      appBar: AppBar(title: Text(l.tabProfile, style: text.titleLarge)),
-      body: PageBody(
+    return SelahPage(
+        title: l.tabProfile,
         children: [
           Eyebrow(l.yourChurch),
           const SizedBox(height: 12),
@@ -95,15 +94,14 @@ class ProfilePage extends ConsumerWidget {
           const SizedBox(height: 32),
           Eyebrow(l.theme),
           const SizedBox(height: 12),
-          SegmentedButton<ThemeMode>(
-            segments: [
-              ButtonSegment(value: ThemeMode.system, label: Text(l.themeSystem)),
-              ButtonSegment(value: ThemeMode.light, label: Text(l.themeLight)),
-              ButtonSegment(value: ThemeMode.dark, label: Text(l.themeDark)),
-            ],
-            selected: {ref.watch(themeModeProvider)},
-            showSelectedIcon: false,
-            onSelectionChanged: (modes) => ref.read(themeModeProvider.notifier).set(modes.single),
+          AdaptiveSegmented<ThemeMode>(
+            segments: {
+              ThemeMode.system: l.themeSystem,
+              ThemeMode.light: l.themeLight,
+              ThemeMode.dark: l.themeDark,
+            },
+            selected: ref.watch(themeModeProvider),
+            onChanged: (mode) => ref.read(themeModeProvider.notifier).set(mode),
           ),
           const SizedBox(height: 32),
           Row(children: [
@@ -141,7 +139,6 @@ class ProfilePage extends ConsumerWidget {
                   ),
           ),
         ],
-      ),
     );
   }
 }

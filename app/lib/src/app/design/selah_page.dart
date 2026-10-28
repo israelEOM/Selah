@@ -14,6 +14,7 @@ class SelahPage extends StatelessWidget {
     this.title,
     this.backTo,
     this.backTooltip,
+    this.onBack,
     this.actions = const [],
     required this.children,
     this.onRefresh,
@@ -26,6 +27,9 @@ class SelahPage extends StatelessWidget {
   /// Where back goes when there is nothing to pop. Null means no back button.
   final String? backTo;
   final String? backTooltip;
+
+  /// Replaces the default back action (pop, or go to [backTo]) for pages with their own inner steps.
+  final VoidCallback? onBack;
   final List<Widget> actions;
   final List<Widget> children;
   final Future<void> Function()? onRefresh;
@@ -42,7 +46,7 @@ class SelahPage extends StatelessWidget {
       back = IconButton(
         icon: Icon(ios ? CupertinoIcons.back : Icons.arrow_back),
         tooltip: backTooltip ?? l.back,
-        onPressed: () => popOr(context, backTo!),
+        onPressed: onBack ?? () => popOr(context, backTo!),
       );
     }
 

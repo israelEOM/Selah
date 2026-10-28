@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:selah/src/app/theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -350,4 +351,19 @@ void main() {
       await tester.pump(const Duration(minutes: 2));
     });
   }
+
+  testWidgets('the sign-in page builds on iOS in portrait', (tester) async {
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    try {
+      await _pump(tester);
+      expect(tester.takeException(), isNull);
+      expect(find.text('Continuar con Google'), findsOneWidget);
+      expect(find.text('Iniciar sesión'), findsWidgets);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
 }

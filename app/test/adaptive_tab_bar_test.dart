@@ -181,8 +181,9 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await _pumpRouter(tester, '/profile', platform: TargetPlatform.iOS);
-    final list = find.byType(ListView);
-    expect(find.text('Cerrar sesión'), findsNothing, reason: 'the last item starts below the fold');
+    final list = find.byType(CustomScrollView);
+    // The page lays out every child, so "below the fold" means below the window, not unbuilt.
+    expect(tester.getRect(find.text('Cerrar sesión')).top, greaterThan(480), reason: 'the last item starts below the fold');
     await tester.drag(list, const Offset(0, -3000));
     await tester.pumpAndSettle();
     final lastButton = find.widgetWithText(TextButton, 'Cerrar sesión');
@@ -192,7 +193,7 @@ void main() {
 
   testWidgets('pages scroll under the floating bar on iOS', (tester) async {
     await _pumpRouter(tester, '/profile', platform: TargetPlatform.iOS);
-    final list = tester.getRect(find.byType(ListView));
+    final list = tester.getRect(find.byType(CustomScrollView));
     expect(list.bottom, greaterThan(tester.getRect(find.byType(FrostedTabBar)).top));
   });
 }

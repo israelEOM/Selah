@@ -128,13 +128,10 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
         ],
       _Step.leader => _sent ? _sentMessage(l, text) : _leaderForm(l, text),
     };
-    return Scaffold(
-      appBar: AppBar(
-        leading: _step == _Step.choice || widget.step != null
-            ? null
-            : BackButton(onPressed: () => _show(_Step.choice)),
-      ),
-      body: PageBody(
+    return SelahPage(
+        backTo: '/profile',
+        // Inside the member or leader part, back returns to the choice, unless the page opened straight into it.
+        onBack: _step == _Step.choice || widget.step != null ? null : () => _show(_Step.choice),
         maxWidth: 560,
         children: [
           ...children,
@@ -143,7 +140,6 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
             Text(_error!, style: text.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.error)),
           ],
         ],
-      ),
     );
   }
 

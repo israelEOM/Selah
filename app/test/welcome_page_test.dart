@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -128,5 +129,20 @@ void main() {
   testWidgets('step=leader opens the form directly', (tester) async {
     await _pump(tester, location: '/welcome?step=leader');
     expect(find.text('Enviar solicitud'), findsOneWidget);
+  });
+
+  testWidgets('the welcome page builds on iOS in portrait', (tester) async {
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    try {
+      await _pump(tester);
+      expect(tester.takeException(), isNull);
+      expect(find.byType(FilledButton), findsNothing);
+      expect(find.byIcon(Icons.people_outline), findsOneWidget);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
   });
 }

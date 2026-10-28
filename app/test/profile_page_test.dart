@@ -1,3 +1,5 @@
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -145,5 +147,23 @@ void main() {
     await _pump(tester, userId: 'u', role: ChurchRole.member, mine: const [Membership(church: _vida, role: ChurchRole.member)]);
     expect(find.text('Unirme a una iglesia'), findsNothing);
     expect(find.text('Traer mi iglesia a Selah'), findsNothing);
+  });
+
+  testWidgets('profile theme picker is the sliding control on iOS', (tester) async {
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    try {
+      await _pump(tester);
+      expect(tester.takeException(), isNull);
+      expect(find.byType(CupertinoSlidingSegmentedControl<ThemeMode>), findsOneWidget);
+      await _tap(tester, 'Oscuro');
+      final container = ProviderScope.containerOf(tester.element(find.byType(ProfilePage)));
+      expect(container.read(themeModeProvider), ThemeMode.dark);
+      expect((await SharedPreferences.getInstance()).getString('theme'), 'dark');
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
   });
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:selah/src/app/theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -125,5 +126,19 @@ void main() {
     await _submit(tester);
     expect(fake.created, isEmpty);
     expect(find.text(AppLocalizationsEs().churchNameInvalid), findsOneWidget);
+  });
+
+  testWidgets('the create church page builds on iOS in portrait', (tester) async {
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    try {
+      await _pump(tester);
+      expect(tester.takeException(), isNull);
+      expect(find.byType(FilledButton), findsOneWidget);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
   });
 }

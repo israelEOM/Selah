@@ -53,7 +53,7 @@ class _JoinPageState extends ConsumerState<JoinPage> {
 
     Widget body;
     if (info.isLoading || user.isLoading) {
-      body = const Center(child: CircularProgressIndicator());
+      body = const SkeletonList(rows: 2);
     } else if (info.value == null || (_failed && _inviteGone)) {
       body = Text(l.inviteInvalid, style: text.bodyLarge);
     } else if (info.hasError || _failed) {
@@ -79,7 +79,7 @@ class _JoinPageState extends ConsumerState<JoinPage> {
           _accepting = true; // set before scheduling so a rebuild can't schedule it twice
           WidgetsBinding.instance.addPostFrameCallback((_) => _accept(invite));
         }
-        body = const Center(child: CircularProgressIndicator());
+        body = const SkeletonList(rows: 2);
       } else {
         body = Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(l.joinChurchAs(invite.churchName, roleLabel(l, invite.role)), style: text.headlineMedium),
@@ -91,6 +91,6 @@ class _JoinPageState extends ConsumerState<JoinPage> {
         ]);
       }
     }
-    return Scaffold(appBar: AppBar(), body: PageBody(maxWidth: 440, children: [body]));
+    return SelahPage(backTo: '/', maxWidth: 440, children: [body]);
   }
 }

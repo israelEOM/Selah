@@ -136,9 +136,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final text = Theme.of(context).textTheme;
-    return Scaffold(
-      appBar: AppBar(),
-      body: PageBody(
+    return SelahPage(
+        backTo: '/profile',
         maxWidth: 440,
         children: [
           Eyebrow('Selah'),
@@ -200,7 +199,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             child: Text(_creating ? l.haveAccount : l.needAccount),
           ),
         ],
-      ),
     );
   }
 }

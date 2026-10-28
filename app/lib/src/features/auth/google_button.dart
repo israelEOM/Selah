@@ -27,10 +27,10 @@ class GoogleButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
           textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
         ),
-        child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+        child: Row(mainAxisSize: MainAxisSize.min, mainAxisAlignment: MainAxisAlignment.center, children: [
           SvgPicture.string(_googleMark, width: 18, height: 18),
           const SizedBox(width: 12),
-          Text(AppLocalizations.of(context)!.continueWithGoogle),
+          Flexible(child: Text(AppLocalizations.of(context)!.continueWithGoogle, overflow: TextOverflow.ellipsis)),
         ]),
       );
 }

@@ -95,12 +95,12 @@ class _CreateChurchPageState extends ConsumerState<CreateChurchPage> {
     }
     final admin = ref.watch(isPlatformAdminProvider);
     if (user.value == null || !admin.hasValue) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const SelahPage(backTo: '/profile', children: [SkeletonList(rows: 3)]);
     }
     if (!admin.value!) return ChurchMessage(text: l.createChurchAdminOnly, style: text.bodyLarge);
-    return Scaffold(
-      appBar: AppBar(title: Text(l.createChurchTitle, style: text.titleLarge)),
-      body: PageBody(
+    return SelahPage(
+        title: l.createChurchTitle,
+        backTo: '/profile',
         children: [
           Form(
             key: _form,
@@ -144,7 +144,6 @@ class _CreateChurchPageState extends ConsumerState<CreateChurchPage> {
             ),
           ),
         ],
-      ),
     );
   }
 }

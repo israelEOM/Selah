@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:selah/src/app/theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -117,5 +120,42 @@ void main() {
     expect(fake.attempts, 2);
     expect(fake.accepted, ['t1']);
     expect(find.text('ADMIN vida-nueva'), findsOneWidget);
+  });
+
+  testWidgets('join page shows skeletons while the invite loads', (tester) async {
+    final gate = Completer<_Info?>();
+    final router = GoRouter(initialLocation: '/join/t1', routes: [
+      GoRoute(path: '/join/:token', builder: (_, s) => JoinPage(token: s.pathParameters['token']!)),
+    ]);
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        inviteInfoProvider('t1').overrideWith((ref) => gate.future),
+        userIdProvider.overrideWith((ref) => Stream.value(null)),
+      ],
+      child: MaterialApp.router(
+        theme: selahLightTheme(),
+        routerConfig: router,
+        locale: const Locale('es'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+      ),
+    ));
+    await tester.pump();
+    expect(find.byType(Skeleton), findsWidgets);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+  });
+
+  testWidgets('the join page builds on iOS in portrait', (tester) async {
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    try {
+      await _pump(tester);
+      expect(tester.takeException(), isNull);
+      expect(find.text(es.joinChurchAs('Vida Nueva', es.roleEditor)), findsOneWidget);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
   });
 }
