@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -146,6 +147,23 @@ void main() {
     addTearDown(router.dispose);
     walk(router.configuration.routes);
     expect(bare, isEmpty, reason: 'use _page(...) instead of a bare builder');
+  });
+
+  testWidgets('previous and next day replace the browser history entry instead of adding one', (tester) async {
+    final reports = <Map<Object?, Object?>>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.navigation, (call) async {
+      if (call.method == 'routeInformationUpdated') reports.add(call.arguments as Map<Object?, Object?>);
+      return null;
+    });
+    addTearDown(() => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.navigation, null));
+    await _pump(tester, '/c/vida-nueva/studies/seguir/day/3');
+    for (final label in ['Día siguiente', 'Día anterior']) {
+      reports.clear();
+      await tester.scrollUntilVisible(find.text(label), 300, scrollable: find.byType(Scrollable).first);
+      await _tap(tester, find.text(label));
+      expect(reports, isNotEmpty, reason: label);
+      expect(reports.last['replace'], isTrue, reason: '$label should not add a browser history entry');
+    }
   });
 
   testWidgets('back from a reader opened on Hoy returns to Hoy', (tester) async {

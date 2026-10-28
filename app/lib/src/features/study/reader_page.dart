@@ -68,6 +68,11 @@ class ReaderPage extends ConsumerWidget {
   }
 }
 
+/// Swaps the day in place. Neglected, so on web the browser's back leaves the reader like the in-app back, instead of
+/// walking through each day read.
+void _goToDay(BuildContext context, String path, PublicStudy original) =>
+    Router.neglect(context, () => context.pushReplacement(path, extra: original));
+
 class _Day extends ConsumerWidget {
   const _Day({
     required this.church,
@@ -197,13 +202,13 @@ class _Day extends ConsumerWidget {
           children: [
             if (day.number > 1)
               TextButton.icon(
-                onPressed: () => context.pushReplacement(dayPath(day.number - 1), extra: original),
+                onPressed: () => _goToDay(context, dayPath(day.number - 1), original),
                 icon: const Icon(Icons.arrow_back, size: 18),
                 label: Text(l.previousDay),
               ),
             const Spacer(),
             if (day.number < total)
-              FilledButton(onPressed: () => context.pushReplacement(dayPath(day.number + 1), extra: original), child: Text(l.nextDay)),
+              FilledButton(onPressed: () => _goToDay(context, dayPath(day.number + 1), original), child: Text(l.nextDay)),
           ],
         ),
       ],
