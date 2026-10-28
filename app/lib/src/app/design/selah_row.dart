@@ -20,29 +20,35 @@ class SelahRow extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     final radius = BorderRadius.circular(Radii.row);
     final ios = uiPlatformOf(context) == UiPlatform.ios;
+    final decoration = BoxDecoration(color: tones.surface, borderRadius: radius);
+    const padding = EdgeInsets.fromLTRB(18, 14, 14, 14);
+    final content = Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: text.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+              if (detail != null) Text(detail!, style: text.bodyMedium?.copyWith(color: tones.muted)),
+            ],
+          ),
+        ),
+        trailing ??
+            Icon(ios ? CupertinoIcons.chevron_forward : Icons.chevron_right, color: tones.muted, size: ios ? 18 : 24),
+      ],
+    );
+    // Android paints the fill as ink on Pressable's own Material so the ripple shows above it; elsewhere a plain box
+    // keeps the fill independent of any ancestor Material.
     return Pressable(
       onPressed: onOpen,
       borderRadius: radius,
       haptic: true,
-      child: Ink(
-        decoration: BoxDecoration(color: tones.surface, borderRadius: radius),
-        padding: const EdgeInsets.fromLTRB(18, 14, 14, 14),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(label, style: text.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
-                  if (detail != null) Text(detail!, style: text.bodyMedium?.copyWith(color: tones.muted)),
-                ],
-              ),
+      child: uiPlatformOf(context) == UiPlatform.android
+          ? Ink(decoration: decoration, padding: padding, child: content)
+          : DecoratedBox(
+              decoration: decoration,
+              child: Padding(padding: padding, child: content),
             ),
-            trailing ??
-                Icon(ios ? CupertinoIcons.chevron_forward : Icons.chevron_right, color: tones.muted, size: ios ? 18 : 24),
-          ],
-        ),
-      ),
     );
   }
 }

@@ -30,8 +30,13 @@ class Pressable extends StatefulWidget {
 class _PressableState extends State<Pressable> with TickerProviderStateMixin {
   late final AnimationController _scale = AnimationController.unbounded(vsync: this, value: 1);
 
-  /// Runs for [Motion.tapDebounce] after each accepted tap; frame-driven so it leaves no timer behind.
-  late final AnimationController _lock = AnimationController(vsync: this, duration: Motion.tapDebounce);
+  /// Runs for [Motion.tapDebounce] after each accepted tap; frame-driven so it leaves no timer behind. Preserved so
+  /// Reduce Motion (which shortens normal controllers) does not shrink the guard.
+  late final AnimationController _lock = AnimationController(
+    vsync: this,
+    duration: Motion.tapDebounce,
+    animationBehavior: AnimationBehavior.preserve,
+  );
 
   @override
   void dispose() {

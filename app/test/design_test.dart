@@ -183,4 +183,36 @@ void main() {
     await tester.pumpWidget(host(reduce: true, const SkeletonList(rows: 3, hero: true)));
     expect(find.byType(Skeleton), findsNWidgets(4));
   });
+
+  testWidgets('Pressable keeps its tap guard under Reduce Motion', (tester) async {
+    tester.platformDispatcher.accessibilityFeaturesTestValue = const FakeAccessibilityFeatures(disableAnimations: true);
+    addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
+    var taps = 0;
+    await tester.pumpWidget(host(reduce: true, Pressable(onPressed: () => taps++, child: box())));
+    await tester.tap(find.byType(Pressable));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.tap(find.byType(Pressable));
+    expect(taps, 1);
+    await tester.pump(Motion.tapDebounce);
+    await tester.tap(find.byType(Pressable));
+    expect(taps, 2);
+  });
+
+  testWidgets('SelahRow builds on iOS without a Material ancestor', (tester) async {
+    await tester.pumpWidget(
+      Theme(
+        data: selahLightTheme().copyWith(platform: TargetPlatform.iOS),
+        child: Directionality(
+          textDirection: TextDirection.ltr,
+          child: MediaQuery(
+            data: const MediaQueryData(),
+            child: SelahRow(label: 'Reading', onOpen: () {}),
+          ),
+        ),
+      ),
+    );
+    expect(tester.takeException(), isNull);
+    expect(find.text('Reading'), findsOneWidget);
+  });
 }
