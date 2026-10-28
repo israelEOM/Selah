@@ -253,14 +253,17 @@ class PageBody extends StatelessWidget {
   final List<Widget> children;
   final double maxWidth;
 
+  /// Scrolls to the screen's bottom edge, under a floating tab bar, with the bottom inset (which includes the bar's
+  /// height under the shell) as padding so the last item still clears it.
   @override
   Widget build(BuildContext context) => SafeArea(
+    bottom: false,
     child: Align(
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: maxWidth),
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
+          padding: EdgeInsets.fromLTRB(20, 16, 20, 40 + MediaQuery.paddingOf(context).bottom),
           children: children,
         ),
       ),

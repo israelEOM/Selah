@@ -6,6 +6,7 @@ import '../../l10n/app_localizations.dart';
 import '../data/current_church.dart';
 import '../data/providers.dart';
 import '../features/welcome/welcome_state.dart';
+import 'design/adaptive_tab_bar.dart';
 import 'theme.dart';
 
 /// Which tab a location belongs to: Hoy (0), Estudios (1) or Perfil (2).
@@ -77,96 +78,68 @@ class _SelahShellState extends ConsumerState<SelahShell> {
     if (tabIndexFor(location) == 1) _studiesChurch = Uri.parse(location).pathSegments[1];
   }
 
+  /// Hoy, Estudios and Perfil, in tab order.
+  List<SelahTab> _tabs(AppLocalizations l) => [
+    SelahTab(
+      label: l.tabToday,
+      icon: Icons.wb_sunny_outlined,
+      selectedIcon: Icons.wb_sunny,
+      symbol: 'sun.max',
+      selectedSymbol: 'sun.max.fill',
+    ),
+    SelahTab(
+      label: l.tabStudies,
+      icon: Icons.menu_book_outlined,
+      selectedIcon: Icons.menu_book,
+      symbol: 'book',
+      selectedSymbol: 'book.fill',
+    ),
+    SelahTab(
+      label: l.tabProfile,
+      icon: Icons.person_outline,
+      selectedIcon: Icons.person,
+      symbol: 'person',
+      selectedSymbol: 'person.fill',
+    ),
+  ];
+
+  void _select(int index) => index == 1 ? _openStudies() : _goTab(index);
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final selected = widget.navigationShell.currentIndex;
     _noteStudiesChurch();
+    final tabs = _tabs(l);
+    final wide = uiPlatformOf(context) != UiPlatform.ios && MediaQuery.sizeOf(context).width >= kRailBreakpoint;
+    if (wide) {
+      return Scaffold(
+        body: Row(children: [
+          NavigationRail(
+            selectedIndex: selected,
+            labelType: NavigationRailLabelType.all,
+            onDestinationSelected: (index) {
+              SelahHaptics.selection();
+              _select(index);
+            },
+            destinations: [
+              for (final tab in tabs)
+                NavigationRailDestination(
+                  icon: Icon(tab.icon),
+                  selectedIcon: Icon(tab.selectedIcon),
+                  label: Text(tab.label),
+                ),
+            ],
+          ),
+          Expanded(child: widget.navigationShell),
+        ]),
+      );
+    }
+    // The page runs under the bar, and its bottom inset grows by the bar's height so the last item still clears it.
     return Scaffold(
+      extendBody: true,
       body: widget.navigationShell,
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
-          child: Align(
-            heightFactor: 1,
-            child: ConstrainedBox(
-              // The width of PageBody's content.
-              constraints: const BoxConstraints(maxWidth: 720),
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: context.tones.surface,
-                  borderRadius: BorderRadius.circular(28),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(6),
-                  child: Row(children: [
-                    _Tab(
-                      icon: Icons.wb_sunny_outlined,
-                      label: l.tabToday,
-                      selected: selected == 0,
-                      onTap: () => _goTab(0),
-                    ),
-                    _Tab(
-                      icon: Icons.menu_book_outlined,
-                      label: l.tabStudies,
-                      selected: selected == 1,
-                      onTap: _openStudies,
-                    ),
-                    _Tab(
-                      icon: Icons.person_outline,
-                      label: l.tabProfile,
-                      selected: selected == 2,
-                      onTap: () => _goTab(2),
-                    ),
-                  ]),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Tab extends StatelessWidget {
-  const _Tab({required this.icon, required this.label, required this.selected, required this.onTap});
-
-  final IconData icon;
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
-    final color = selected ? primary : context.tones.muted;
-    return Expanded(
-      child: Semantics(
-        selected: selected,
-        button: true,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(22),
-          onTap: onTap,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            decoration: ShapeDecoration(
-              shape: const StadiumBorder(),
-              color: selected ? primary.withValues(alpha: 0.12) : Colors.transparent,
-            ),
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-              Icon(icon, color: color),
-              const SizedBox(height: 2),
-              Text(
-                label,
-                style: TextStyle(fontSize: 12, fontWeight: selected ? FontWeight.w700 : FontWeight.w500, color: color),
-              ),
-            ]),
-          ),
-        ),
-      ),
+      bottomNavigationBar: AdaptiveTabBar(tabs: tabs, currentIndex: selected, onTap: _select),
     );
   }
 }

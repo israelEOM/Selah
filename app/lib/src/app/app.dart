@@ -23,6 +23,7 @@ import '../features/study/study_page.dart';
 import '../features/today/today_page.dart';
 import '../features/welcome/welcome_page.dart';
 import '../l10n/locale.dart';
+import 'design/adaptive_tab_bar.dart';
 import 'shell.dart';
 import 'theme.dart';
 import 'theme_mode.dart';
@@ -48,6 +49,8 @@ GoRouter createRouter({String initialLocation = '/'}) {
   return GoRouter(
       navigatorKey: rootNavigatorKey,
       initialLocation: initialLocation,
+      // Hides the native glass bar while a page opens above the tabs.
+      observers: [CNTabBarRouteObserver()],
       routes: [
         // The three tab roots, each with its own stack, under the tab bar.
         StatefulShellRoute.indexedStack(

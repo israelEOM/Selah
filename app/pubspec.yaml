@@ -46,6 +46,7 @@ dependencies:
     sdk: flutter
   flutter_svg: ^2.3.0
   web: ^1.1.1
+  cupertino_native_better: ^1.8.1
 
 dev_dependencies:
   flutter_test:
