@@ -157,6 +157,15 @@ void main() {
     expect(_path(router), '/c/vida-nueva');
   });
 
+  testWidgets('tapping Estudios while on it stays on the church', (tester) async {
+    final router = await _pump(tester, '/c/vida-nueva');
+    expect(find.text('Iglesia Vida Nueva'), findsWidgets);
+    await _tap(tester, find.text('Estudios'));
+    expect(_path(router), '/c/vida-nueva');
+    expect(find.text('No encontramos esta iglesia.'), findsNothing);
+    expect(find.text('Iglesia Vida Nueva'), findsWidgets);
+  });
+
   testWidgets('a study page opened from a link goes back to its church', (tester) async {
     final router = await _pump(tester, '/c/vida-nueva/studies/seguir');
     await _back(tester, 'Volver');

@@ -62,7 +62,9 @@ class _SelahShellState extends ConsumerState<SelahShell> {
     if (slug == null) {
       context.push('/churches');
     } else if (slug == _studiesChurch) {
-      _goTab(1);
+      // Never with initialLocation: that is the branch's placeholder. The branch holds only the church page, so
+      // coming back to it is already its root.
+      widget.navigationShell.goBranch(1);
     } else {
       context.go('/c/$slug');
     }

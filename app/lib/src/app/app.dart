@@ -55,8 +55,9 @@ GoRouter createRouter({String initialLocation = '/'}) {
           branches: [
             StatefulShellBranch(routes: [GoRoute(path: '/', builder: (_, _) => const TodayPage())]),
             StatefulShellBranch(
-              // go_router wants a location it can open on its own. Estudios never uses it: the tab always goes
-              // to a real church first (see SelahShell), so this placeholder is never built.
+              // go_router wants a location it can open on its own. Estudios never uses it: the tab goes to a real
+              // church first and never calls goBranch with initialLocation (see SelahShell), so this placeholder
+              // is never built.
               initialLocation: '/c/_',
               routes: [
                 GoRoute(path: '/c/:church', builder: (_, state) => _inChurch(state, (church) => ChurchPage(church: church))),
