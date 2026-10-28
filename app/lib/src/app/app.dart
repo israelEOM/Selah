@@ -43,6 +43,25 @@ Widget _inChurchAdmin(BuildContext context, GoRouterState state, Widget Function
 /// The app's top navigator, which the study page and the reader open on, above the tab bar.
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 
+/// A route whose page is a Flutter [MaterialPage], so it gets the platform transition and its back gestures: the
+/// iOS edge swipe and Android predictive back. go_router 18 checks for package:material_ui's MaterialApp rather
+/// than Flutter's, so left to itself it builds every page as a [NoTransitionPage], with neither.
+GoRoute _page({
+  required String path,
+  required GoRouterWidgetBuilder builder,
+  GlobalKey<NavigatorState>? parentNavigatorKey,
+}) => GoRoute(
+  path: path,
+  parentNavigatorKey: parentNavigatorKey,
+  pageBuilder: (_, state) => MaterialPage<void>(
+    key: state.pageKey,
+    name: state.name ?? state.path,
+    arguments: {...state.pathParameters, ...state.uri.queryParameters},
+    restorationId: state.pageKey.value,
+    child: Builder(builder: (context) => builder(context, state)),
+  ),
+);
+
 GoRouter createRouter({String initialLocation = '/'}) {
   // On web, the address bar shows the page on top, pushed or not, so it can be copied and reopened.
   GoRouter.optionURLReflectsImperativeAPIs = true;
@@ -54,28 +73,33 @@ GoRouter createRouter({String initialLocation = '/'}) {
       routes: [
         // The three tab roots, each with its own stack, under the tab bar.
         StatefulShellRoute.indexedStack(
-          builder: (_, _, navigationShell) => SelahShell(navigationShell: navigationShell),
+          // A MaterialPage too (see _page), so the tabs slide aside under a page pushed above them.
+          pageBuilder: (_, state, navigationShell) => MaterialPage<void>(
+            key: state.pageKey,
+            restorationId: state.pageKey.value,
+            child: SelahShell(navigationShell: navigationShell),
+          ),
           branches: [
-            StatefulShellBranch(routes: [GoRoute(path: '/', builder: (_, _) => const TodayPage())]),
+            StatefulShellBranch(routes: [_page(path: '/', builder: (_, _) => const TodayPage())]),
             StatefulShellBranch(
               // go_router wants a location it can open on its own. Estudios never uses it: the tab goes to a real
               // church first and never calls goBranch with initialLocation (see SelahShell), so this placeholder
               // is never built.
               initialLocation: '/c/_',
               routes: [
-                GoRoute(path: '/c/:church', builder: (_, state) => _inChurch(state, (church) => ChurchPage(church: church))),
+                _page(path: '/c/:church', builder: (_, state) => _inChurch(state, (church) => ChurchPage(church: church))),
               ],
             ),
-            StatefulShellBranch(routes: [GoRoute(path: '/profile', builder: (_, _) => const ProfilePage())]),
+            StatefulShellBranch(routes: [_page(path: '/profile', builder: (_, _) => const ProfilePage())]),
           ],
         ),
         // Reading sits above the tabs, so back returns to whichever tab opened it.
-        GoRoute(
+        _page(
           path: '/c/:church/studies/:slug',
           parentNavigatorKey: rootNavigatorKey,
           builder: (_, state) => _inChurch(state, (church) => StudyPage(church: church, slug: state.pathParameters['slug']!)),
         ),
-        GoRoute(
+        _page(
           path: '/c/:church/studies/:slug/day/:number',
           parentNavigatorKey: rootNavigatorKey,
           builder: (_, state) => _inChurch(
@@ -87,29 +111,29 @@ GoRouter createRouter({String initialLocation = '/'}) {
             ),
           ),
         ),
-        GoRoute(path: '/churches', builder: (_, _) => const ChurchPickerPage()),
-        GoRoute(path: '/login', builder: (_, _) => const LoginPage()),
-        GoRoute(path: '/welcome', builder: (_, state) => WelcomePage(step: state.uri.queryParameters['step'])),
-        GoRoute(path: '/join/:token', builder: (_, state) => JoinPage(token: state.pathParameters['token']!)),
-        GoRoute(path: '/churches/new', builder: (_, _) => const CreateChurchPage()),
-        GoRoute(path: '/requests', builder: (context, _) => inSpanish(context, const RequestsPage())),
-        GoRoute(
+        _page(path: '/churches', builder: (_, _) => const ChurchPickerPage()),
+        _page(path: '/login', builder: (_, _) => const LoginPage()),
+        _page(path: '/welcome', builder: (_, state) => WelcomePage(step: state.uri.queryParameters['step'])),
+        _page(path: '/join/:token', builder: (_, state) => JoinPage(token: state.pathParameters['token']!)),
+        _page(path: '/churches/new', builder: (_, _) => const CreateChurchPage()),
+        _page(path: '/requests', builder: (context, _) => inSpanish(context, const RequestsPage())),
+        _page(
           path: '/c/:church/admin',
           builder: (context, state) => _inChurchAdmin(context, state, (church) => AdminHomePage(church: church)),
         ),
-        GoRoute(
+        _page(
           path: '/c/:church/admin/settings',
           builder: (context, state) => _inChurchAdmin(context, state, (church) => ChurchSettingsPage(church: church)),
         ),
-        GoRoute(
+        _page(
           path: '/c/:church/admin/people',
           builder: (context, state) => _inChurchAdmin(context, state, (church) => PeoplePage(church: church)),
         ),
-        GoRoute(
+        _page(
           path: '/c/:church/admin/sermons/new',
           builder: (context, state) => _inChurchAdmin(context, state, (church) => ImportPage(church: church)),
         ),
-        GoRoute(
+        _page(
           path: '/c/:church/admin/sermons/:id',
           builder: (context, state) => _inChurchAdmin(
             context,
@@ -118,15 +142,15 @@ GoRouter createRouter({String initialLocation = '/'}) {
           ),
         ),
         // Links from before churches had their own addresses.
-        GoRoute(path: '/studies/:slug', builder: (_, state) => LegacyStudyRedirect(slug: state.pathParameters['slug']!)),
-        GoRoute(
+        _page(path: '/studies/:slug', builder: (_, state) => LegacyStudyRedirect(slug: state.pathParameters['slug']!)),
+        _page(
           path: '/studies/:slug/day/:number',
           builder: (_, state) => LegacyStudyRedirect(
             slug: state.pathParameters['slug']!,
             dayNumber: state.pathParameters['number']!,
           ),
         ),
-        GoRoute(path: '/admin', builder: (_, _) => const LegacyAdminRedirect()),
+        _page(path: '/admin', builder: (_, _) => const LegacyAdminRedirect()),
       ],
     );
 }

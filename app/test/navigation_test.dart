@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -103,6 +104,30 @@ Future<void> _back(WidgetTester tester, String tooltip) => _tap(tester, find.byT
 
 const _reader1 = '/c/vida-nueva/studies/seguir/day/1';
 
+/// The iOS back swipe: a drag from the left edge to past the middle of the screen. Test pointer events carry no
+/// real timing, so a short flick has no velocity and settles back; past halfway it pops, as on a device.
+Future<void> _edgeSwipe(WidgetTester tester) async {
+  final gesture = await tester.startGesture(const Offset(5, 300));
+  await gesture.moveBy(const Offset(20, 0));
+  await tester.pump();
+  for (var i = 0; i < 10; i++) {
+    await gesture.moveBy(const Offset(60, 0));
+    await tester.pump(const Duration(milliseconds: 16));
+  }
+  await gesture.up();
+  await tester.pumpAndSettle();
+}
+
+/// Runs [body] as on an iPhone, then puts the test platform back.
+Future<void> _onIos(Future<void> Function() body) async {
+  debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+  try {
+    await body();
+  } finally {
+    debugDefaultTargetPlatformOverride = null;
+  }
+}
+
 void main() {
   testWidgets('back from a reader opened on Hoy returns to Hoy', (tester) async {
     final router = await _pump(tester, '/');
@@ -206,5 +231,26 @@ void main() {
     expect(_path(router), _reader1);
     await _back(tester, 'Back to the study');
     expect(_path(router), '/');
+  });
+
+  testWidgets('iOS edge swipe from a reader opened on Hoy returns to Hoy', (tester) async {
+    await _onIos(() async {
+      final router = await _pump(tester, '/');
+      await _tap(tester, find.text('Reflexión'));
+      expect(_path(router), _reader1);
+      await _edgeSwipe(tester);
+      expect(_path(router), '/');
+      expect(find.text('Idea principal 1'), findsOneWidget);
+    });
+  });
+
+  testWidgets('iOS edge swipe from a reader opened on the study page returns to the study page', (tester) async {
+    await _onIos(() async {
+      final router = await _pump(tester, '/c/vida-nueva/studies/seguir');
+      await _tap(tester, find.text('Día 2 del camino'));
+      expect(_path(router), '/c/vida-nueva/studies/seguir/day/2');
+      await _edgeSwipe(tester);
+      expect(_path(router), '/c/vida-nueva/studies/seguir');
+    });
   });
 }
