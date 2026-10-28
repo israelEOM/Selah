@@ -67,7 +67,7 @@ Today almost every member move uses `context.go`, which replaces the page, so th
 
 - **Back returns to where you came from.** *(Decided by the owner.)* Drilling into a page pushes it, so the iOS edge back-swipe, Android predictive back and the on-screen back button all pop to the previous page. A reader opened from Hoy goes back to Hoy, and the hero card animates back into place. A reader opened from the study page goes back to the study page. A page opened directly from a deep link, with nothing to pop, goes back to its logical parent (today's fixed destinations).
 - **Each tab remembers its place.** *(My call.)* Use a `StatefulShellRoute` with one stack per tab, the way native tab bars behave. Tapping the tab you're already on pops it to its root.
-- **The tab bar shows on tab roots and the study page, and hides in the reader.** *(My call.)* Reading is full-screen and focused, and the bar slides away when the reader opens.
+- **The tab bar shows on the three tab roots (Hoy, the church page, Perfil) and hides on the study page and the reader.** *(My call, revised while planning.)* Both of these pages can be opened from Hoy and from Estudios. For back to return to whichever tab opened them, they have to sit above the tabs instead of inside one tab's stack. As a bonus, reading is full-screen and focused.
 - **Previous and next day replace the reader page in place.** *(My call.)* That way back still leaves the reader in one step instead of walking through every day.
 - Web keeps working URLs and deep links, and the browser back button follows the same stack.
 - Tests that assert a destination after tapping back or a row are updated to the new behavior. Everything else they assert stays.
