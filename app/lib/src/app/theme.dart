@@ -3,7 +3,11 @@ import 'package:flutter/material.dart';
 import 'design/transitions.dart';
 
 export 'design/haptics.dart';
+export 'design/hero_card.dart';
 export 'design/platform.dart';
+export 'design/pressable.dart';
+export 'design/selah_row.dart';
+export 'design/skeleton.dart';
 export 'design/tokens.dart';
 
 const _serif = 'Georgia';
