@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:selah/src/app/theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -123,10 +124,26 @@ void main() {
     expect(find.text('Reflexión 2'), findsOneWidget);
   });
 
+  testWidgets('the reader shows the day on iOS', (tester) async {
+    // Portrait: the iOS sliver bar only builds its large title there.
+    tester.view.physicalSize = const Size(1800, 2700);
+    addTearDown(tester.view.resetPhysicalSize);
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    try {
+      await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/2');
+      expect(tester.takeException(), isNull);
+      expect(find.text('Título día 2'), findsOneWidget);
+      expect(find.byTooltip('Volver'), findsOneWidget);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
   testWidgets('reader moves to the next day', (tester) async {
     final router = await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/2');
     await tester.drag(find.byType(Scrollable).first, const Offset(0, -500));
     await tester.pumpAndSettle();
+    expect(find.text('Día siguiente').hitTestable(), findsOneWidget);
     await tester.tap(find.text('Día siguiente'));
     await tester.pumpAndSettle();
     expect(router.state.uri.path, '/c/vida-nueva/studies/retiro-espiritual/day/3');
@@ -136,6 +153,7 @@ void main() {
     await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/3');
     await tester.drag(find.byType(Scrollable).first, const Offset(0, -500));
     await tester.pumpAndSettle();
+    expect(find.text('Día anterior').hitTestable(), findsOneWidget);
     expect(find.text('Día siguiente'), findsNothing);
   });
 

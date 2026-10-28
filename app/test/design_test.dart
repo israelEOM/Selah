@@ -251,6 +251,23 @@ void main() {
     }
   });
 
+  testWidgets('SelahPage with no title builds on iOS', (tester) async {
+    // Portrait: the sliver bar only builds its large title there.
+    tester.view.physicalSize = const Size(1200, 2400);
+    addTearDown(tester.view.resetPhysicalSize);
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    try {
+      await tester.pumpWidget(pageApp(const SelahPage(backTo: '/', actions: [Icon(Icons.language)], children: [Text('body')])));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.text('body'), findsOneWidget);
+      expect(find.byTooltip('Back'), findsOneWidget);
+      expect(find.byIcon(Icons.language), findsOneWidget);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
   testWidgets('SelahPage on Android uses a large Material app bar', (tester) async {
     debugDefaultTargetPlatformOverride = TargetPlatform.android;
     try {

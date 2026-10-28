@@ -20,16 +20,13 @@ class DayHero extends StatelessWidget {
       tag: tag,
       flightShuttleBuilder: (context, animation, direction, from, to) => Material(
         type: MaterialType.transparency,
-        child: DefaultTextStyle(
-          style: DefaultTextStyle.of(context).style,
-          // The two cards differ in height, so let the shuttle overflow its in-between size and clip it.
-          child: ClipRect(
-            child: OverflowBox(
-              alignment: Alignment.topCenter,
-              minHeight: 0,
-              maxHeight: double.infinity,
-              child: (direction == HeroFlightDirection.push ? to : from).widget,
-            ),
+        // The two cards differ in height, so let the shuttle overflow its in-between size and clip it.
+        child: ClipRect(
+          child: OverflowBox(
+            alignment: Alignment.topCenter,
+            minHeight: 0,
+            maxHeight: double.infinity,
+            child: (direction == HeroFlightDirection.push ? to : from).widget,
           ),
         ),
       ),

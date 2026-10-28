@@ -47,7 +47,22 @@ class SelahPage extends StatelessWidget {
     }
 
     final Widget header;
-    if (ios) {
+    if (ios && title == null) {
+      // CupertinoSliverNavigationBar needs a large title or a route title, so the slim bar is a pinned plain bar.
+      header = SliverPersistentHeader(
+        pinned: true,
+        delegate: _SlimBarDelegate(
+          extent: MediaQuery.paddingOf(context).top + kMinInteractiveDimensionCupertino,
+          bar: CupertinoNavigationBar(
+            automaticallyImplyLeading: false,
+            leading: back,
+            trailing: actions.isEmpty ? null : Row(mainAxisSize: MainAxisSize.min, children: actions),
+            backgroundColor: theme.scaffoldBackgroundColor.withValues(alpha: 0.85),
+            border: null,
+          ),
+        ),
+      );
+    } else if (ios) {
       header = CupertinoSliverNavigationBar(
         largeTitle: title == null ? null : Text(title!),
         automaticallyImplyLeading: false,
@@ -109,4 +124,22 @@ class SelahPage extends StatelessWidget {
       body: !ios && onRefresh != null ? RefreshIndicator(onRefresh: onRefresh!, child: scroll) : scroll,
     );
   }
+}
+
+class _SlimBarDelegate extends SliverPersistentHeaderDelegate {
+  _SlimBarDelegate({required this.extent, required this.bar});
+
+  final double extent;
+  final Widget bar;
+
+  @override
+  double get minExtent => extent;
+  @override
+  double get maxExtent => extent;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) => bar;
+
+  @override
+  bool shouldRebuild(_SlimBarDelegate old) => extent != old.extent || bar != old.bar;
 }
