@@ -184,6 +184,14 @@ void main() {
     expect(tester.widget<FadeTransition>(find.byType(FadeTransition).last).opacity.value, 1);
   });
 
+  testWidgets('Entrance caps its stagger, so a late item waits no longer than the seventh', (tester) async {
+    double opacity() => tester.widget<FadeTransition>(find.byType(FadeTransition).last).opacity.value;
+    await tester.pumpWidget(host(const Entrance(index: 30, child: Text('hi'))));
+    await tester.pump(); // The first frame only starts the animation.
+    await tester.pump(Motion.staggerStep * 6 + Motion.medium);
+    expect(opacity(), 1);
+  });
+
   testWidgets('SkeletonList with a hero draws rows + 1 blocks', (tester) async {
     await tester.pumpWidget(host(reduce: true, const SkeletonList(rows: 3, hero: true)));
     expect(find.byType(Skeleton), findsNWidgets(4));

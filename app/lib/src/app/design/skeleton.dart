@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import '../theme.dart';
@@ -82,7 +84,7 @@ class SkeletonList extends StatelessWidget {
   }
 }
 
-/// Fades and slides its child up 12px on first build, staggered by [index]; shown at once with Reduce Motion.
+/// Fades and slides its child up 12px on first build, staggered by [index] (up to 6); shown at once with Reduce Motion.
 class Entrance extends StatefulWidget {
   const Entrance({super.key, required this.index, required this.child});
 
@@ -94,7 +96,8 @@ class Entrance extends StatefulWidget {
 }
 
 class _EntranceState extends State<Entrance> with SingleTickerProviderStateMixin {
-  late final Duration _delay = Motion.staggerStep * widget.index;
+  /// Capped at the seventh item, so a long list does not keep its tail waiting.
+  late final Duration _delay = Motion.staggerStep * min(widget.index, 6);
   late final AnimationController _controller = AnimationController(vsync: this, duration: _delay + Motion.medium);
   late final Animation<double> _curve = CurvedAnimation(
     parent: _controller,
