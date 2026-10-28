@@ -39,33 +39,49 @@ Widget _inChurch(GoRouterState state, Widget Function(Church church) builder) =>
 Widget _inChurchAdmin(BuildContext context, GoRouterState state, Widget Function(Church church) builder) =>
     inSpanish(context, _inChurch(state, builder));
 
-GoRouter createRouter({String initialLocation = '/'}) => GoRouter(
+/// The app's top navigator, which the study page and the reader open on, above the tab bar.
+final rootNavigatorKey = GlobalKey<NavigatorState>();
+
+GoRouter createRouter({String initialLocation = '/'}) {
+  // On web, the address bar shows the page on top, pushed or not, so it can be copied and reopened.
+  GoRouter.optionURLReflectsImperativeAPIs = true;
+  return GoRouter(
+      navigatorKey: rootNavigatorKey,
       initialLocation: initialLocation,
       routes: [
-        // The member pages, under the tab bar.
-        ShellRoute(
-          builder: (_, state, child) => SelahShell(location: state.uri.path, child: child),
-          routes: [
-            GoRoute(path: '/', builder: (_, _) => const TodayPage()),
-            GoRoute(path: '/profile', builder: (_, _) => const ProfilePage()),
-            GoRoute(path: '/c/:church', builder: (_, state) => _inChurch(state, (church) => ChurchPage(church: church))),
-            GoRoute(
-              path: '/c/:church/studies/:slug',
-              builder: (_, state) =>
-                  _inChurch(state, (church) => StudyPage(church: church, slug: state.pathParameters['slug']!)),
+        // The three tab roots, each with its own stack, under the tab bar.
+        StatefulShellRoute.indexedStack(
+          builder: (_, _, navigationShell) => SelahShell(navigationShell: navigationShell),
+          branches: [
+            StatefulShellBranch(routes: [GoRoute(path: '/', builder: (_, _) => const TodayPage())]),
+            StatefulShellBranch(
+              // go_router wants a location it can open on its own. Estudios never uses it: the tab always goes
+              // to a real church first (see SelahShell), so this placeholder is never built.
+              initialLocation: '/c/_',
+              routes: [
+                GoRoute(path: '/c/:church', builder: (_, state) => _inChurch(state, (church) => ChurchPage(church: church))),
+              ],
             ),
-            GoRoute(
-              path: '/c/:church/studies/:slug/day/:number',
-              builder: (_, state) => _inChurch(
-                state,
-                (church) => ReaderPage(
-                  church: church,
-                  slug: state.pathParameters['slug']!,
-                  dayNumber: int.tryParse(state.pathParameters['number']!) ?? 0,
-                ),
-              ),
-            ),
+            StatefulShellBranch(routes: [GoRoute(path: '/profile', builder: (_, _) => const ProfilePage())]),
           ],
+        ),
+        // Reading sits above the tabs, so back returns to whichever tab opened it.
+        GoRoute(
+          path: '/c/:church/studies/:slug',
+          parentNavigatorKey: rootNavigatorKey,
+          builder: (_, state) => _inChurch(state, (church) => StudyPage(church: church, slug: state.pathParameters['slug']!)),
+        ),
+        GoRoute(
+          path: '/c/:church/studies/:slug/day/:number',
+          parentNavigatorKey: rootNavigatorKey,
+          builder: (_, state) => _inChurch(
+            state,
+            (church) => ReaderPage(
+              church: church,
+              slug: state.pathParameters['slug']!,
+              dayNumber: int.tryParse(state.pathParameters['number']!) ?? 0,
+            ),
+          ),
         ),
         GoRoute(path: '/churches', builder: (_, _) => const ChurchPickerPage()),
         GoRoute(path: '/login', builder: (_, _) => const LoginPage()),
@@ -109,6 +125,7 @@ GoRouter createRouter({String initialLocation = '/'}) => GoRouter(
         GoRoute(path: '/admin', builder: (_, _) => const LegacyAdminRedirect()),
       ],
     );
+}
 
 final _router = createRouter();
 

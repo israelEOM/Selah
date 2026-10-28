@@ -106,7 +106,7 @@ void main() {
     await tester.scrollUntilVisible(find.text('Título día 2'), 300);
     await tester.tap(find.text('Título día 2'));
     await tester.pumpAndSettle();
-    expect(router.routerDelegate.currentConfiguration.uri.path, '/c/vida-nueva/studies/retiro-espiritual/day/2');
+    expect(router.state.uri.path, '/c/vida-nueva/studies/retiro-espiritual/day/2');
   });
 
   testWidgets('unknown study says it is not available', (tester) async {
@@ -126,7 +126,7 @@ void main() {
     await tester.scrollUntilVisible(find.text('Día siguiente'), 300);
     await tester.tap(find.text('Día siguiente'));
     await tester.pumpAndSettle();
-    expect(router.routerDelegate.currentConfiguration.uri.path, '/c/vida-nueva/studies/retiro-espiritual/day/3');
+    expect(router.state.uri.path, '/c/vida-nueva/studies/retiro-espiritual/day/3');
   });
 
   testWidgets('last day has no next day', (tester) async {

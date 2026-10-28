@@ -101,7 +101,7 @@ class _Today extends ConsumerWidget {
                       child: Align(
                         alignment: Alignment.centerLeft,
                         child: OutlinedButton(
-                          onPressed: () => context.go('/c/${church.slug}/studies/${study.slug}'),
+                          onPressed: () => context.push('/c/${church.slug}/studies/${study.slug}'),
                           child: Text(l.sermonSummaryButton),
                         ),
                       ),
@@ -118,7 +118,7 @@ class _Today extends ConsumerWidget {
                             Align(
                               alignment: Alignment.centerLeft,
                               child: TextButton(
-                                onPressed: () => context.go(_dayPath(study, next.number)),
+                                onPressed: () => context.push(_dayPath(study, next.number)),
                                 child: Text(l.readNext),
                               ),
                             ),
@@ -185,7 +185,7 @@ class _Today extends ConsumerWidget {
             onTick: () => tickPart(ref, progressId, day, part, ref.read(clockProvider)()),
             onOpen: part == DayPart.reading
                 ? () => _openBible(day.bibleReading!, study.bibleVersionCode)
-                : () => context.go(_dayPath(study, day.number)),
+                : () => context.push(_dayPath(study, day.number)),
           ),
         ),
     ];

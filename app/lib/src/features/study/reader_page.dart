@@ -33,7 +33,7 @@ class ReaderPage extends ConsumerWidget {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           tooltip: l.backToStudy,
-          onPressed: () => context.go('/c/${church.slug}/studies/$slug'),
+          onPressed: () => popOr(context, '/c/${church.slug}/studies/$slug'),
         ),
         actions: const [LanguageMenu(), SizedBox(width: 8)],
       ),
@@ -185,13 +185,13 @@ class _Day extends ConsumerWidget {
           children: [
             if (day.number > 1)
               TextButton.icon(
-                onPressed: () => context.go(dayPath(day.number - 1)),
+                onPressed: () => context.pushReplacement(dayPath(day.number - 1)),
                 icon: const Icon(Icons.arrow_back, size: 18),
                 label: Text(l.previousDay),
               ),
             const Spacer(),
             if (day.number < total)
-              FilledButton(onPressed: () => context.go(dayPath(day.number + 1)), child: Text(l.nextDay)),
+              FilledButton(onPressed: () => context.pushReplacement(dayPath(day.number + 1)), child: Text(l.nextDay)),
           ],
         ),
       ],

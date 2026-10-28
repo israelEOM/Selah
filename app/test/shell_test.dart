@@ -59,7 +59,7 @@ Future<GoRouter> _pump(WidgetTester tester, String location, {Church? current = 
   return router;
 }
 
-String _path(GoRouter router) => router.routerDelegate.currentConfiguration.uri.path;
+String _path(GoRouter router) => router.state.uri.path;
 
 void main() {
   test('tabIndexFor maps locations to tabs', () {

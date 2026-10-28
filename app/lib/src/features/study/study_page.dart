@@ -26,7 +26,7 @@ class StudyPage extends ConsumerWidget {
     final study = ref.watch(studyProvider((churchId: church.id, slug: slug)));
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(icon: const Icon(Icons.arrow_back), tooltip: l.back, onPressed: () => context.go('/c/${church.slug}')),
+        leading: IconButton(icon: const Icon(Icons.arrow_back), tooltip: l.back, onPressed: () => popOr(context, '/c/${church.slug}')),
         actions: const [LanguageMenu(), SizedBox(width: 8)],
       ),
       body: study.when(
@@ -102,7 +102,7 @@ class _StudyBody extends ConsumerWidget {
                       title: Text(day.title, style: text.titleLarge),
                       subtitle: day.bibleReading == null ? null : Text(day.bibleReading!),
                       trailing: const Icon(Icons.chevron_right),
-                      onTap: () => context.go('/c/${church.slug}/studies/${study.slug}/day/${day.number}'),
+                      onTap: () => context.push('/c/${church.slug}/studies/${study.slug}/day/${day.number}'),
                     ),
                   ),
                 ),

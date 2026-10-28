@@ -17,16 +17,18 @@ int tabIndexFor(String location) {
 
 /// The member pages, with the tab bar floating under them.
 class SelahShell extends ConsumerStatefulWidget {
-  const SelahShell({super.key, required this.location, required this.child});
+  const SelahShell({super.key, required this.navigationShell});
 
-  final String location;
-  final Widget child;
+  final StatefulNavigationShell navigationShell;
 
   @override
   ConsumerState<SelahShell> createState() => _SelahShellState();
 }
 
 class _SelahShellState extends ConsumerState<SelahShell> {
+  /// The church the Estudios tab last showed, so tapping it again comes back to the same place.
+  String? _studiesChurch;
+
   @override
   void initState() {
     super.initState();
@@ -44,23 +46,42 @@ class _SelahShellState extends ConsumerState<SelahShell> {
     });
   }
 
+  /// Hoy and Perfil switch to their tab; tapping the tab you're on pops it to its root.
+  void _goTab(int index) =>
+      widget.navigationShell.goBranch(index, initialLocation: index == widget.navigationShell.currentIndex);
+
+  /// Estudios opens the current church, or the church list when there's none.
   Future<void> _openStudies() async {
-    String destination;
+    String? slug;
     try {
-      final church = await ref.read(currentChurchProvider.future);
-      destination = church == null ? '/churches' : '/c/${church.slug}';
+      slug = (await ref.read(currentChurchProvider.future))?.slug;
     } catch (_) {
-      destination = '/churches';
+      slug = null;
     }
-    if (mounted) context.go(destination);
+    if (!mounted) return;
+    if (slug == null) {
+      context.push('/churches');
+    } else if (slug == _studiesChurch) {
+      _goTab(1);
+    } else {
+      context.go('/c/$slug');
+    }
+  }
+
+  /// Remembers which church the Estudios tab is on.
+  void _noteStudiesChurch() {
+    if (widget.navigationShell.currentIndex != 1) return;
+    final location = widget.navigationShell.shellRouteContext.routerState.uri.path;
+    if (tabIndexFor(location) == 1) _studiesChurch = Uri.parse(location).pathSegments[1];
   }
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    final selected = tabIndexFor(widget.location);
+    final selected = widget.navigationShell.currentIndex;
+    _noteStudiesChurch();
     return Scaffold(
-      body: widget.child,
+      body: widget.navigationShell,
       bottomNavigationBar: SafeArea(
         top: false,
         child: Padding(
@@ -82,7 +103,7 @@ class _SelahShellState extends ConsumerState<SelahShell> {
                       icon: Icons.wb_sunny_outlined,
                       label: l.tabToday,
                       selected: selected == 0,
-                      onTap: () => context.go('/'),
+                      onTap: () => _goTab(0),
                     ),
                     _Tab(
                       icon: Icons.menu_book_outlined,
@@ -94,7 +115,7 @@ class _SelahShellState extends ConsumerState<SelahShell> {
                       icon: Icons.person_outline,
                       label: l.tabProfile,
                       selected: selected == 2,
-                      onTap: () => context.go('/profile'),
+                      onTap: () => _goTab(2),
                     ),
                   ]),
                 ),
