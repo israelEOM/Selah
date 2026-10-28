@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+import 'package:selah/l10n/app_localizations.dart';
 import 'package:selah/src/app/theme.dart';
 
 void main() {
@@ -214,5 +216,133 @@ void main() {
     );
     expect(tester.takeException(), isNull);
     expect(find.text('Reading'), findsOneWidget);
+  });
+
+  Widget pageApp(Widget home, {GoRouter? router}) {
+    final theme = selahLightTheme();
+    if (router != null) {
+      return MaterialApp.router(
+        theme: theme,
+        routerConfig: router,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+      );
+    }
+    return MaterialApp(
+      theme: theme,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: home,
+    );
+  }
+
+  testWidgets('SelahPage on iOS uses a large collapsing title', (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    try {
+      await tester.pumpWidget(pageApp(const SelahPage(title: 'Today', children: [Text('body')])));
+      expect(find.byType(CupertinoSliverNavigationBar), findsOneWidget);
+      expect(find.text('Today'), findsWidgets);
+      expect(find.text('body'), findsOneWidget);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
+  testWidgets('SelahPage on Android uses a large Material app bar', (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    try {
+      await tester.pumpWidget(pageApp(const SelahPage(title: 'Today', children: [Text('body')])));
+      expect(find.byType(SliverAppBar), findsOneWidget);
+      expect(find.byType(CupertinoSliverNavigationBar), findsNothing);
+      expect(find.text('Today'), findsWidgets);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
+  for (final target in [TargetPlatform.iOS, TargetPlatform.android]) {
+    testWidgets('SelahPage back pops when it can and goes to backTo when it cannot ($target)', (tester) async {
+      debugDefaultTargetPlatformOverride = target;
+      try {
+        final router = GoRouter(
+          initialLocation: '/',
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (_, _) => const SelahPage(title: 'Home', children: [Text('home body')]),
+            ),
+            GoRoute(
+              path: '/detail',
+              builder: (_, _) => const SelahPage(title: 'Detail', backTo: '/', children: [Text('detail body')]),
+            ),
+          ],
+        );
+        await tester.pumpWidget(pageApp(const SizedBox(), router: router));
+        router.push('/detail');
+        await tester.pumpAndSettle();
+        expect(find.text('detail body'), findsOneWidget);
+        await tester.tap(find.byTooltip('Back'));
+        await tester.pumpAndSettle();
+        expect(find.text('home body'), findsOneWidget);
+        expect(find.text('detail body'), findsNothing);
+
+        router.go('/detail');
+        await tester.pumpAndSettle();
+        expect(find.text('detail body'), findsOneWidget);
+        await tester.tap(find.byTooltip('Back'));
+        await tester.pumpAndSettle();
+        expect(find.text('home body'), findsOneWidget);
+      } finally {
+        debugDefaultTargetPlatformOverride = null;
+      }
+    });
+
+    testWidgets('SelahPage pull to refresh calls onRefresh ($target)', (tester) async {
+      debugDefaultTargetPlatformOverride = target;
+      try {
+        var calls = 0;
+        await tester.pumpWidget(
+          pageApp(SelahPage(title: 'Today', onRefresh: () async => calls++, children: const [Text('body')])),
+        );
+        await tester.fling(find.text('body'), const Offset(0, 400), 1000);
+        await tester.pump();
+        await tester.pump(const Duration(seconds: 1));
+        await tester.pump(const Duration(seconds: 1));
+        expect(calls, 1);
+      } finally {
+        debugDefaultTargetPlatformOverride = null;
+      }
+    });
+  }
+
+  testWidgets('AdaptiveSegmented picks the platform control and reports changes', (tester) async {
+    for (final target in [TargetPlatform.iOS, TargetPlatform.android]) {
+      debugDefaultTargetPlatformOverride = target;
+      try {
+        String? picked;
+        await tester.pumpWidget(
+          pageApp(
+            Scaffold(
+              body: Center(
+                child: AdaptiveSegmented<String>(
+                  segments: const {'a': 'Alpha', 'b': 'Beta'},
+                  selected: 'a',
+                  onChanged: (v) => picked = v,
+                ),
+              ),
+            ),
+          ),
+        );
+        expect(
+          find.byType(target == TargetPlatform.iOS ? CupertinoSlidingSegmentedControl<String> : SegmentedButton<String>),
+          findsOneWidget,
+        );
+        await tester.tap(find.text('Beta'));
+        await tester.pumpAndSettle();
+        expect(picked, 'b');
+      } finally {
+        debugDefaultTargetPlatformOverride = null;
+      }
+    }
   });
 }
