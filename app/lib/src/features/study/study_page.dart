@@ -102,7 +102,7 @@ class _StudyBody extends ConsumerWidget {
                       title: Text(day.title, style: text.titleLarge),
                       subtitle: day.bibleReading == null ? null : Text(day.bibleReading!),
                       trailing: const Icon(Icons.chevron_right),
-                      onTap: () => context.push('/c/${church.slug}/studies/${study.slug}/day/${day.number}'),
+                      onTap: () => context.push('/c/${church.slug}/studies/${study.slug}/day/${day.number}', extra: original),
                     ),
                   ),
                 ),

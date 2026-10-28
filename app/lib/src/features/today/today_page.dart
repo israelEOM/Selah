@@ -111,16 +111,16 @@ class _Today extends ConsumerWidget {
                     return page(switch (state) {
                       NoStudy() => const [],
                       DayToDo(:final day) => [
-                          ..._devotional(context, ref, study, original.id, day, progress, done: false),
+                          ..._devotional(context, ref, study, original,  day, progress, done: false),
                           summary,
                         ],
                       DoneForToday(:final day, :final next) => [
-                          ..._devotional(context, ref, study, original.id, day, progress, done: true),
+                          ..._devotional(context, ref, study, original,  day, progress, done: true),
                           if (next != null)
                             Align(
                               alignment: Alignment.centerLeft,
                               child: TextButton(
-                                onPressed: () => context.push(_dayPath(study, next.number)),
+                                onPressed: () => context.push(_dayPath(study, next.number), extra: original),
                                 child: Text(l.readNext),
                               ),
                             ),
@@ -154,14 +154,15 @@ class _Today extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     PublicStudy study,
-    String progressId,
+    PublicStudy original,
     DevotionalDay day,
     StudyProgress progress, {
     required bool done,
   }) {
     final l = AppLocalizations.of(context)!;
+    final progressId = original.id;
     final ticked = progress.days[day.number]?.parts ?? const <DayPart>{};
-    void openDay() => context.push(_dayPath(study, day.number));
+    void openDay() => context.push(_dayPath(study, day.number), extra: original);
     String label(DayPart part) => switch (part) {
           DayPart.reading => l.bibleReading,
           DayPart.reflection => l.reflection,

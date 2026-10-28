@@ -108,6 +108,7 @@ GoRouter createRouter({String initialLocation = '/'}) {
               church: church,
               slug: state.pathParameters['slug']!,
               dayNumber: int.tryParse(state.pathParameters['number']!) ?? 0,
+              initialStudy: state.extra is PublicStudy ? state.extra as PublicStudy : null,
             ),
           ),
         ),

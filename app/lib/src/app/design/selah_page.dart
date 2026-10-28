@@ -59,6 +59,7 @@ class SelahPage extends StatelessWidget {
             trailing: actions.isEmpty ? null : Row(mainAxisSize: MainAxisSize.min, children: actions),
             backgroundColor: theme.scaffoldBackgroundColor.withValues(alpha: 0.85),
             border: null,
+            transitionBetweenRoutes: false,
           ),
         ),
       );

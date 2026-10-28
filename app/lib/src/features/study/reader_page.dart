@@ -17,11 +17,14 @@ import 'translation_banner.dart';
 
 /// One devotional day, laid out for reading on a phone.
 class ReaderPage extends ConsumerWidget {
-  const ReaderPage({super.key, required this.church, required this.slug, required this.dayNumber});
+  const ReaderPage({super.key, required this.church, required this.slug, required this.dayNumber, this.initialStudy});
 
   final Church church;
   final String slug;
   final int dayNumber;
+
+  /// The study the opener already has; shown while [studyProvider] loads so the hero header is there on the first frame.
+  final PublicStudy? initialStudy;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -30,6 +33,24 @@ class ReaderPage extends ConsumerWidget {
     final study = ref.watch(studyProvider((churchId: church.id, slug: slug)));
     final language = ref.watch(appLocaleProvider).languageCode;
     final backTo = '/c/${church.slug}/studies/$slug';
+    Widget loaded(PublicStudy? original) {
+      final s = original == null
+          ? null
+          : studyToShow(original, language, showOriginal: ref.watch(showOriginalProvider(original.id)));
+      final day = s?.days.where((d) => d.number == dayNumber).firstOrNull;
+      if (original == null || s == null || day == null) {
+        return SelahPage(
+          backTo: backTo,
+          actions: const [LanguageMenu(), SizedBox(width: 8)],
+          children: [Text(l.studyNotFound, style: text.bodyLarge)],
+        );
+      }
+      return _Day(church: church, study: s, original: original, language: language, day: day);
+    }
+
+    // While the fetch runs, the study the opener passed in stands in, so the hero header is on screen for the flight.
+    final seed = initialStudy?.slug == slug ? initialStudy : null;
+    if (!study.hasValue && !study.hasError && seed != null) return loaded(seed);
     return study.when(
       loading: () => SelahPage(
         backTo: backTo,
@@ -42,20 +63,7 @@ class ReaderPage extends ConsumerWidget {
         actions: const [LanguageMenu(), SizedBox(width: 8)],
         children: [Text(l.loadError, style: text.bodyLarge)],
       ),
-      data: (original) {
-        final s = original == null
-            ? null
-            : studyToShow(original, language, showOriginal: ref.watch(showOriginalProvider(original.id)));
-        final day = s?.days.where((d) => d.number == dayNumber).firstOrNull;
-        if (original == null || s == null || day == null) {
-          return SelahPage(
-            backTo: backTo,
-            actions: const [LanguageMenu(), SizedBox(width: 8)],
-            children: [Text(l.studyNotFound, style: text.bodyLarge)],
-          );
-        }
-        return _Day(church: church, study: s, original: original, language: language, day: day);
-      },
+      data: loaded,
     );
   }
 }
@@ -189,13 +197,13 @@ class _Day extends ConsumerWidget {
           children: [
             if (day.number > 1)
               TextButton.icon(
-                onPressed: () => context.pushReplacement(dayPath(day.number - 1)),
+                onPressed: () => context.pushReplacement(dayPath(day.number - 1), extra: original),
                 icon: const Icon(Icons.arrow_back, size: 18),
                 label: Text(l.previousDay),
               ),
             const Spacer(),
             if (day.number < total)
-              FilledButton(onPressed: () => context.pushReplacement(dayPath(day.number + 1)), child: Text(l.nextDay)),
+              FilledButton(onPressed: () => context.pushReplacement(dayPath(day.number + 1), extra: original), child: Text(l.nextDay)),
           ],
         ),
       ],

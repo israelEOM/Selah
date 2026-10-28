@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:selah/l10n/app_localizations.dart';
@@ -10,6 +11,7 @@ import 'package:selah/src/app/theme.dart';
 import 'package:selah/src/core/models.dart';
 import 'package:selah/src/data/current_church.dart';
 import 'package:selah/src/data/providers.dart';
+import 'package:selah/src/features/study/reader_page.dart';
 import 'package:selah/src/features/today/today_page.dart';
 import 'package:selah/src/l10n/locale.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -61,6 +63,8 @@ Future<void> _pump(
   Future<PublicStudy?> Function()? newest,
   bool settle = true,
   double textScale = 1,
+  Widget Function(GoRouterState)? reader,
+  List<Override> overrides = const [],
 }) async {
   SharedPreferences.setMockInitialValues(prefs);
   final router = GoRouter(initialLocation: '/', routes: [
@@ -69,7 +73,7 @@ Future<void> _pump(
     GoRoute(path: '/c/vida-nueva/studies/:slug', builder: (_, s) => Text('STUDY ${s.pathParameters['slug']}')),
     GoRoute(
       path: '/c/vida-nueva/studies/:slug/day/:n',
-      builder: (_, s) => Text('READER ${s.pathParameters['slug']} ${s.pathParameters['n']}'),
+      builder: (_, s) => reader?.call(s) ?? Text('READER ${s.pathParameters['slug']} ${s.pathParameters['n']}'),
     ),
   ]);
   await tester.pumpWidget(ProviderScope(
@@ -79,6 +83,7 @@ Future<void> _pump(
       newestStudyProvider.overrideWith(
           (ref, churchId) async => newest != null ? newest() : noStudy ? null : PublicStudy.fromJson(study ?? _json())),
       clockProvider.overrideWithValue(clock ?? () => _now),
+      ...overrides,
     ],
     child: Consumer(
       builder: (context, ref, _) => MaterialApp.router(
@@ -252,6 +257,26 @@ void main() {
   testWidgets('the hero card carries the day\'s hero tag', (tester) async {
     await _pump(tester);
     expect(find.byWidgetPredicate((w) => w is Hero && w.tag == dayHeroTag('study-1', 1)), findsOneWidget);
+  });
+
+  testWidgets('the reader has the hero header on its first frame, before the study loads', (tester) async {
+    await _pump(
+      tester,
+      overrides: [studyProvider.overrideWith((ref, key) => Completer<PublicStudy?>().future)],
+      reader: (s) => ReaderPage(
+        church: _church,
+        slug: s.pathParameters['slug']!,
+        dayNumber: int.parse(s.pathParameters['n']!),
+        initialStudy: s.extra as PublicStudy?,
+      ),
+    );
+    await tester.tap(find.byType(HeroCard));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(find.byType(Skeleton), findsNothing);
+    final hero = find.byWidgetPredicate((w) => w is Hero && w.tag == dayHeroTag('study-1', 1));
+    expect(find.descendant(of: find.byType(ReaderPage), matching: hero), findsOneWidget);
+    expect(find.descendant(of: find.byType(ReaderPage), matching: find.text('Idea principal 1')), findsOneWidget);
   });
 
   testWidgets('tapping the hero card opens the day in the reader', (tester) async {
