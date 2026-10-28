@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:selah/src/app/theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,7 +29,7 @@ class _FakeRepository implements SelahRepository {
 }
 
 Future<_FakeRepository> _pump(WidgetTester tester,
-    {String? userId, ChurchRole? role, bool failJoin = false, bool roleLoading = false}) async {
+    {String? userId, ChurchRole? role, bool failJoin = false, bool roleLoading = false, bool studiesLoading = false}) async {
   final fake = _FakeRepository()..failJoin = failJoin;
   final router = GoRouter(initialLocation: '/c/vida-nueva', routes: [
     GoRoute(path: '/c/vida-nueva', builder: (_, _) => const ChurchPage(church: _church)),
@@ -42,9 +43,11 @@ Future<_FakeRepository> _pump(WidgetTester tester,
       userIdProvider.overrideWith((ref) => Stream.value(userId)),
       myChurchesProvider.overrideWith((ref) async => const []),
       churchRoleProvider('A').overrideWith((ref) => roleLoading ? Completer<ChurchRole?>().future : Future.value(role)),
-      publishedStudiesProvider('A').overrideWith((ref) async => const [
-            StudyCard(id: '1', slug: 'retiro-espiritual', title: 'La necesidad del retiro espiritual', numberOfDays: 3),
-          ]),
+      publishedStudiesProvider('A').overrideWith((ref) => studiesLoading
+          ? Completer<List<StudyCard>>().future
+          : Future.value(const [
+              StudyCard(id: '1', slug: 'retiro-espiritual', title: 'La necesidad del retiro espiritual', numberOfDays: 3),
+            ])),
     ],
     child: MaterialApp.router(
       theme: selahLightTheme(),
@@ -54,7 +57,7 @@ Future<_FakeRepository> _pump(WidgetTester tester,
       supportedLocales: AppLocalizations.supportedLocales,
     ),
   ));
-  if (roleLoading) {
+  if (roleLoading || studiesLoading) {
     await tester.pump(const Duration(milliseconds: 100));
   } else {
     await tester.pumpAndSettle();
@@ -65,7 +68,7 @@ Future<_FakeRepository> _pump(WidgetTester tester,
 void main() {
   testWidgets('lists the studies and opens one', (tester) async {
     await _pump(tester);
-    expect(find.text('Iglesia Vida Nueva'), findsOneWidget);
+    expect(find.text('Iglesia Vida Nueva'), findsWidgets);
     expect(find.text('Gestionar'), findsNothing);
     await tester.tap(find.text('La necesidad del retiro espiritual'));
     await tester.pumpAndSettle();
@@ -103,5 +106,26 @@ void main() {
     await _pump(tester);
     expect(find.text('Seguir'), findsNothing);
     expect(find.text('Iniciar sesión'), findsNothing);
+  });
+
+  testWidgets('church page shows skeletons while studies load', (tester) async {
+    await _pump(tester, studiesLoading: true);
+    expect(find.byType(Skeleton), findsWidgets);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+  });
+
+  testWidgets('the church page builds on iOS in portrait', (tester) async {
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    try {
+      await _pump(tester, userId: 'u');
+      expect(tester.takeException(), isNull);
+      expect(find.text('La necesidad del retiro espiritual'), findsOneWidget);
+      expect(find.text('Seguir'), findsOneWidget);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
   });
 }

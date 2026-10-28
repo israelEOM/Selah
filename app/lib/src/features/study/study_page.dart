@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -24,17 +25,18 @@ class StudyPage extends ConsumerWidget {
     final l = AppLocalizations.of(context)!;
     final text = Theme.of(context).textTheme;
     final study = ref.watch(studyProvider((churchId: church.id, slug: slug)));
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(icon: const Icon(Icons.arrow_back), tooltip: l.back, onPressed: () => popOr(context, '/c/${church.slug}')),
-        actions: const [LanguageMenu(), SizedBox(width: 8)],
-      ),
-      body: study.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, _) => PageBody(children: [Text(l.loadError, style: text.bodyLarge)]),
-        data: (s) =>
-            s == null ? PageBody(children: [Text(l.studyNotFound, style: text.bodyLarge)]) : _StudyBody(church: church, original: s),
-      ),
+    final backTo = '/c/${church.slug}';
+    SelahPage page(List<Widget> children) => SelahPage(
+          backTo: backTo,
+          actions: const [LanguageMenu(), SizedBox(width: 8)],
+          children: children,
+        );
+    return study.when(
+      loading: () => page(const [SkeletonList(hero: true, rows: 4)]),
+      error: (_, _) => page([Text(l.loadError, style: text.bodyLarge)]),
+      data: (s) => s == null
+          ? page([Text(l.studyNotFound, style: text.bodyLarge)])
+          : _StudyBody(church: church, original: s),
     );
   }
 }
@@ -56,7 +58,9 @@ class _StudyBody extends ConsumerWidget {
     final points = List<Map<String, dynamic>>.from(summary['points'] as List? ?? const []);
     final takeaways = List<String>.from(summary['key_takeaways'] as List? ?? const []);
     final byline = [study.sermon.preacher ?? study.sermon.channel, l.daysCount(study.numberOfDays)].whereType<String>();
-    return PageBody(
+    return SelahPage(
+      backTo: '/c/${church.slug}',
+      actions: const [LanguageMenu(), SizedBox(width: 8)],
       children: [
         TranslationBanner(shown: study, original: original, language: language),
         if (study.sermon.thumbnailUrl != null)
@@ -90,19 +94,27 @@ class _StudyBody extends ConsumerWidget {
           label: l.devotionalPath,
           child: Column(
             children: [
-              for (final day in study.days)
+              for (final (i, day) in study.days.indexed)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10),
-                  child: Card(
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                      leading: progress?.isDone(day) ?? false
-                          ? Icon(Icons.check_circle, color: context.tones.done)
-                          : Text('${day.number}', style: text.headlineSmall?.copyWith(color: Theme.of(context).colorScheme.primary)),
-                      title: Text(day.title, style: text.titleLarge),
-                      subtitle: day.bibleReading == null ? null : Text(day.bibleReading!),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () => context.push('/c/${church.slug}/studies/${study.slug}/day/${day.number}', extra: original),
+                  child: Entrance(
+                    index: i,
+                    child: SelahRow(
+                      label: day.title,
+                      detail: day.bibleReading,
+                      trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                        if (progress?.isDone(day) ?? false)
+                          Icon(Icons.check_circle, color: context.tones.done)
+                        else
+                          Text('${day.number}', style: text.titleMedium?.copyWith(color: Theme.of(context).colorScheme.primary)),
+                        const SizedBox(width: Space.s),
+                        Icon(
+                          uiPlatformOf(context) == UiPlatform.ios ? CupertinoIcons.chevron_forward : Icons.chevron_right,
+                          color: context.tones.muted,
+                          size: uiPlatformOf(context) == UiPlatform.ios ? 18 : 24,
+                        ),
+                      ]),
+                      onOpen: () => context.push('/c/${church.slug}/studies/${study.slug}/day/${day.number}', extra: original),
                     ),
                   ),
                 ),

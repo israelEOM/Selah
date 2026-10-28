@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:selah/src/app/theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,7 +15,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 const _vida = Church(id: 'A', slug: 'vida-nueva', name: 'Iglesia Vida Nueva');
 const _otra = Church(id: 'B', slug: 'otra', name: 'Otra Iglesia');
 
-Future<void> _pump(WidgetTester tester, {String? userId, ChurchRole? role}) async {
+Future<void> _pump(WidgetTester tester, {String? userId, ChurchRole? role, bool loading = false}) async {
   SharedPreferences.setMockInitialValues({});
   final router = GoRouter(initialLocation: '/churches', routes: [
     GoRoute(path: '/', builder: (_, _) => const Text('HOME')),
@@ -23,7 +26,8 @@ Future<void> _pump(WidgetTester tester, {String? userId, ChurchRole? role}) asyn
     overrides: [
       userIdProvider.overrideWith((ref) => Stream.value(userId)),
       myChurchesProvider.overrideWith((ref) async => [if (role != null) Membership(church: _vida, role: role)]),
-      publicChurchesProvider.overrideWith((ref) async => const [_vida, _otra]),
+      publicChurchesProvider.overrideWith(
+          (ref) => loading ? Completer<List<Church>>().future : Future.value(const [_vida, _otra])),
     ],
     child: MaterialApp.router(
       theme: selahLightTheme(),
@@ -33,13 +37,17 @@ Future<void> _pump(WidgetTester tester, {String? userId, ChurchRole? role}) asyn
       supportedLocales: AppLocalizations.supportedLocales,
     ),
   ));
-  await tester.pumpAndSettle();
+  if (loading) {
+    await tester.pump(const Duration(milliseconds: 500));
+  } else {
+    await tester.pumpAndSettle();
+  }
 }
 
 void main() {
   testWidgets('a visitor sees the public churches', (tester) async {
     await _pump(tester);
-    expect(find.text('Elige tu iglesia'), findsOneWidget);
+    expect(find.text('Elige tu iglesia'), findsWidgets);
     expect(find.text('TUS IGLESIAS'), findsNothing);
     expect(find.text('Iglesia Vida Nueva'), findsOneWidget);
     expect(find.text('Otra Iglesia'), findsOneWidget);
@@ -81,5 +89,26 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('HOME'), findsOneWidget);
     expect((await SharedPreferences.getInstance()).getString('church'), 'otra');
+  });
+
+  testWidgets('church picker shows skeletons while churches load', (tester) async {
+    await _pump(tester, loading: true);
+    expect(find.byType(Skeleton), findsWidgets);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+  });
+
+  testWidgets('the church picker builds on iOS in portrait', (tester) async {
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    try {
+      await _pump(tester);
+      expect(tester.takeException(), isNull);
+      expect(find.text('Iglesia Vida Nueva'), findsOneWidget);
+      expect(find.text('Otra Iglesia'), findsOneWidget);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
   });
 }

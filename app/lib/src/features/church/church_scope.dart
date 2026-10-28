@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../app/theme.dart';
@@ -35,7 +34,7 @@ class _ChurchScopeState extends ConsumerState<ChurchScope> {
     final l = AppLocalizations.of(context)!;
     final text = Theme.of(context).textTheme;
     return ref.watch(churchProvider(widget.slug)).when(
-          loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+          loading: () => const SelahPage(backTo: '/', children: [SkeletonList(rows: 4)]),
           error: (_, _) => ChurchMessage(text: l.loadError, style: text.bodyLarge),
           data: (church) {
             if (church == null) return ChurchMessage(text: l.churchNotFound, style: text.bodyLarge);
@@ -54,14 +53,8 @@ class ChurchMessage extends StatelessWidget {
   final TextStyle? style;
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            tooltip: AppLocalizations.of(context)!.back,
-            onPressed: () => context.go('/'),
-          ),
-        ),
-        body: PageBody(children: [Text(text, style: style)]),
+  Widget build(BuildContext context) => SelahPage(
+        backTo: '/',
+        children: [Text(text, style: style)],
       );
 }

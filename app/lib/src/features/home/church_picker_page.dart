@@ -14,12 +14,10 @@ class ChurchPickerPage extends ConsumerWidget {
   const ChurchPickerPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => Scaffold(
-        appBar: AppBar(title: Text(AppLocalizations.of(context)!.pickChurch)),
-        body: RefreshIndicator(
-          onRefresh: () => refreshChurches(ref),
-          child: const PageBody(children: [ChurchList()]),
-        ),
+  Widget build(BuildContext context, WidgetRef ref) => SelahPage(
+        title: AppLocalizations.of(context)!.pickChurch,
+        onRefresh: () => refreshChurches(ref),
+        children: const [ChurchList()],
       );
 }
 
@@ -52,17 +50,14 @@ class ChurchList extends ConsumerWidget {
         if (mineOnly) ...[
           Eyebrow(l.yourChurches),
           const SizedBox(height: 12),
-          for (final m in mine) _ChurchTile(church: m.church, subtitle: roleLabel(l, m.role), onPick: onPick),
+          for (final (i, m) in mine.indexed)
+            _ChurchTile(index: i, church: m.church, subtitle: roleLabel(l, m.role), onPick: onPick),
           const SizedBox(height: 24),
         ],
         Eyebrow(l.allChurches),
         const SizedBox(height: 12),
         ...churches.when(
-          loading: () => [
-            const Center(
-              child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator()),
-            ),
-          ],
+          loading: () => [const SkeletonList(rows: 4)],
           error: (_, _) => [
             Text(l.loadError, style: text.bodyMedium),
             const SizedBox(height: 12),
@@ -77,8 +72,9 @@ class ChurchList extends ConsumerWidget {
           data: (items) => items.isEmpty
               ? [Text(l.noStudiesYet, style: text.bodyMedium)]
               : [
-                  for (final church in items)
+                  for (final (i, church) in items.indexed)
                     _ChurchTile(
+                      index: mine.length + i,
                       church: church,
                       onPick: onPick,
                       opensPage: mineOnly && !mine.any((m) => m.church.id == church.id),
@@ -91,8 +87,10 @@ class ChurchList extends ConsumerWidget {
 }
 
 class _ChurchTile extends ConsumerWidget {
-  const _ChurchTile({required this.church, this.subtitle, this.onPick, this.opensPage = false});
+  const _ChurchTile({required this.index, required this.church, this.subtitle, this.onPick, this.opensPage = false});
 
+  /// Position in the page, for the staggered entrance.
+  final int index;
   final Church church;
   final String? subtitle;
   final void Function(Church church)? onPick;
@@ -102,22 +100,20 @@ class _ChurchTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: Card(
-          clipBehavior: Clip.antiAlias,
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-            title: Text(church.name, style: Theme.of(context).textTheme.titleLarge),
-            subtitle: subtitle == null ? null : Text(subtitle!),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: onPick != null
+        padding: const EdgeInsets.only(bottom: Space.m),
+        child: Entrance(
+          index: index,
+          child: SelahRow(
+            label: church.name,
+            detail: subtitle,
+            onOpen: onPick != null
                 ? () => onPick!(church)
                 : opensPage
                     ? () => context.go('/c/${church.slug}')
                     : () {
-                    ref.read(chosenChurchSlugProvider.notifier).choose(church.slug);
-                    context.go('/');
-                  },
+                        ref.read(chosenChurchSlugProvider.notifier).choose(church.slug);
+                        context.go('/');
+                      },
           ),
         ),
       );

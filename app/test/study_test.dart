@@ -211,4 +211,71 @@ void main() {
     expect(find.byType(Skeleton), findsWidgets);
     expect(find.byType(CircularProgressIndicator), findsNothing);
   });
+
+  testWidgets('study page shows skeletons while it loads', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await tester.pumpWidget(ProviderScope(
+      overrides: [studyProvider.overrideWith((ref, key) => Completer<PublicStudy?>().future)],
+      child: MaterialApp(
+        theme: selahLightTheme(),
+        locale: const Locale('es'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const StudyPage(church: _church, slug: 'retiro-espiritual'),
+      ),
+    ));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.byType(Skeleton), findsWidgets);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+  });
+
+  testWidgets('the study page builds on iOS in portrait', (tester) async {
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    try {
+      await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual');
+      expect(tester.takeException(), isNull);
+      expect(find.text('La necesidad del retiro espiritual'), findsOneWidget);
+      expect(find.byTooltip('Volver'), findsOneWidget);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
+  testWidgets('a day opens in the reader with the loaded study', (tester) async {
+    Object? extra;
+    SharedPreferences.setMockInitialValues({});
+    final router = GoRouter(initialLocation: '/c/vida-nueva/studies/retiro-espiritual', routes: [
+      GoRoute(path: '/c/vida-nueva', builder: (_, _) => const Text('CHURCH')),
+      GoRoute(
+        path: '/c/vida-nueva/studies/:slug',
+        builder: (_, s) => StudyPage(church: _church, slug: s.pathParameters['slug']!),
+      ),
+      GoRoute(
+        path: '/c/vida-nueva/studies/:slug/day/:number',
+        builder: (_, s) {
+          extra = s.extra;
+          return const Text('READER');
+        },
+      ),
+    ]);
+    await tester.pumpWidget(ProviderScope(
+      overrides: [studyProvider.overrideWith((ref, key) async => PublicStudy.fromJson(_json))],
+      child: MaterialApp.router(
+        theme: selahLightTheme(),
+        routerConfig: router,
+        locale: const Locale('es'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+      ),
+    ));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Título día 2'), 300);
+    await tester.tap(find.text('Título día 2'));
+    await tester.pumpAndSettle();
+    expect(extra, isA<PublicStudy>());
+  });
 }

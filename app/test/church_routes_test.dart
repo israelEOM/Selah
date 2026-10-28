@@ -80,13 +80,13 @@ void main() {
 
   testWidgets('/churches opens the church picker without the tab bar', (tester) async {
     await _pump(tester, '/churches');
-    expect(find.text('Elige tu iglesia'), findsOneWidget);
+    expect(find.text('Elige tu iglesia'), findsWidgets);
     expect(find.text('Estudios'), findsNothing);
   });
 
   testWidgets('a church page sits under the tab bar', (tester) async {
     await _pump(tester, '/c/vida-nueva');
-    expect(find.text('Iglesia Vida Nueva'), findsOneWidget);
+    expect(find.text('Iglesia Vida Nueva'), findsWidgets);
     expect(find.text('Estudios'), findsOneWidget);
   });
 
