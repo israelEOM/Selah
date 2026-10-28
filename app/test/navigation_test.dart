@@ -133,6 +133,21 @@ Future<void> _onIos(Future<void> Function() body) async {
 Finder _hoyTab() => find.descendant(of: find.byType(AdaptiveTabBar), matching: find.text('Hoy'));
 
 void main() {
+  test('every route builds a page, so none loses its transition or back gesture', () {
+    final bare = <String>[];
+    void walk(List<RouteBase> routes) {
+      for (final route in routes) {
+        if (route is GoRoute && route.pageBuilder == null) bare.add(route.path);
+        walk(route.routes);
+      }
+    }
+
+    final router = createRouter();
+    addTearDown(router.dispose);
+    walk(router.configuration.routes);
+    expect(bare, isEmpty, reason: 'use _page(...) instead of a bare builder');
+  });
+
   testWidgets('back from a reader opened on Hoy returns to Hoy', (tester) async {
     final router = await _pump(tester, '/');
     await _tap(tester, find.text('Reflexión'));
