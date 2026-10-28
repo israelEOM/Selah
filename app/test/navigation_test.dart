@@ -137,7 +137,7 @@ void main() {
     final router = await _pump(tester, '/');
     await _tap(tester, find.text('Reflexión'));
     expect(_path(router), _reader1);
-    await _back(tester, 'Volver al estudio');
+    await _back(tester, 'Volver');
     expect(_path(router), '/');
     expect(find.text('SEGUIR A JESÚS · DÍA 1 DE 5'), findsOneWidget);
     expect(find.text('Idea principal 1'), findsOneWidget);
@@ -147,7 +147,7 @@ void main() {
     final router = await _pump(tester, '/c/vida-nueva/studies/seguir');
     await _tap(tester, find.text('Día 2 del camino'));
     expect(_path(router), '/c/vida-nueva/studies/seguir/day/2');
-    await _back(tester, 'Volver al estudio');
+    await _back(tester, 'Volver');
     expect(_path(router), '/c/vida-nueva/studies/seguir');
   });
 
@@ -157,13 +157,13 @@ void main() {
     await tester.scrollUntilVisible(find.text('Día siguiente'), 300, scrollable: find.byType(Scrollable).first);
     await _tap(tester, find.text('Día siguiente'));
     expect(_path(router), endsWith('/day/2'));
-    await _back(tester, 'Volver al estudio');
+    await _back(tester, 'Volver');
     expect(_path(router), '/');
   });
 
   testWidgets('a reader opened from a link goes back to its study page', (tester) async {
     final router = await _pump(tester, '/c/vida-nueva/studies/seguir/day/3');
-    await _back(tester, 'Volver al estudio');
+    await _back(tester, 'Volver');
     expect(_path(router), '/c/vida-nueva/studies/seguir');
   });
 
@@ -172,7 +172,7 @@ void main() {
     await tester.scrollUntilVisible(find.text('Día siguiente'), 300, scrollable: find.byType(Scrollable).first);
     await _tap(tester, find.text('Día siguiente'));
     expect(_path(router), '/c/vida-nueva/studies/seguir/day/4');
-    await _back(tester, 'Volver al estudio');
+    await _back(tester, 'Volver');
     expect(_path(router), '/c/vida-nueva/studies/seguir');
   });
 
@@ -207,7 +207,7 @@ void main() {
     await _tap(tester, find.text('Reflexión'));
     expect(_path(router), _reader1);
     expect(_hoyTab().hitTestable(), findsNothing);
-    await _back(tester, 'Volver al estudio');
+    await _back(tester, 'Volver');
     router.push('/c/vida-nueva/studies/seguir');
     await tester.pumpAndSettle();
     expect(_hoyTab().hitTestable(), findsNothing);
@@ -233,7 +233,7 @@ void main() {
     await _tap(tester, find.byTooltip('Idioma'));
     await _tap(tester, find.text('English').last);
     expect(_path(router), _reader1);
-    await _back(tester, 'Back to the study');
+    await _back(tester, 'Back');
     expect(_path(router), '/');
   });
 

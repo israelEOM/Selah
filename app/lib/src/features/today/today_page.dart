@@ -173,7 +173,7 @@ class _Today extends ConsumerWidget {
         onPressed: openDay,
         haptic: true,
         borderRadius: BorderRadius.circular(Radii.card),
-        child: Hero(
+        child: DayHero(
           tag: dayHeroTag(progressId, day.number),
           child: HeroCard(
             eyebrow: '${study.title} · ${l.dayOfTotal(day.number, study.days.length)}',

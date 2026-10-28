@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:selah/src/app/theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -123,7 +125,8 @@ void main() {
 
   testWidgets('reader moves to the next day', (tester) async {
     final router = await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/2');
-    await tester.scrollUntilVisible(find.text('Día siguiente'), 300);
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, -500));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Día siguiente'));
     await tester.pumpAndSettle();
     expect(router.state.uri.path, '/c/vida-nueva/studies/retiro-espiritual/day/3');
@@ -131,7 +134,8 @@ void main() {
 
   testWidgets('last day has no next day', (tester) async {
     await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/3');
-    await tester.scrollUntilVisible(find.text('Día anterior'), 300);
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, -500));
+    await tester.pumpAndSettle();
     expect(find.text('Día siguiente'), findsNothing);
   });
 
@@ -156,5 +160,37 @@ void main() {
     await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual', prefs: {'read:study-1': ['2']});
     await tester.scrollUntilVisible(find.text('Título día 2'), 300);
     expect(find.byIcon(Icons.check_circle), findsOneWidget);
+  });
+
+  testWidgets('the reader header carries the same hero tag as Hoy', (tester) async {
+    await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/1');
+    final hero = find.byWidgetPredicate((w) => w is Hero && w.tag == dayHeroTag('study-1', 1));
+    expect(hero, findsOneWidget);
+    expect(find.descendant(of: hero, matching: find.text('Título día 1')), findsOneWidget);
+    expect(find.descendant(of: hero, matching: find.text('Idea 1')), findsOneWidget);
+    expect(find.descendant(of: hero, matching: find.byType(HeroCard)), findsOneWidget);
+  });
+
+  testWidgets('the main idea appears once in the reader', (tester) async {
+    await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/1');
+    expect(find.text('Idea 1'), findsOneWidget);
+  });
+
+  testWidgets('the reader shows skeletons while the study loads', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await tester.pumpWidget(ProviderScope(
+      overrides: [studyProvider.overrideWith((ref, key) => Completer<PublicStudy?>().future)],
+      child: MaterialApp(
+        theme: selahLightTheme(),
+        locale: const Locale('es'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const ReaderPage(church: _church, slug: 'retiro-espiritual', dayNumber: 1),
+      ),
+    ));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.byType(Skeleton), findsWidgets);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
   });
 }

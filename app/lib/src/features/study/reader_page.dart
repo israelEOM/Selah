@@ -11,6 +11,7 @@ import '../../data/providers.dart';
 import '../home/language_menu.dart';
 import '../../l10n/locale.dart';
 import '../today/part_tick.dart';
+import '../today/today_page.dart' show tickWithFeedback;
 import 'study_widgets.dart';
 import 'translation_banner.dart';
 
@@ -28,29 +29,33 @@ class ReaderPage extends ConsumerWidget {
     final text = Theme.of(context).textTheme;
     final study = ref.watch(studyProvider((churchId: church.id, slug: slug)));
     final language = ref.watch(appLocaleProvider).languageCode;
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          tooltip: l.backToStudy,
-          onPressed: () => popOr(context, '/c/${church.slug}/studies/$slug'),
-        ),
+    final backTo = '/c/${church.slug}/studies/$slug';
+    return study.when(
+      loading: () => SelahPage(
+        backTo: backTo,
         actions: const [LanguageMenu(), SizedBox(width: 8)],
+        maxWidth: 680,
+        children: const [SkeletonList(hero: true, rows: 5)],
       ),
-      body: study.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, _) => PageBody(children: [Text(l.loadError, style: text.bodyLarge)]),
-        data: (original) {
-          final s = original == null
-              ? null
-              : studyToShow(original, language, showOriginal: ref.watch(showOriginalProvider(original.id)));
-          final day = s?.days.where((d) => d.number == dayNumber).firstOrNull;
-          if (original == null || s == null || day == null) {
-            return PageBody(children: [Text(l.studyNotFound, style: text.bodyLarge)]);
-          }
-          return _Day(church: church, study: s, original: original, language: language, day: day);
-        },
+      error: (_, _) => SelahPage(
+        backTo: backTo,
+        actions: const [LanguageMenu(), SizedBox(width: 8)],
+        children: [Text(l.loadError, style: text.bodyLarge)],
       ),
+      data: (original) {
+        final s = original == null
+            ? null
+            : studyToShow(original, language, showOriginal: ref.watch(showOriginalProvider(original.id)));
+        final day = s?.days.where((d) => d.number == dayNumber).firstOrNull;
+        if (original == null || s == null || day == null) {
+          return SelahPage(
+            backTo: backTo,
+            actions: const [LanguageMenu(), SizedBox(width: 8)],
+            children: [Text(l.studyNotFound, style: text.bodyLarge)],
+          );
+        }
+        return _Day(church: church, study: s, original: original, language: language, day: day);
+      },
     );
   }
 }
@@ -80,7 +85,7 @@ class _Day extends ConsumerWidget {
           key: ValueKey('tick-${part.name}'),
           label: label,
           ticked: ticked.contains(part),
-          onTap: () => tickPart(ref, original.id, day, part, ref.read(clockProvider)()),
+          onTap: () => tickWithFeedback(ref, original.id, day, part, ref.read(clockProvider)()),
         );
     // The reflection tick sits on the first of reflection, application and questions that the day has.
     final reflectionHolder = day.reflection != null ? 0 : day.application != null ? 1 : day.questions.isNotEmpty ? 2 : -1;
@@ -88,29 +93,38 @@ class _Day extends ConsumerWidget {
     final total = study.days.length;
     final reading = serifReading(context);
     String dayPath(int n) => '/c/${church.slug}/studies/${study.slug}/day/$n';
-    return PageBody(
+    final scheme = Theme.of(context).colorScheme;
+    // The same on-hero colour HeroCard draws its text in.
+    final onHero = Theme.of(context).brightness == Brightness.light ? scheme.onPrimary : scheme.onSurface;
+    return SelahPage(
+      backTo: '/c/${church.slug}/studies/${study.slug}',
+      actions: const [LanguageMenu(), SizedBox(width: 8)],
       maxWidth: 680,
       children: [
         TranslationBanner(shown: study, original: original, language: language),
-        Eyebrow(l.dayOfTotal(day.number, total)),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            for (final d in study.days)
-              Padding(
-                padding: const EdgeInsets.only(right: 6),
-                child: Icon(
-                  d.number <= day.number || (progress?.isDone(d) ?? false) ? Icons.circle : Icons.circle_outlined,
-                  size: 10,
-                  color: d.number == day.number ? Theme.of(context).colorScheme.primary : context.tones.muted,
-                ),
-              ),
-          ],
+        DayHero(
+          tag: dayHeroTag(original.id, day.number),
+          child: HeroCard(
+            eyebrow: l.dayOfTotal(day.number, total),
+            eyebrowAccessory: Row(
+              children: [
+                for (final d in study.days)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: Icon(
+                      d.number <= day.number || (progress?.isDone(d) ?? false) ? Icons.circle : Icons.circle_outlined,
+                      size: 10,
+                      color: onHero.withValues(alpha: d.number == day.number ? 1 : 0.6),
+                    ),
+                  ),
+              ],
+            ),
+            title: day.title,
+            quote: day.mainIdea,
+          ),
         ),
-        const SizedBox(height: 18),
-        Text(day.title, style: text.displaySmall?.copyWith(fontSize: 34)),
         if (day.bibleReading != null) ...[
-          const SizedBox(height: 14),
+          const SizedBox(height: Space.l),
           Row(children: [
             Expanded(
               child: ExternalLink(
@@ -122,16 +136,6 @@ class _Day extends ConsumerWidget {
             tick(DayPart.reading, l.bibleReading),
           ]),
           Text(l.externalReaderNote, style: text.bodyMedium?.copyWith(fontSize: 12)),
-        ],
-        if (day.mainIdea != null) ...[
-          const SizedBox(height: 28),
-          Container(
-            padding: const EdgeInsets.only(left: 16),
-            decoration: BoxDecoration(
-              border: Border(left: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2)),
-            ),
-            child: Text(day.mainIdea!, style: text.titleLarge?.copyWith(fontWeight: FontWeight.w500)),
-          ),
         ],
         if (day.reflection != null)
           ReadingSection(

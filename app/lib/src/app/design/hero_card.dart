@@ -5,11 +5,47 @@ import '../theme.dart';
 /// Hero tag shared by a study day's card and its page, for the shared-element transition.
 Object dayHeroTag(String studyId, int dayNumber) => 'day-hero-$studyId-$dayNumber';
 
+/// A [Hero] for a day's card that keeps its text styled mid-flight (the overlay has no Material above it). Under Reduce
+/// Motion the flight is switched off, so the page change falls back to the route's own fade.
+class DayHero extends StatelessWidget {
+  const DayHero({super.key, required this.tag, required this.child});
+
+  final Object tag;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => HeroMode(
+    enabled: !reduceMotion(context),
+    child: Hero(
+      tag: tag,
+      flightShuttleBuilder: (context, animation, direction, from, to) => Material(
+        type: MaterialType.transparency,
+        child: DefaultTextStyle(
+          style: DefaultTextStyle.of(context).style,
+          // The two cards differ in height, so let the shuttle overflow its in-between size and clip it.
+          child: ClipRect(
+            child: OverflowBox(
+              alignment: Alignment.topCenter,
+              minHeight: 0,
+              maxHeight: double.infinity,
+              child: (direction == HeroFlightDirection.push ? to : from).widget,
+            ),
+          ),
+        ),
+      ),
+      child: child,
+    ),
+  );
+}
+
 /// The gradient card with an eyebrow, a title, a serif quote and an optional badge and footer.
 class HeroCard extends StatelessWidget {
-  const HeroCard({super.key, this.eyebrow, this.title, this.quote, this.badge, this.footer});
+  const HeroCard({super.key, this.eyebrow, this.eyebrowAccessory, this.title, this.quote, this.badge, this.footer});
 
   final String? eyebrow;
+
+  /// Sits under the eyebrow (the reader's progress dots).
+  final Widget? eyebrowAccessory;
   final String? title;
   final String? quote;
 
@@ -27,6 +63,7 @@ class HeroCard extends StatelessWidget {
     final parts = <Widget>[
       if (eyebrow != null)
         Text(eyebrow!.toUpperCase(), style: text.labelSmall?.copyWith(color: onHero.withValues(alpha: 0.8))),
+      ?eyebrowAccessory,
       if (title != null) Text(title!, style: text.headlineSmall?.copyWith(color: onHero)),
       if (quote != null) Text(quote!, style: serifQuote(context).copyWith(color: onHero)),
       ?footer,

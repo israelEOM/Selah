@@ -35,12 +35,12 @@ class ReadingSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(top: 32),
+    padding: const EdgeInsets.only(top: Space.xxl),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (tick == null) Eyebrow(label) else Row(children: [Expanded(child: Eyebrow(label)), tick!]),
-        const SizedBox(height: 10),
+        const SizedBox(height: Space.m),
         child,
       ],
     ),
