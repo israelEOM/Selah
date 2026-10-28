@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
 
+import 'design/transitions.dart';
+
+export 'design/haptics.dart';
+export 'design/platform.dart';
+export 'design/tokens.dart';
+
 const _serif = 'Georgia';
 const _serifFallback = ['Times New Roman', 'serif'];
 
@@ -160,6 +166,7 @@ ThemeData _build(_Palette p) {
     colorScheme: scheme,
     scaffoldBackgroundColor: p.background,
     extensions: [p.tones],
+    pageTransitionsTheme: selahPageTransitions(),
     textTheme: TextTheme(
       displaySmall: _heading(40, p.text),
       headlineMedium: _heading(30, p.text),
