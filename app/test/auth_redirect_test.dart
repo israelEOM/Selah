@@ -45,4 +45,9 @@ void main() {
     expect(isEmbeddedBrowser('Mozilla/5.0 (iPhone) [FBAN/FBIOS;FBAV/400.0]'), isTrue);
     expect(isEmbeddedBrowser('Mozilla/5.0 (iPhone) Version/18.0 Mobile/15E148 Safari/604.1'), isFalse);
   });
+
+  test('outside a browser Google returns to the app link', () {
+    expect(oauthReturnUrl(Uri.parse('file:///'), next: '/join/t'), nativeOAuthReturnUrl);
+    expect(oauthReturnUrl(Uri()), nativeOAuthReturnUrl);
+  });
 }

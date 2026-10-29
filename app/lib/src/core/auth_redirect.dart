@@ -7,9 +7,15 @@ String? safeNext(String? next) {
   return next;
 }
 
+/// Where the iOS app asks Google to send the person back to; Info.plist registers the scheme.
+const nativeOAuthReturnUrl = 'com.israel.selah.app://login-callback';
+
 /// Where Google sends the person back to, and how the app reads the result.
 /// A safe [next] rides along so the login page can send them on afterwards.
+/// Outside a browser there is no site to return to, so the app's own link is used;
+/// the login page is still open there and moves on once the session arrives.
 String oauthReturnUrl(Uri base, {String? next}) {
+  if (!base.isScheme('http') && !base.isScheme('https')) return nativeOAuthReturnUrl;
   final safe = safeNext(next);
   return '${base.origin}/login${safe == null ? '' : '?next=${Uri.encodeQueryComponent(safe)}'}';
 }

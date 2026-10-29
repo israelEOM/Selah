@@ -119,9 +119,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     });
     try {
       // On the web the page leaves for Google, so _busy stays set.
-      await ref
-          .read(repositoryProvider)
-          .signInWithProvider(OAuthProvider.google, redirectTo: oauthReturnUrl(widget.landing ?? Uri.base, next: _next));
+      final redirectTo = oauthReturnUrl(widget.landing ?? Uri.base, next: _next);
+      await ref.read(repositoryProvider).signInWithProvider(OAuthProvider.google, redirectTo: redirectTo);
+      // In the app the page stays put while Safari signs in, so the button comes back
+      // in case the person returns without finishing.
+      if (redirectTo == nativeOAuthReturnUrl && mounted) setState(() => _busy = false);
     } catch (_) {
       if (mounted) {
         setState(() {

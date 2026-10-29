@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/models.dart';
@@ -305,7 +306,12 @@ class SelahRepository {
 
   /// On the web this leaves the page; Supabase brings the person back to [redirectTo].
   Future<void> signInWithProvider(OAuthProvider provider, {required String redirectTo}) =>
-      _client.auth.signInWithOAuth(provider, redirectTo: redirectTo);
+      _client.auth.signInWithOAuth(
+        provider,
+        redirectTo: redirectTo,
+        // In the app, Safari carries the sign-in and hands back through the app's link.
+        authScreenLaunchMode: kIsWeb ? LaunchMode.platformDefault : LaunchMode.externalApplication,
+      );
 
   Future<void> signOut() => _client.auth.signOut();
 }
