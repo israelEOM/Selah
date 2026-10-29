@@ -97,10 +97,19 @@ void main() {
     expect(study.days.first.questions, ['¿Pregunta 1?']);
   });
 
-  test('Bible reader link names the reference and the version', () {
-    final uri = bibleReaderUrl('2 Reyes 2:25', 'RVR1960');
-    expect(uri.host, 'www.biblegateway.com');
-    expect(uri.queryParameters, {'search': '2 Reyes 2:25', 'version': 'RVR1960'});
+  test('Bible reader link opens the passage in YouVersion', () {
+    expect(bibleReaderUrl('2 Reyes 2:25', 'RVR1960').toString(), 'https://www.bible.com/bible/149/2KI.2.25.RVR1960');
+    expect(bibleReaderUrl('Colosenses 3:1-4', 'NVI').toString(), 'https://www.bible.com/bible/128/COL.3.1-4.NVI');
+    expect(bibleReaderUrl('Cânticos 2', 'NVI-PT').toString(), 'https://www.bible.com/bible/129/SNG.2.NVI');
+    expect(bibleReaderUrl('1 John 4:7–8', 'ESV').toString(), 'https://www.bible.com/bible/59/1JN.4.7-8.ESV');
+  });
+
+  test('Bible reader link falls back to Bible Gateway when it cannot match', () {
+    for (final (reference, version) in [('Hechos 2:1', 'LBLA'), ('Sermón del monte', 'RVR1960')]) {
+      final uri = bibleReaderUrl(reference, version);
+      expect(uri.host, 'www.biblegateway.com');
+      expect(uri.queryParameters, {'search': reference, 'version': version});
+    }
   });
 
   testWidgets('study page lists the days and opens one', (tester) async {
