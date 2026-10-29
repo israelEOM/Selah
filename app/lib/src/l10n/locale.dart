@@ -7,11 +7,8 @@ const supportedLanguages = ['es', 'en', 'pt'];
 
 const _preferenceKey = 'language';
 
-/// The device's language when the app supports it, Spanish otherwise.
-String languageFor(Locale device) =>
-    supportedLanguages.contains(device.languageCode)
-    ? device.languageCode
-    : 'es';
+/// Selah starts in Spanish, the church's language, until the reader picks another.
+const defaultLanguage = 'es';
 
 /// The language saved before the app started; `main` overrides this once.
 final savedLanguageProvider = Provider<String?>((ref) => null);
@@ -25,7 +22,7 @@ class AppLocale extends Notifier<Locale> {
     if (saved != null && supportedLanguages.contains(saved)) {
       return Locale(saved);
     }
-    return Locale(languageFor(PlatformDispatcher.instance.locale));
+    return const Locale(defaultLanguage);
   }
 
   Future<void> set(String language) async {

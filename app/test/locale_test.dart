@@ -35,12 +35,18 @@ Widget _app(Widget home, {List<Override> overrides = const [], bool admin = fals
     );
 
 void main() {
-  test('languageFor maps device locales', () {
-    expect(languageFor(const Locale('pt', 'PT')), 'pt');
-    expect(languageFor(const Locale('pt', 'BR')), 'pt');
-    expect(languageFor(const Locale('en', 'GB')), 'en');
-    expect(languageFor(const Locale('fr')), 'es');
-    expect(languageFor(const Locale('es', 'MX')), 'es');
+  testWidgets('starts in Spanish on an English phone when nothing is saved', (tester) async {
+    tester.platformDispatcher.localeTestValue = const Locale('en', 'US');
+    addTearDown(tester.platformDispatcher.clearLocaleTestValue);
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    expect(container.read(appLocaleProvider), const Locale('es'));
+  });
+
+  test('a saved choice wins over the default', () {
+    final container = ProviderContainer(overrides: [savedLanguageProvider.overrideWithValue('pt')]);
+    addTearDown(container.dispose);
+    expect(container.read(appLocaleProvider), const Locale('pt'));
   });
 
   testWidgets('choosing English changes the interface and is remembered', (tester) async {

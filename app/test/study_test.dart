@@ -141,9 +141,9 @@ void main() {
 
   testWidgets('reader moves to the next day', (tester) async {
     final router = await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/2');
-    await tester.drag(find.byType(Scrollable).first, const Offset(0, -500));
+    await tester.scrollUntilVisible(find.text('Día siguiente'), 300);
+    await tester.ensureVisible(find.text('Día siguiente'));
     await tester.pumpAndSettle();
-    expect(find.text('Día siguiente').hitTestable(), findsOneWidget);
     await tester.tap(find.text('Día siguiente'));
     await tester.pumpAndSettle();
     expect(router.state.uri.path, '/c/vida-nueva/studies/retiro-espiritual/day/3');
