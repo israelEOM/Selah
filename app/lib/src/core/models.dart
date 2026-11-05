@@ -28,6 +28,10 @@ class Church {
     this.defaultBibleVersionCode,
     this.defaultDevotionalDays,
     this.monthlySermonLimit,
+    this.eventsCalendarUrl,
+    this.timezone = 'Europe/Madrid',
+    this.eventsSyncedAt,
+    this.eventsSyncError,
   });
 
   factory Church.fromJson(Map<String, dynamic> json) => Church(
@@ -39,6 +43,10 @@ class Church {
         defaultBibleVersionCode: json['default_bible_version_code'] as String?,
         defaultDevotionalDays: json['default_devotional_days'] as int?,
         monthlySermonLimit: json['monthly_sermon_limit'] as int?,
+        eventsCalendarUrl: json['events_calendar_url'] as String?,
+        timezone: json['timezone'] as String? ?? 'Europe/Madrid',
+        eventsSyncedAt: DateTime.tryParse(json['events_synced_at'] as String? ?? ''),
+        eventsSyncError: json['events_sync_error'] as String?,
       );
 
   final String id;
@@ -49,6 +57,73 @@ class Church {
   final String? defaultBibleVersionCode;
   final int? defaultDevotionalDays;
   final int? monthlySermonLimit;
+
+  /// The church's calendar feed; null when the Eventos tab is off.
+  final String? eventsCalendarUrl;
+
+  /// IANA zone for calendar times that don't name one.
+  final String timezone;
+  final DateTime? eventsSyncedAt;
+
+  /// Why the last calendar refresh failed: blocked, unreachable or not_calendar.
+  final String? eventsSyncError;
+}
+
+/// An upcoming event from a church's calendar.
+class ChurchEvent {
+  const ChurchEvent({
+    required this.uid,
+    required this.title,
+    required this.startsAt,
+    required this.endsAt,
+    required this.localStart,
+    required this.localEnd,
+    this.allDay = false,
+    this.location,
+    this.url,
+  });
+
+  factory ChurchEvent.fromJson(Map<String, dynamic> json) => ChurchEvent(
+        uid: json['uid'] as String,
+        title: json['title'] as String,
+        startsAt: DateTime.parse(json['starts_at'] as String),
+        endsAt: DateTime.parse(json['ends_at'] as String),
+        // Stored without an offset, so these parse as the church's wall clock and are shown as they are.
+        localStart: DateTime.parse(json['local_starts_at'] as String),
+        localEnd: DateTime.parse(json['local_ends_at'] as String),
+        allDay: json['all_day'] as bool? ?? false,
+        location: json['location'] as String?,
+        url: Uri.tryParse(json['url'] as String? ?? '')?.hasScheme == true ? Uri.parse(json['url'] as String) : null,
+      );
+
+  final String uid;
+  final String title;
+  final DateTime startsAt, endsAt;
+
+  /// The church's wall-clock times.
+  final DateTime localStart, localEnd;
+  final bool allDay;
+  final String? location;
+
+  /// The event's page on the church's site.
+  final Uri? url;
+}
+
+/// What checking a church's calendar found.
+sealed class EventsSyncResult {
+  const EventsSyncResult();
+}
+
+class EventsSynced extends EventsSyncResult {
+  const EventsSynced(this.count);
+  final int count;
+}
+
+class EventsSyncFailed extends EventsSyncResult {
+  const EventsSyncFailed(this.error);
+
+  /// blocked, unreachable or not_calendar.
+  final String error;
 }
 
 /// A church the signed-in user belongs to, with their role there.

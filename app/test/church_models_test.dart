@@ -91,4 +91,67 @@ void main() {
     expect(SelahError.fromException(const PostgrestException(message: 'request_pending_exists')), 'request_pending_exists');
     expect(SelahError.fromException(const PostgrestException(message: 'request_not_pending')), 'request_not_pending');
   });
+
+  test('Church.fromJson reads the calendar columns and defaults the timezone', () {
+    final bare = Church.fromJson({'id': 'c1', 'slug': 'grace', 'name': 'Grace Church'});
+    expect(bare.eventsCalendarUrl, isNull);
+    expect(bare.timezone, 'Europe/Madrid');
+    expect(bare.eventsSyncedAt, isNull);
+    expect(bare.eventsSyncError, isNull);
+    final c = Church.fromJson({
+      'id': 'c1',
+      'slug': 'grace',
+      'name': 'Grace Church',
+      'events_calendar_url': 'https://grace.org/cal.ics',
+      'timezone': 'Europe/Lisbon',
+      'events_synced_at': '2026-11-05T09:00:00+00:00',
+      'events_sync_error': 'blocked',
+    });
+    expect(c.eventsCalendarUrl, 'https://grace.org/cal.ics');
+    expect(c.timezone, 'Europe/Lisbon');
+    expect(c.eventsSyncedAt, DateTime.utc(2026, 11, 5, 9));
+    expect(c.eventsSyncError, 'blocked');
+  });
+
+  test('ChurchEvent.fromJson keeps the church wall clock', () {
+    final e = ChurchEvent.fromJson({
+      'uid': 'u1',
+      'title': 'Reunión de Mujeres',
+      'starts_at': '2026-11-14T16:30:00+00:00',
+      'ends_at': '2026-11-14T18:30:00+00:00',
+      'all_day': false,
+      'local_starts_at': '2026-11-14T17:30:00',
+      'local_ends_at': '2026-11-14T19:30:00',
+      'location': 'ICP Alcorcón',
+      'url': 'https://icpresbiteriana.com/event/x/',
+      'timezone': 'Europe/Madrid',
+    });
+    expect(e.uid, 'u1');
+    expect(e.title, 'Reunión de Mujeres');
+    expect(e.startsAt, DateTime.utc(2026, 11, 14, 16, 30));
+    expect(e.localStart, DateTime(2026, 11, 14, 17, 30));
+    expect(e.localStart.isUtc, isFalse);
+    expect(e.localEnd, DateTime(2026, 11, 14, 19, 30));
+    expect(e.allDay, isFalse);
+    expect(e.location, 'ICP Alcorcón');
+    expect(e.url, Uri.parse('https://icpresbiteriana.com/event/x/'));
+  });
+
+  test('ChurchEvent.fromJson without a url or location', () {
+    final e = ChurchEvent.fromJson({
+      'uid': 'u2',
+      'title': 'Retiro',
+      'starts_at': '2026-11-19T23:00:00+00:00',
+      'ends_at': '2026-11-20T23:00:00+00:00',
+      'all_day': true,
+      'local_starts_at': '2026-11-20T00:00:00',
+      'local_ends_at': '2026-11-21T00:00:00',
+      'location': null,
+      'url': null,
+      'timezone': 'Europe/Madrid',
+    });
+    expect(e.url, isNull);
+    expect(e.location, isNull);
+    expect(e.allDay, isTrue);
+  });
 }

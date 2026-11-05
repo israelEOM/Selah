@@ -285,5 +285,14 @@
   "requestAlreadyDecided": "Esta solicitud ya fue resuelta.",
   "noPendingRequests": "No hay solicitudes pendientes.",
   "churchCreated": "Iglesia creada",
-  "requestRejectedNotice": "Solicitud rechazada"
+  "requestRejectedNotice": "Solicitud rechazada",
+  "eventsCalendarLink": "Link do calendário",
+  "eventsCalendarHint": "Cole o link do calendário da sua igreja (iCal, Google Agenda ou a página de eventos do seu site).",
+  "eventsCalendarInvalid": "Cole um link que comece com https:// ou webcal://",
+  "churchTimezone": "Fuso horário",
+  "eventsFound": "{count, plural, =0{O calendário não tem próximos eventos.} =1{Encontrado 1 próximo evento} other{Encontrados {count} próximos eventos}}",
+  "eventsBlocked": "O site bloqueia o acesso automático. Peça ao administrador do site que permita o calendário.",
+  "eventsUnreachable": "Não foi possível ler o calendário.",
+  "eventsNotCalendar": "Esse link não é um calendário.",
+  "eventsLastSync": "Última atualização: {date}"
 }

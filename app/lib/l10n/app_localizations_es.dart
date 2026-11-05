@@ -680,4 +680,45 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get requestRejectedNotice => 'Solicitud rechazada';
+
+  @override
+  String get eventsCalendarLink => 'Enlace del calendario';
+
+  @override
+  String get eventsCalendarHint =>
+      'Pega el enlace del calendario de tu iglesia (iCal, Google Calendar o la página de eventos de tu web).';
+
+  @override
+  String get eventsCalendarInvalid =>
+      'Pega un enlace que empiece por https:// o webcal://';
+
+  @override
+  String get churchTimezone => 'Zona horaria';
+
+  @override
+  String eventsFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Se encontraron $count próximos eventos',
+      one: 'Se encontró 1 próximo evento',
+      zero: 'No hay próximos eventos en el calendario.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get eventsBlocked =>
+      'El sitio web bloquea el acceso automático. Pide al administrador de la web que permita el calendario.';
+
+  @override
+  String get eventsUnreachable => 'No se pudo leer el calendario.';
+
+  @override
+  String get eventsNotCalendar => 'Ese enlace no es un calendario.';
+
+  @override
+  String eventsLastSync(String date) {
+    return 'Última actualización: $date';
+  }
 }

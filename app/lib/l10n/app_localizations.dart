@@ -1323,6 +1323,60 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Solicitud rechazada'**
   String get requestRejectedNotice;
+
+  /// No description provided for @eventsCalendarLink.
+  ///
+  /// In es, this message translates to:
+  /// **'Enlace del calendario'**
+  String get eventsCalendarLink;
+
+  /// No description provided for @eventsCalendarHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Pega el enlace del calendario de tu iglesia (iCal, Google Calendar o la página de eventos de tu web).'**
+  String get eventsCalendarHint;
+
+  /// No description provided for @eventsCalendarInvalid.
+  ///
+  /// In es, this message translates to:
+  /// **'Pega un enlace que empiece por https:// o webcal://'**
+  String get eventsCalendarInvalid;
+
+  /// No description provided for @churchTimezone.
+  ///
+  /// In es, this message translates to:
+  /// **'Zona horaria'**
+  String get churchTimezone;
+
+  /// No description provided for @eventsFound.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =0{No hay próximos eventos en el calendario.} =1{Se encontró 1 próximo evento} other{Se encontraron {count} próximos eventos}}'**
+  String eventsFound(int count);
+
+  /// No description provided for @eventsBlocked.
+  ///
+  /// In es, this message translates to:
+  /// **'El sitio web bloquea el acceso automático. Pide al administrador de la web que permita el calendario.'**
+  String get eventsBlocked;
+
+  /// No description provided for @eventsUnreachable.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo leer el calendario.'**
+  String get eventsUnreachable;
+
+  /// No description provided for @eventsNotCalendar.
+  ///
+  /// In es, this message translates to:
+  /// **'Ese enlace no es un calendario.'**
+  String get eventsNotCalendar;
+
+  /// No description provided for @eventsLastSync.
+  ///
+  /// In es, this message translates to:
+  /// **'Última actualización: {date}'**
+  String eventsLastSync(String date);
 }
 
 class _AppLocalizationsDelegate
