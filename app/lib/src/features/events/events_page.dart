@@ -26,7 +26,9 @@ class EventsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
     final text = Theme.of(context).textTheme;
-    final events = ref.watch(upcomingEventsProvider(church.id));
+    final events = ref
+        .watch(upcomingEventsProvider(church.id))
+        .whenData((events) => [...events]..sort((a, b) => a.startsAt.compareTo(b.startsAt)));
     return SelahPage(
       onRefresh: () => ref.refresh(upcomingEventsProvider(church.id).future),
       children: [

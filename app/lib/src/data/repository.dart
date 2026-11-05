@@ -260,7 +260,7 @@ class SelahRepository {
         .select()
         .eq('church_id', churchId)
         .gt('ends_at', DateTime.now().toUtc().toIso8601String())
-        .order('starts_at')
+        .order('starts_at', ascending: true)
         .limit(20);
     return rows.map(ChurchEvent.fromJson).toList();
   }

@@ -15,7 +15,23 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 const _vida = Church(id: 'A', slug: 'vida-nueva', name: 'Iglesia Vida Nueva');
 
+final _meeting = ChurchEvent(
+  uid: 'm1',
+  title: 'Reunión de jóvenes',
+  startsAt: DateTime.utc(2026, 11, 21, 17),
+  endsAt: DateTime.utc(2026, 11, 21, 19),
+  localStart: DateTime(2026, 11, 21, 18),
+  localEnd: DateTime(2026, 11, 21, 20),
+);
+
 class _FakeRepository implements SelahRepository {
+  _FakeRepository([this.events = const []]);
+
+  final List<ChurchEvent> events;
+
+  @override
+  Future<List<ChurchEvent>> upcomingEvents(String churchId) async => events;
+
   @override
   Future<Church?> churchBySlug(String slug) async => slug == 'vida-nueva' ? _vida : null;
 
@@ -35,12 +51,13 @@ class _FakeRepository implements SelahRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-Future<GoRouter> _pump(WidgetTester tester, String location, {Church? current = _vida, bool needsWelcome = false}) async {
+Future<GoRouter> _pump(WidgetTester tester, String location,
+    {Church? current = _vida, bool needsWelcome = false, List<ChurchEvent> events = const []}) async {
   SharedPreferences.setMockInitialValues({});
   final router = createRouter(initialLocation: location);
   await tester.pumpWidget(ProviderScope(
     overrides: [
-      repositoryProvider.overrideWithValue(_FakeRepository()),
+      repositoryProvider.overrideWithValue(_FakeRepository(events)),
       userIdProvider.overrideWith((ref) => Stream.value('user-1')),
       myChurchesProvider.overrideWith((ref) async => const [Membership(church: _vida, role: ChurchRole.editor)]),
       isPlatformAdminProvider.overrideWith((ref) async => false),
@@ -66,14 +83,39 @@ void main() {
     expect(tabIndexFor('/'), 0);
     expect(tabIndexFor('/c/x'), 1);
     expect(tabIndexFor('/c/x/studies/s/day/2'), 1);
-    expect(tabIndexFor('/profile'), 2);
+    expect(tabIndexFor('/c/x/events'), 2);
+    expect(tabIndexFor('/profile'), 3);
   });
 
-  testWidgets('the profile page shows the three tabs', (tester) async {
+  testWidgets('the profile page shows Hoy, Estudios and Perfil when there are no events', (tester) async {
     await _pump(tester, '/profile');
     expect(find.text('Hoy'), findsOneWidget);
     expect(find.text('Estudios'), findsOneWidget);
     expect(find.text('Perfil'), findsWidgets);
+    expect(find.text('Eventos'), findsNothing);
+  });
+
+  testWidgets('Eventos sits between Estudios and Perfil when the church has events', (tester) async {
+    final router = await _pump(tester, '/profile', events: [_meeting]);
+    double x(String label) => tester.getCenter(find.text(label).last).dx;
+    expect(x('Estudios') < x('Eventos') && x('Eventos') < x('Perfil'), isTrue);
+    await tester.tap(find.text('Eventos'));
+    await tester.pumpAndSettle();
+    expect(_path(router), '/c/vida-nueva/events');
+    expect(find.text('Reunión de jóvenes'), findsOneWidget);
+  });
+
+  testWidgets('without events Perfil still opens the profile', (tester) async {
+    final router = await _pump(tester, '/');
+    expect(find.text('Eventos'), findsNothing);
+    await tester.tap(find.text('Perfil'));
+    await tester.pumpAndSettle();
+    expect(_path(router), '/profile');
+  });
+
+  testWidgets('no church, no Eventos tab', (tester) async {
+    await _pump(tester, '/profile', current: null, events: [_meeting]);
+    expect(find.text('Eventos'), findsNothing);
   });
 
   testWidgets('Estudios opens the current church', (tester) async {

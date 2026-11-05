@@ -103,6 +103,12 @@ void main() {
     expect(find.text('18:00 – 20:00'), findsOneWidget);
   });
 
+  testWidgets('events that arrive out of order still lead with the earliest', (tester) async {
+    await _pump(tester, [_youth, _men, _women]);
+    expect(find.text('ESTE SÁBADO'), findsOneWidget);
+    expect(tester.getTopLeft(find.text(_women.title)).dy, lessThan(tester.getTopLeft(find.text(_youth.title)).dy));
+  });
+
   testWidgets('tapping opens the event page on the church site', (tester) async {
     final (_, opened) = await _pump(tester, [_women, _men, _youth]);
     await tester.tap(find.text(es.eventsDetails));

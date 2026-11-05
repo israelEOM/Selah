@@ -16,6 +16,7 @@ import '../features/church/church_scope.dart';
 import '../features/church/create_church_page.dart';
 import '../features/church/join_page.dart';
 import '../features/church/legacy_redirects.dart';
+import '../features/events/events_page.dart';
 import '../features/home/church_picker_page.dart';
 import '../features/profile/profile_page.dart';
 import '../features/study/reader_page.dart';
@@ -71,7 +72,7 @@ GoRouter createRouter({String initialLocation = '/'}) {
       // Hides the native glass bar while a page opens above the tabs.
       observers: [CNTabBarRouteObserver()],
       routes: [
-        // The three tab roots, each with its own stack, under the tab bar.
+        // The four tab roots, each with its own stack, under the tab bar. Eventos shows only while there are events.
         StatefulShellRoute.indexedStack(
           // A MaterialPage too (see _page), so the tabs slide aside under a page pushed above them.
           pageBuilder: (_, state, navigationShell) => MaterialPage<void>(
@@ -88,6 +89,16 @@ GoRouter createRouter({String initialLocation = '/'}) {
               initialLocation: '/c/_',
               routes: [
                 _page(path: '/c/:church', builder: (_, state) => _inChurch(state, (church) => ChurchPage(church: church))),
+              ],
+            ),
+            StatefulShellBranch(
+              // Like Estudios: the tab goes to the current church's events, never to this placeholder.
+              initialLocation: '/c/_/events',
+              routes: [
+                _page(
+                  path: '/c/:church/events',
+                  builder: (_, state) => _inChurch(state, (church) => EventsPage(church: church)),
+                ),
               ],
             ),
             StatefulShellBranch(routes: [_page(path: '/profile', builder: (_, _) => const ProfilePage())]),

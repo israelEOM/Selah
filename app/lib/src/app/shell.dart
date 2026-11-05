@@ -9,12 +9,20 @@ import '../features/welcome/welcome_state.dart';
 import 'design/adaptive_tab_bar.dart';
 import 'theme.dart';
 
-/// Which tab a location belongs to: Hoy (0), Estudios (1) or Perfil (2).
+/// Which branch a location belongs to: Hoy (0), Estudios (1), Eventos (2) or Perfil (3).
 int tabIndexFor(String location) {
+  if (RegExp(r'^/c/[^/]+/events/?$').hasMatch(location)) return 2;
   if (location.startsWith('/c/')) return 1;
-  if (location == '/profile' || location.startsWith('/profile/')) return 2;
+  if (location == '/profile' || location.startsWith('/profile/')) return 3;
   return 0;
 }
+
+/// Whether the current church has something coming up, so the Eventos tab shows.
+final showEventsTabProvider = Provider<bool>((ref) {
+  final church = ref.watch(currentChurchProvider).value;
+  if (church == null) return false;
+  return ref.watch(upcomingEventsProvider(church.id)).value?.isNotEmpty ?? false;
+});
 
 /// The member pages, with the tab bar floating under them.
 class SelahShell extends ConsumerStatefulWidget {
@@ -51,6 +59,15 @@ class _SelahShellState extends ConsumerState<SelahShell> {
   void _goTab(int index) =>
       widget.navigationShell.goBranch(index, initialLocation: index == widget.navigationShell.currentIndex);
 
+  /// Eventos opens the current church's events.
+  Future<void> _openEvents() async {
+    final church = await ref.read(currentChurchProvider.future);
+    if (!mounted || church == null) return;
+    final target = '/c/${church.slug}/events';
+    if (widget.navigationShell.shellRouteContext.routerState.uri.path == target) return;
+    context.go(target);
+  }
+
   /// Estudios opens the current church, or the church list when there's none.
   Future<void> _openStudies() async {
     String? slug;
@@ -78,7 +95,13 @@ class _SelahShellState extends ConsumerState<SelahShell> {
     if (tabIndexFor(location) == 1) _studiesChurch = Uri.parse(location).pathSegments[1];
   }
 
-  /// Hoy, Estudios and Perfil, in tab order.
+  /// The branches shown in the bar, in order: Eventos only while there are events (or while it's open).
+  List<int> _visibleBranches() {
+    final events = ref.watch(showEventsTabProvider) || widget.navigationShell.currentIndex == 2;
+    return [0, 1, if (events) 2, 3];
+  }
+
+  /// Every tab, by branch: Hoy, Estudios, Eventos and Perfil.
   List<SelahTab> _tabs(AppLocalizations l) => [
     SelahTab(
       label: l.tabToday,
@@ -95,6 +118,13 @@ class _SelahShellState extends ConsumerState<SelahShell> {
       selectedSymbol: 'book.fill',
     ),
     SelahTab(
+      label: l.tabEvents,
+      icon: Icons.event_outlined,
+      selectedIcon: Icons.event,
+      symbol: 'calendar',
+      selectedSymbol: 'calendar',
+    ),
+    SelahTab(
       label: l.tabProfile,
       icon: Icons.person_outline,
       selectedIcon: Icons.person,
@@ -103,14 +133,21 @@ class _SelahShellState extends ConsumerState<SelahShell> {
     ),
   ];
 
-  void _select(int index) => index == 1 ? _openStudies() : _goTab(index);
+  void _selectBranch(int branch) => switch (branch) {
+        1 => _openStudies(),
+        2 => _openEvents(),
+        _ => _goTab(branch),
+      };
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    final selected = widget.navigationShell.currentIndex;
+    final branches = _visibleBranches();
+    final selected = branches.indexOf(widget.navigationShell.currentIndex);
     _noteStudiesChurch();
-    final tabs = _tabs(l);
+    final allTabs = _tabs(l);
+    final tabs = [for (final b in branches) allTabs[b]];
+    void select(int index) => _selectBranch(branches[index]);
     final wide = uiPlatformOf(context) != UiPlatform.ios && MediaQuery.sizeOf(context).width >= kRailBreakpoint;
     if (wide) {
       return Scaffold(
@@ -120,7 +157,7 @@ class _SelahShellState extends ConsumerState<SelahShell> {
             labelType: NavigationRailLabelType.all,
             onDestinationSelected: (index) {
               SelahHaptics.selection();
-              _select(index);
+              select(index);
             },
             destinations: [
               for (final tab in tabs)
@@ -139,7 +176,7 @@ class _SelahShellState extends ConsumerState<SelahShell> {
     return Scaffold(
       extendBody: true,
       body: widget.navigationShell,
-      bottomNavigationBar: AdaptiveTabBar(tabs: tabs, currentIndex: selected, onTap: _select),
+      bottomNavigationBar: AdaptiveTabBar(tabs: tabs, currentIndex: selected, onTap: select),
     );
   }
 }
