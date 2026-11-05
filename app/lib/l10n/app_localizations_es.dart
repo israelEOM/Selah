@@ -721,4 +721,30 @@ class AppLocalizationsEs extends AppLocalizations {
   String eventsLastSync(String date) {
     return 'Última actualización: $date';
   }
+
+  @override
+  String get tabEvents => 'Eventos';
+
+  @override
+  String get eventsTitle => 'Eventos';
+
+  @override
+  String get eventsToday => 'Hoy';
+
+  @override
+  String get eventsTomorrow => 'Mañana';
+
+  @override
+  String eventsThisWeekday(String weekday) {
+    return 'Este $weekday';
+  }
+
+  @override
+  String get eventsDetails => 'Ver detalles';
+
+  @override
+  String get eventsLater => 'Después';
+
+  @override
+  String get eventsAllDay => 'Todo el día';
 }

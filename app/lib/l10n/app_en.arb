@@ -294,5 +294,13 @@
   "eventsBlocked": "The website blocks automatic access. Ask the website's admin to allow the calendar.",
   "eventsUnreachable": "Couldn't read the calendar.",
   "eventsNotCalendar": "That link isn't a calendar.",
-  "eventsLastSync": "Last updated: {date}"
+  "eventsLastSync": "Last updated: {date}",
+  "tabEvents": "Events",
+  "eventsTitle": "Events",
+  "eventsToday": "Today",
+  "eventsTomorrow": "Tomorrow",
+  "eventsThisWeekday": "This {weekday}",
+  "eventsDetails": "See details",
+  "eventsLater": "Later",
+  "eventsAllDay": "All day"
 }

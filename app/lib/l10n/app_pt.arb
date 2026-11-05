@@ -294,5 +294,13 @@
   "eventsBlocked": "O site bloqueia o acesso automático. Peça ao administrador do site que permita o calendário.",
   "eventsUnreachable": "Não foi possível ler o calendário.",
   "eventsNotCalendar": "Esse link não é um calendário.",
-  "eventsLastSync": "Última atualização: {date}"
+  "eventsLastSync": "Última atualização: {date}",
+  "tabEvents": "Eventos",
+  "eventsTitle": "Eventos",
+  "eventsToday": "Hoje",
+  "eventsTomorrow": "Amanhã",
+  "eventsThisWeekday": "{weekday}",
+  "eventsDetails": "Ver detalhes",
+  "eventsLater": "Depois",
+  "eventsAllDay": "Dia inteiro"
 }

@@ -1377,6 +1377,54 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Última actualización: {date}'**
   String eventsLastSync(String date);
+
+  /// No description provided for @tabEvents.
+  ///
+  /// In es, this message translates to:
+  /// **'Eventos'**
+  String get tabEvents;
+
+  /// No description provided for @eventsTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Eventos'**
+  String get eventsTitle;
+
+  /// No description provided for @eventsToday.
+  ///
+  /// In es, this message translates to:
+  /// **'Hoy'**
+  String get eventsToday;
+
+  /// No description provided for @eventsTomorrow.
+  ///
+  /// In es, this message translates to:
+  /// **'Mañana'**
+  String get eventsTomorrow;
+
+  /// The next event is later this week; weekday is its lowercase name (sábado).
+  ///
+  /// In es, this message translates to:
+  /// **'Este {weekday}'**
+  String eventsThisWeekday(String weekday);
+
+  /// No description provided for @eventsDetails.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver detalles'**
+  String get eventsDetails;
+
+  /// No description provided for @eventsLater.
+  ///
+  /// In es, this message translates to:
+  /// **'Después'**
+  String get eventsLater;
+
+  /// No description provided for @eventsAllDay.
+  ///
+  /// In es, this message translates to:
+  /// **'Todo el día'**
+  String get eventsAllDay;
 }
 
 class _AppLocalizationsDelegate

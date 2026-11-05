@@ -322,5 +322,21 @@
         "type": "String"
       }
     }
-  }
+  },
+  "tabEvents": "Eventos",
+  "eventsTitle": "Eventos",
+  "eventsToday": "Hoy",
+  "eventsTomorrow": "Mañana",
+  "eventsThisWeekday": "Este {weekday}",
+  "@eventsThisWeekday": {
+    "description": "The next event is later this week; weekday is its lowercase name (sábado).",
+    "placeholders": {
+      "weekday": {
+        "type": "String"
+      }
+    }
+  },
+  "eventsDetails": "Ver detalles",
+  "eventsLater": "Después",
+  "eventsAllDay": "Todo el día"
 }
