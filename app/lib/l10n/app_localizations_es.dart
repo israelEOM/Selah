@@ -747,4 +747,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get eventsAllDay => 'Todo el día';
+
+  @override
+  String get eventsNone => 'No hay próximos eventos.';
 }

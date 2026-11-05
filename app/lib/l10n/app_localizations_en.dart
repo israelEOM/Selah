@@ -748,4 +748,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get eventsAllDay => 'All day';
+
+  @override
+  String get eventsNone => 'No upcoming events.';
 }

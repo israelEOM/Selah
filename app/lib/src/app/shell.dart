@@ -21,7 +21,8 @@ int tabIndexFor(String location) {
 final showEventsTabProvider = Provider<bool>((ref) {
   final church = ref.watch(currentChurchProvider).value;
   if (church == null) return false;
-  return ref.watch(upcomingEventsProvider(church.id)).value?.isNotEmpty ?? false;
+  final now = DateTime.now();
+  return ref.watch(upcomingEventsProvider(church.id)).value?.any((e) => e.endsAt.isAfter(now)) ?? false;
 });
 
 /// The member pages, with the tab bar floating under them.
@@ -38,9 +39,16 @@ class _SelahShellState extends ConsumerState<SelahShell> {
   /// The church the Estudios tab last showed, so tapping it again comes back to the same place.
   String? _studiesChurch;
 
+  late final AppLifecycleListener _lifecycle;
+
   @override
   void initState() {
     super.initState();
+    // Coming back after a while: read the church's events again, so the Eventos tab reflects what's coming up now.
+    _lifecycle = AppLifecycleListener(onResume: () {
+      final church = ref.read(currentChurchProvider).value;
+      if (church != null) ref.invalidate(upcomingEventsProvider(church.id));
+    });
     // A new account that arrives here without passing the sign-in page (the return from Google, an email
     // confirmation link, a restored session) gets the welcome question once per app session.
     ref.listenManual(needsWelcomeProvider, fireImmediately: true, (_, needs) {
@@ -53,6 +61,12 @@ class _SelahShellState extends ConsumerState<SelahShell> {
         context.go('/welcome');
       });
     });
+  }
+
+  @override
+  void dispose() {
+    _lifecycle.dispose();
+    super.dispose();
   }
 
   /// Hoy and Perfil switch to their tab; tapping the tab you're on pops it to its root.

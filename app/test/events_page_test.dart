@@ -61,7 +61,7 @@ Future<(_FakeRepository, List<Uri>)> _pump(WidgetTester tester, List<ChurchEvent
       locale: const Locale('es'),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: EventsPage(church: _church, open: opened.add, today: DateTime(2026, 11, 12)),
+      home: EventsPage(church: _church, open: opened.add, now: DateTime(2026, 11, 12, 10)),
     ),
   ));
   await tester.pumpAndSettle();
@@ -107,6 +107,18 @@ void main() {
     await _pump(tester, [_youth, _men, _women]);
     expect(find.text('ESTE SÁBADO'), findsOneWidget);
     expect(tester.getTopLeft(find.text(_women.title)).dy, lessThan(tester.getTopLeft(find.text(_youth.title)).dy));
+  });
+
+  testWidgets('events that have ended are not shown', (tester) async {
+    await _pump(tester, [_event('Ensayo', DateTime(2026, 11, 10, 18), DateTime(2026, 11, 10, 20)), _women]);
+    expect(find.text('Ensayo'), findsNothing);
+    expect(find.text(_women.title), findsOneWidget);
+  });
+
+  testWidgets('when everything has ended the page says so', (tester) async {
+    await _pump(tester, [_event('Ensayo', DateTime(2026, 11, 10, 18), DateTime(2026, 11, 10, 20))]);
+    expect(find.text('Ensayo'), findsNothing);
+    expect(find.text(es.eventsNone), findsOneWidget);
   });
 
   testWidgets('tapping opens the event page on the church site', (tester) async {

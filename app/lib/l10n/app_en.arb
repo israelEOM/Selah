@@ -302,5 +302,6 @@
   "eventsThisWeekday": "This {weekday}",
   "eventsDetails": "See details",
   "eventsLater": "Later",
-  "eventsAllDay": "All day"
+  "eventsAllDay": "All day",
+  "eventsNone": "No upcoming events."
 }

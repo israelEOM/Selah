@@ -14,21 +14,22 @@ void _openExternally(Uri uri) => launchUrl(uri, mode: LaunchMode.externalApplica
 /// A church's upcoming events from its own calendar: the next one first, then the rest. Events open on the
 /// church's site.
 class EventsPage extends ConsumerWidget {
-  const EventsPage({super.key, required this.church, this.open = _openExternally, this.today});
+  const EventsPage({super.key, required this.church, this.open = _openExternally, this.now});
 
   final Church church;
   final void Function(Uri) open;
 
-  /// Fixes "today" for the day labels; the real date when null.
-  final DateTime? today;
+  /// Fixes the clock for which events have ended and for the day labels; the real time when null.
+  final DateTime? now;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
     final text = Theme.of(context).textTheme;
-    final events = ref
-        .watch(upcomingEventsProvider(church.id))
-        .whenData((events) => [...events]..sort((a, b) => a.startsAt.compareTo(b.startsAt)));
+    final now = this.now ?? DateTime.now();
+    // The app can sit in memory for days, so what's stored may have ended since it was read.
+    final events = ref.watch(upcomingEventsProvider(church.id)).whenData((events) =>
+        events.where((e) => e.endsAt.isAfter(now)).toList()..sort((a, b) => a.startsAt.compareTo(b.startsAt)));
     return SelahPage(
       onRefresh: () => ref.refresh(upcomingEventsProvider(church.id).future),
       children: [
@@ -40,7 +41,8 @@ class EventsPage extends ConsumerWidget {
           loading: () => [const SkeletonList(rows: 3)],
           error: (_, _) => [Text(l.loadError, style: text.bodyMedium)],
           data: (events) => [
-            if (events.isNotEmpty) _NextEvent(event: events.first, today: today ?? DateTime.now(), open: open),
+            if (events.isEmpty) Text(l.eventsNone, style: text.bodyLarge),
+            if (events.isNotEmpty) _NextEvent(event: events.first, today: now, open: open),
             if (events.length > 1) ...[
               const SizedBox(height: Space.xl),
               Eyebrow(l.eventsLater),

@@ -1425,6 +1425,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Todo el día'**
   String get eventsAllDay;
+
+  /// No description provided for @eventsNone.
+  ///
+  /// In es, this message translates to:
+  /// **'No hay próximos eventos.'**
+  String get eventsNone;
 }
 
 class _AppLocalizationsDelegate

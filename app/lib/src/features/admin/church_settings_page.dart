@@ -91,11 +91,9 @@ class _ChurchSettingsPageState extends ConsumerState<ChurchSettingsPage> {
         'events_calendar_url': calendar,
         'timezone': _timezone,
       });
-      // A new link is checked straight away, so the owner knows it works before members do. The link stays saved
-      // either way, and the refresh keeps trying.
-      final checked = calendar != null && calendar != _savedCalendar
-          ? await repository.syncChurchEvents(widget.church.id)
-          : null;
+      // The link is checked on every save, so the owner knows it works before members do, and can confirm a fix
+      // (a web admin letting Selah through, a new timezone). It stays saved either way, and the refresh keeps trying.
+      final checked = calendar != null ? await repository.syncChurchEvents(widget.church.id) : null;
       _savedCalendar = calendar;
       ref.invalidate(churchProvider(widget.church.slug));
       ref.invalidate(upcomingEventsProvider(widget.church.id));

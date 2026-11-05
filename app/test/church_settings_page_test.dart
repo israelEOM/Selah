@@ -123,14 +123,15 @@ void main() {
         findsOneWidget);
   });
 
-  testWidgets('an unchanged link is not checked again', (tester) async {
+  testWidgets('saving again re-checks the same link, so an owner sees the web admin\'s fix', (tester) async {
     const linked = Church(id: 'A', slug: 'vida-nueva', name: 'Iglesia Vida Nueva',
-        eventsCalendarUrl: 'https://a.org/cal.ics');
+        eventsCalendarUrl: 'https://a.org/cal.ics', eventsSyncError: 'blocked');
     final fake = await _pump(tester, church: linked);
     await tester.tap(find.text(es.save));
     await tester.pumpAndSettle();
     expect(fake.updates.single['events_calendar_url'], 'https://a.org/cal.ics');
-    expect(fake.syncCalls, isEmpty);
+    expect(fake.syncCalls, ['A']);
+    expect(find.text(es.eventsFound(4)), findsOneWidget);
   });
 
   testWidgets('clearing the link turns the calendar off without a check', (tester) async {

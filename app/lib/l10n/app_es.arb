@@ -338,5 +338,6 @@
   },
   "eventsDetails": "Ver detalles",
   "eventsLater": "Después",
-  "eventsAllDay": "Todo el día"
+  "eventsAllDay": "Todo el día",
+  "eventsNone": "No hay próximos eventos."
 }

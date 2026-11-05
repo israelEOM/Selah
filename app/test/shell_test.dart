@@ -15,22 +15,28 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 const _vida = Church(id: 'A', slug: 'vida-nueva', name: 'Iglesia Vida Nueva');
 
+// A week out, so it is always upcoming.
+final _meetingStart = DateTime.now().add(const Duration(days: 7));
 final _meeting = ChurchEvent(
   uid: 'm1',
   title: 'Reunión de jóvenes',
-  startsAt: DateTime.utc(2026, 11, 21, 17),
-  endsAt: DateTime.utc(2026, 11, 21, 19),
-  localStart: DateTime(2026, 11, 21, 18),
-  localEnd: DateTime(2026, 11, 21, 20),
+  startsAt: _meetingStart.toUtc(),
+  endsAt: _meetingStart.add(const Duration(hours: 2)).toUtc(),
+  localStart: _meetingStart,
+  localEnd: _meetingStart.add(const Duration(hours: 2)),
 );
 
 class _FakeRepository implements SelahRepository {
   _FakeRepository([this.events = const []]);
 
   final List<ChurchEvent> events;
+  int eventReads = 0;
 
   @override
-  Future<List<ChurchEvent>> upcomingEvents(String churchId) async => events;
+  Future<List<ChurchEvent>> upcomingEvents(String churchId) async {
+    eventReads++;
+    return events;
+  }
 
   @override
   Future<Church?> churchBySlug(String slug) async => slug == 'vida-nueva' ? _vida : null;
@@ -57,7 +63,7 @@ Future<GoRouter> _pump(WidgetTester tester, String location,
   final router = createRouter(initialLocation: location);
   await tester.pumpWidget(ProviderScope(
     overrides: [
-      repositoryProvider.overrideWithValue(_FakeRepository(events)),
+      repositoryProvider.overrideWithValue(_lastFake = _FakeRepository(events)),
       userIdProvider.overrideWith((ref) => Stream.value('user-1')),
       myChurchesProvider.overrideWith((ref) async => const [Membership(church: _vida, role: ChurchRole.editor)]),
       isPlatformAdminProvider.overrideWith((ref) async => false),
@@ -77,6 +83,8 @@ Future<GoRouter> _pump(WidgetTester tester, String location,
 }
 
 String _path(GoRouter router) => router.state.uri.path;
+
+late _FakeRepository _lastFake;
 
 void main() {
   test('tabIndexFor maps locations to tabs', () {
@@ -111,6 +119,32 @@ void main() {
     await tester.tap(find.text('Perfil'));
     await tester.pumpAndSettle();
     expect(_path(router), '/profile');
+  });
+
+  testWidgets('a church whose events have all ended has no Eventos tab', (tester) async {
+    final ended = ChurchEvent(
+      uid: 'old',
+      title: 'Culto pasado',
+      startsAt: DateTime.utc(2020, 1, 5, 10),
+      endsAt: DateTime.utc(2020, 1, 5, 12),
+      localStart: DateTime(2020, 1, 5, 11),
+      localEnd: DateTime(2020, 1, 5, 13),
+    );
+    await _pump(tester, '/profile', events: [ended]);
+    expect(find.text('Eventos'), findsNothing);
+  });
+
+  testWidgets('coming back to the app reads the events again', (tester) async {
+    await _pump(tester, '/profile', events: [_meeting]);
+    final before = _lastFake.eventReads;
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pumpAndSettle();
+    expect(_lastFake.eventReads, greaterThan(before));
   });
 
   testWidgets('no church, no Eventos tab', (tester) async {
