@@ -1,5 +1,5 @@
 begin;
-select plan(13);
+select plan(14);
 
 select has_table('public', 'church_events', 'church_events table exists');
 
@@ -63,6 +63,10 @@ update public.churches set events_calendar_url = null where id = '00000000-0000-
 select tests.reset();
 select is((select count(*)::int from public.church_events
            where church_id = '00000000-0000-0000-0000-00000000000a'), 0, 'clearing the link deletes events');
+
+-- The refresh runs every three hours.
+select is((select schedule from cron.job where jobname = 'sync-church-events'), '0 */3 * * *',
+  'church calendars refresh every three hours');
 
 select * from finish();
 rollback;
