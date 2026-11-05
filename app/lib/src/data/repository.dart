@@ -251,6 +251,33 @@ class SelahRepository {
   Future<void> updateChurch(String churchId, Map<String, dynamic> fields) =>
       _client.from('churches').update(fields).eq('id', churchId);
 
+  // Church calendars -------------------------------------------------------------
+
+  /// A church's events that haven't ended, earliest first.
+  Future<List<ChurchEvent>> upcomingEvents(String churchId) async {
+    final rows = await _client
+        .from('church_events')
+        .select()
+        .eq('church_id', churchId)
+        .gt('ends_at', DateTime.now().toUtc().toIso8601String())
+        .order('starts_at', ascending: true)
+        .limit(20);
+    return rows.map(ChurchEvent.fromJson).toList();
+  }
+
+  /// Reads the church's calendar now (owners only) and stores what it found.
+  Future<EventsSyncResult> syncChurchEvents(String churchId) async {
+    try {
+      final response = await _client.functions.invoke('sync-church-events', body: {'church_id': churchId});
+      final data = response.data as Map<String, dynamic>;
+      return data['ok'] == true
+          ? EventsSynced(data['count'] as int)
+          : EventsSyncFailed(data['error'] as String? ?? 'unreachable');
+    } catch (_) {
+      return const EventsSyncFailed('unreachable');
+    }
+  }
+
   Future<String> createInvite(String churchId, ChurchRole role) async =>
       await _client.rpc('create_invite', params: {'p_church': churchId, 'p_role': role.name}) as String;
 

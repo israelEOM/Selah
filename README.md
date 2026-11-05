@@ -123,3 +123,29 @@ The migrations and the new app must go out together: the old app does not unders
 ## Releasing church requests and the Today page
 
 Migration `202610300001_church_requests.sql` (a table and functions only) must be pushed (`npx supabase db push --linked`) before deploying this app version, because the new app calls the request functions at sign-up and from Perfil → Solicitudes de iglesias. The old app keeps working against the new schema.
+
+## Church calendars
+
+An owner pastes the church's calendar link in Ajustes de la iglesia (an iCal / `webcal://` link, a Google Calendar public address, or an Events Calendar site's `/events/` page). The Supabase function `supabase/functions/sync-church-events` reads it and keeps the next 60 days (at most 20 events) in `church_events`. `pg_cron` calls it every 3 hours, and Church settings calls it once whenever the link changes. Members see an Eventos tab while their church has something coming up.
+
+Function tests: `cd supabase/functions/sync-church-events && deno test --allow-read=.` (needs Deno 2: `brew install deno`).
+
+### Releasing
+
+The migrations and the function go out before the app that uses them. In order:
+
+1. `npx supabase db push --linked` (Node 20+). It applies `202611050001_church_events.sql` and `202611050002_church_events_cron.sql`.
+2. `npx supabase functions deploy sync-church-events`
+3. Pick a long random secret and give it to the function: `npx supabase secrets set SYNC_SECRET=<secret>`
+4. In the SQL editor, give the same secret and the project's address to the cron job:
+   ```sql
+   select vault.create_secret('https://<project-ref>.supabase.co', 'project_url');
+   select vault.create_secret('<secret>', 'sync_church_events_secret');
+   ```
+5. Build and deploy the app (see "Live app").
+
+### When a church's website blocks Selah
+
+Some church sites put every visitor through a bot check (Cloudflare's "Just a moment…" page). Selah does not try to get past it; Church settings shows "El sitio web bloquea el acceso automático…" instead. The owner can forward this to whoever runs the website:
+
+> Selah, our church app, reads our public events calendar every few hours. Its requests identify as `Selah-Calendar/1.0 (+https://selah-226.pages.dev)` and only ask for the calendar feed, whose address contains `ical=1`. Could you let those requests past the bot check? In Cloudflare: Security → WAF → Custom rules → create a rule where *URI Query String* contains `ical=1`, with the action *Skip* (all remaining custom rules, and Super Bot Fight Mode / Bot Fight Mode if it's on).

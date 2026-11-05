@@ -58,6 +58,10 @@ final publicChurchesProvider = FutureProvider<List<Church>>((ref) => ref.watch(r
 final publishedStudiesProvider = FutureProvider.family<List<StudyCard>, String>(
     (ref, churchId) => ref.watch(repositoryProvider).publishedStudies(churchId));
 
+/// A church's upcoming calendar events, by church id.
+final upcomingEventsProvider = FutureProvider.family<List<ChurchEvent>, String>(
+    (ref, churchId) => ref.watch(repositoryProvider).upcomingEvents(churchId));
+
 /// A church's sermons as its editors see them, by church id.
 final sermonsProvider = FutureProvider.family<List<SermonRow>, String>((ref, churchId) {
   ref.watch(userIdProvider);

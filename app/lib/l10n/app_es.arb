@@ -299,5 +299,45 @@
   "requestAlreadyDecided": "Esta solicitud ya fue resuelta.",
   "noPendingRequests": "No hay solicitudes pendientes.",
   "churchCreated": "Iglesia creada",
-  "requestRejectedNotice": "Solicitud rechazada"
+  "requestRejectedNotice": "Solicitud rechazada",
+  "eventsCalendarLink": "Enlace del calendario",
+  "eventsCalendarHint": "Pega el enlace del calendario de tu iglesia (iCal, Google Calendar o la página de eventos de tu web).",
+  "eventsCalendarInvalid": "Pega un enlace que empiece por https:// o webcal://",
+  "churchTimezone": "Zona horaria",
+  "eventsFound": "{count, plural, =0{No hay próximos eventos en el calendario.} =1{Se encontró 1 próximo evento} other{Se encontraron {count} próximos eventos}}",
+  "@eventsFound": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "eventsBlocked": "El sitio web bloquea el acceso automático. Pide al administrador de la web que permita el calendario.",
+  "eventsUnreachable": "No se pudo leer el calendario.",
+  "eventsNotCalendar": "Ese enlace no es un calendario.",
+  "eventsLastSync": "Última actualización: {date}",
+  "@eventsLastSync": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "tabEvents": "Eventos",
+  "eventsTitle": "Eventos",
+  "eventsToday": "Hoy",
+  "eventsTomorrow": "Mañana",
+  "eventsThisWeekday": "Este {weekday}",
+  "@eventsThisWeekday": {
+    "description": "The next event is later this week; weekday is its lowercase name (sábado).",
+    "placeholders": {
+      "weekday": {
+        "type": "String"
+      }
+    }
+  },
+  "eventsDetails": "Ver detalles",
+  "eventsLater": "Después",
+  "eventsAllDay": "Todo el día",
+  "eventsNone": "No hay próximos eventos."
 }

@@ -678,4 +678,74 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get requestRejectedNotice => 'Solicitud rechazada';
+
+  @override
+  String get eventsCalendarLink => 'Link do calendário';
+
+  @override
+  String get eventsCalendarHint =>
+      'Cole o link do calendário da sua igreja (iCal, Google Agenda ou a página de eventos do seu site).';
+
+  @override
+  String get eventsCalendarInvalid =>
+      'Cole um link que comece com https:// ou webcal://';
+
+  @override
+  String get churchTimezone => 'Fuso horário';
+
+  @override
+  String eventsFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Encontrados $count próximos eventos',
+      one: 'Encontrado 1 próximo evento',
+      zero: 'O calendário não tem próximos eventos.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get eventsBlocked =>
+      'O site bloqueia o acesso automático. Peça ao administrador do site que permita o calendário.';
+
+  @override
+  String get eventsUnreachable => 'Não foi possível ler o calendário.';
+
+  @override
+  String get eventsNotCalendar => 'Esse link não é um calendário.';
+
+  @override
+  String eventsLastSync(String date) {
+    return 'Última atualização: $date';
+  }
+
+  @override
+  String get tabEvents => 'Eventos';
+
+  @override
+  String get eventsTitle => 'Eventos';
+
+  @override
+  String get eventsToday => 'Hoje';
+
+  @override
+  String get eventsTomorrow => 'Amanhã';
+
+  @override
+  String eventsThisWeekday(String weekday) {
+    return '$weekday';
+  }
+
+  @override
+  String get eventsDetails => 'Ver detalhes';
+
+  @override
+  String get eventsLater => 'Depois';
+
+  @override
+  String get eventsAllDay => 'Dia inteiro';
+
+  @override
+  String get eventsNone => 'Não há próximos eventos.';
 }
