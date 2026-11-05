@@ -106,3 +106,33 @@ Deno.test('an all-day event keeps its date', () => {
 Deno.test('a web page is not a calendar', () => {
   assertThrows(() => parseFeed('<!DOCTYPE html><html><body>Hola</body></html>', madrid), NotCalendarError);
 });
+
+const editedFeed = () => parseFeed(fixture('weekly_edited.ics'), madrid);
+const sundays = () => editedFeed().filter((e) => e.uid.startsWith('weekly-edited@'));
+
+Deno.test('an edited occurrence replaces its slot instead of adding one', () => {
+  const events = sundays();
+  assertEquals(new Set(events.map((e) => e.uid)).size, events.length);
+  const moved = events.filter((e) => e.local_starts_at.startsWith('2026-11-15'));
+  assertEquals(moved.length, 1);
+  assertEquals(moved[0].local_starts_at, '2026-11-15T12:00:00');
+  assertEquals(moved[0].title, 'Culto dominical (con Santa Cena)');
+  assertEquals(events.filter((e) => e.local_starts_at.startsWith('2026-11-22')).map((e) => e.title), [
+    'Culto dominical – invitado especial',
+  ]);
+});
+
+Deno.test('cancelled events and cancelled occurrences are dropped', () => {
+  const events = editedFeed();
+  assertEquals(events.some((e) => e.title === 'Ensayo del coro'), false);
+  assertEquals(sundays().some((e) => e.local_starts_at.startsWith('2026-11-29')), false);
+});
+
+Deno.test('a daily series that began years ago still shows its next days', () => {
+  const ics = Deno.readTextFileSync(new URL('./fixtures/weekly_edited.ics', import.meta.url));
+  const daily = parseFeed(ics, { now, churchTimezone: 'Europe/Madrid' }).filter((e) =>
+    e.uid.startsWith('daily-prayer@')
+  );
+  assertEquals(daily.length > 0, true);
+  assertEquals(daily[0].local_starts_at, '2026-11-06T07:00:00');
+});

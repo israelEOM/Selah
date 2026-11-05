@@ -50,46 +50,70 @@ export function parseFeed(ics: string, opts: { now: Date; churchTimezone: string
   const from = opts.now.getTime();
   const until = from + WINDOW_DAYS * 24 * 60 * 60 * 1000;
 
+  // An edited occurrence of a series (Google, Outlook) is its own VEVENT with the series' UID and a RECURRENCE-ID.
+  // It belongs to its series, which then yields it in place of the original slot.
+  const components = calendar.getAllSubcomponents('vevent');
+  const masters = new Map<string, ICAL.Event>();
+  for (const component of components) {
+    if (!component.hasProperty('recurrence-id')) {
+      masters.set(String(component.getFirstPropertyValue('uid')), new ICAL.Event(component));
+    }
+  }
+  const standalone: ICAL.Event[] = [...masters.values()];
+  for (const component of components) {
+    if (!component.hasProperty('recurrence-id')) continue;
+    const override = new ICAL.Event(component);
+    const master = masters.get(override.uid);
+    master ? master.relateException(override) : standalone.push(override);
+  }
+
   const events: ParsedEvent[] = [];
-  for (const component of calendar.getAllSubcomponents('vevent')) {
-    const event = new ICAL.Event(component);
-    const tzid = component.getFirstProperty('dtstart')?.getParameter('tzid') as string | undefined;
-    const zone = ianaZone(tzid ?? null) ?? fallbackZone;
-    const base = {
-      uid: event.uid,
-      title: decodeEntities(event.summary ?? '').trim(),
-      location: nonEmpty(decodeEntities(event.location ?? '')),
-      url: nonEmpty(component.getFirstPropertyValue('url') as string | null),
-      timezone: zone,
-    };
-    const occurrences: { start: ICAL.Time; end: ICAL.Time }[] = [];
+  for (const event of standalone) {
+    const occurrences: { item: ICAL.Event; start: ICAL.Time; end: ICAL.Time }[] = [];
     if (event.isRecurring()) {
       const iterator = event.iterator();
-      for (let next = iterator.next(), guard = 0; next && guard < 1000; next = iterator.next(), guard++) {
+      // Long-running series start years back; only the window's end stops the walk (the cap is a runaway guard).
+      for (let next = iterator.next(), guard = 0; next && guard < 100_000; next = iterator.next(), guard++) {
         const details = event.getOccurrenceDetails(next);
-        if (toInstant(details.startDate, zone) >= until) break;
-        occurrences.push({ start: details.startDate, end: details.endDate });
+        if (toInstant(details.startDate, zoneOf(details.item, fallbackZone)) >= until) break;
+        occurrences.push({ item: details.item, start: details.startDate, end: details.endDate });
       }
     } else {
-      occurrences.push({ start: event.startDate, end: event.endDate });
+      occurrences.push({ item: event, start: event.startDate, end: event.endDate });
     }
-    for (const { start, end } of occurrences) {
+    for (const { item, start, end } of occurrences) {
+      if (String(item.component.getFirstPropertyValue('status') ?? '').toUpperCase() === 'CANCELLED') continue;
+      const zone = zoneOf(item, fallbackZone);
       const startsAt = toInstant(start, zone);
       const endsAt = toInstant(end, zone);
       if (endsAt <= from || startsAt >= until) continue;
       const startsIso = new Date(startsAt).toISOString();
       events.push({
-        ...base,
-        uid: event.isRecurring() ? `${base.uid}@${startsIso}` : base.uid,
+        uid: event.isRecurring() ? `${event.uid}@${startsIso}` : event.uid,
+        title: decodeEntities(item.summary ?? '').trim(),
         starts_at: startsIso,
         ends_at: new Date(endsAt).toISOString(),
         all_day: start.isDate,
         local_starts_at: wallClock(start, startsAt, zone),
         local_ends_at: wallClock(end, endsAt, zone),
+        location: nonEmpty(decodeEntities(item.location ?? '')),
+        url: nonEmpty(item.component.getFirstPropertyValue('url') as string | null),
+        timezone: zone,
       });
     }
   }
-  return events.sort((a, b) => a.starts_at.localeCompare(b.starts_at)).slice(0, MAX_EVENTS);
+  // The table keys on (church, uid): a feed that repeats one keeps its first.
+  const seen = new Set<string>();
+  return events
+    .sort((a, b) => a.starts_at.localeCompare(b.starts_at))
+    .filter((e) => !seen.has(e.uid) && seen.add(e.uid))
+    .slice(0, MAX_EVENTS);
+}
+
+/** The event's own TZID as an IANA zone, else [fallback]. */
+function zoneOf(event: ICAL.Event, fallback: string): string {
+  const tzid = event.component.getFirstProperty('dtstart')?.getParameter('tzid') as string | undefined;
+  return ianaZone(tzid ?? null) ?? fallback;
 }
 
 /** The UTC instant of [time]: UTC times as they are, everything else read as wall-clock in [zone]. */
@@ -101,11 +125,25 @@ function toInstant(time: ICAL.Time, zone: string): number {
 
 /** [time] on the church's wall clock. */
 function wallClock(time: ICAL.Time, instant: number, zone: string): string {
-  if (!isUtc(time)) return format(time.year, time.month, time.day, time.isDate ? 0 : time.hour,
-    time.isDate ? 0 : time.minute, time.isDate ? 0 : time.second);
+  if (!isUtc(time)) {
+    return format(
+      time.year,
+      time.month,
+      time.day,
+      time.isDate ? 0 : time.hour,
+      time.isDate ? 0 : time.minute,
+      time.isDate ? 0 : time.second,
+    );
+  }
   const local = new TZDate(instant, zone);
-  return format(local.getFullYear(), local.getMonth() + 1, local.getDate(), local.getHours(), local.getMinutes(),
-    local.getSeconds());
+  return format(
+    local.getFullYear(),
+    local.getMonth() + 1,
+    local.getDate(),
+    local.getHours(),
+    local.getMinutes(),
+    local.getSeconds(),
+  );
 }
 
 const isUtc = (time: ICAL.Time) => !time.isDate && time.zone?.tzid === 'UTC';
