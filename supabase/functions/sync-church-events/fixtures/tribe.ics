@@ -1,0 +1,52 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Iglesia Cristiana Presbiteriana de Alcorcón - ECPv6//NONSGML v1.0//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Iglesia Cristiana Presbiteriana de Alcorcón
+X-WR-TIMEZONE:Europe/Madrid
+BEGIN:VTIMEZONE
+TZID:Europe/Madrid
+BEGIN:STANDARD
+TZOFFSETFROM:+0200
+TZOFFSETTO:+0100
+TZNAME:CET
+DTSTART:20261025T010000
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+DTSTART;TZID=Europe/Madrid:20261114T173000
+DTEND;TZID=Europe/Madrid:20261114T193000
+DTSTAMP:20261105T090000
+UID:10000441-1794677400-1794684600@icpresbiteriana.com
+SUMMARY:Reunión de Mujeres &#8211\; Mi hermana y amiga en la Fe
+URL:https://icpresbiteriana.com/event/reunion-de-mujeres-mi-hermana-y-amiga-en-la-fe/
+LOCATION:Iglesia Cristiana Presbiteriana Alcorcón\, Calle Mayor 1\, Alcorcón
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Europe/Madrid:20261114T173000
+DTEND;TZID=Europe/Madrid:20261114T200000
+DTSTAMP:20261105T090000
+UID:10000442-1794677400-1794686400@icpresbiteriana.com
+SUMMARY:Reunión de Hombres &#8211\; ¿Qué\, para qué\, cómo y a quién alabamos?
+URL:https://icpresbiteriana.com/event/reunion-de-hombres-2/
+LOCATION:Iglesia Cristiana Presbiteriana Alcorcón
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Europe/Madrid:20261121T180000
+DTEND;TZID=Europe/Madrid:20261121T200000
+DTSTAMP:20261105T090000
+UID:10000642-1795284000-1795291200@icpresbiteriana.com
+SUMMARY:Reunión de jóvenes &#8211\; Amnón y las consecuencias del pecado
+URL:https://icpresbiteriana.com/event/reunion-de-jovenes-amnon-y-las-consecuencias-del-pecado/
+LOCATION:Iglesia Cristiana Presbiteriana Alcorcón
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Europe/Madrid:20261129T120000
+DTEND;TZID=Europe/Madrid:20261129T133000
+DTSTAMP:20261105T090000
+UID:10000700-1795950000-1795955400@icpresbiteriana.com
+SUMMARY:Culto de Acción de Gracias
+URL:https://icpresbiteriana.com/event/culto-accion-de-gracias/
+END:VEVENT
+END:VCALENDAR
