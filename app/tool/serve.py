@@ -1,7 +1,10 @@
-"""Serves build/web locally, answering unknown paths with index.html so deep links work."""
+"""Serves build/web locally the way Cloudflare Pages does: the landing site at /, /pt/ and /en/, and app.html
+for every app address (see routes.py), so deep links work."""
 import http.server
 import os
 import sys
+
+from routes import resolve
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "build", "web")
 
@@ -15,11 +18,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.send_header("Cache-Control", "no-cache")
         super().end_headers()
 
-    def send_head(self):
-        path = self.translate_path(self.path)
-        if not os.path.exists(path) and "." not in os.path.basename(path):
-            self.path = "/index.html"
-        return super().send_head()
+    def translate_path(self, path):
+        return resolve(ROOT, path)
 
 
 if __name__ == "__main__":

@@ -19,13 +19,15 @@ cd app
 flutter run -d chrome --dart-define-from-file=config/beta.json
 ```
 
-Or build once and serve the result (deep links work, nothing is cached):
+Or build the app and the landing page together and serve the result the way Cloudflare does (the landing page at `/`, the app at `/hoje` and every other app address, deep links work, nothing is cached):
 
 ```sh
 cd app
-flutter build web --release --dart-define-from-file=config/beta.json
+tool/build_web.sh
 python3 tool/serve.py 3100
 ```
+
+The landing page's source is in `site/` (see `site/build.py`); which addresses belong to the app is listed once in `app/tool/routes.py`.
 
 Importing a sermon needs the worker running (see below); reading published studies does not.
 
@@ -37,7 +39,7 @@ https://selah-226.pages.dev (Cloudflare Pages project `selah`). To publish a new
 
 ```sh
 cd app
-flutter build web --release --dart-define-from-file=config/beta.json
+tool/build_web.sh
 npx --yes wrangler pages deploy build/web --project-name selah --branch main
 ```
 
