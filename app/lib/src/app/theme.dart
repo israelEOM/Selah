@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
+import 'design/tokens.dart';
 import 'design/transitions.dart';
 
 export 'design/adaptive_controls.dart';
+export 'design/breakpoints.dart';
 export 'design/haptics.dart';
 export 'design/hero_card.dart';
 export 'design/navigation.dart';
@@ -204,7 +206,7 @@ ThemeData _build(_Palette p) {
       color: p.tones.surface,
       elevation: 0,
       margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.row)),
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
@@ -219,15 +221,15 @@ ThemeData _build(_Palette p) {
       filled: true,
       fillColor: p.tones.surface,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(Radii.control),
         borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(Radii.control),
         borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(Radii.control),
         borderSide: BorderSide(color: p.primary, width: 1.5),
       ),
     ),
@@ -266,7 +268,7 @@ class PageBody extends StatelessWidget {
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: maxWidth),
         child: ListView(
-          padding: EdgeInsets.fromLTRB(20, 16, 20, 40 + MediaQuery.paddingOf(context).bottom),
+          padding: EdgeInsets.fromLTRB(20, 16, 20, Layout.bottomGap + MediaQuery.paddingOf(context).bottom),
           children: children,
         ),
       ),

@@ -528,4 +528,39 @@ void main() {
       debugDefaultTargetPlatformOverride = null;
     }
   });
+
+  test('screen sizes switch at 600 and 1024', () {
+    expect(screenSizeFor(375), ScreenSize.phone);
+    expect(screenSizeFor(599), ScreenSize.phone);
+    expect(screenSizeFor(600), ScreenSize.tablet);
+    expect(screenSizeFor(1023), ScreenSize.tablet);
+    expect(screenSizeFor(1024), ScreenSize.desktop);
+    expect(screenSizeFor(1920), ScreenSize.desktop);
+  });
+
+  Future<double> bottomPaddingWithInset(WidgetTester tester, double inset) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: selahLightTheme(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Builder(
+          builder: (context) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(padding: EdgeInsets.only(bottom: inset)),
+            child: const SelahPage(title: 'Hoje', children: [SizedBox(height: 10)]),
+          ),
+        ),
+      ),
+    );
+    return tester.widget<SliverPadding>(find.byType(SliverPadding).last).padding.resolve(TextDirection.ltr).bottom;
+  }
+
+  testWidgets('bottom gap under the tab bar is small', (tester) async {
+    // Under the shell, the bottom inset already includes the tab bar's height.
+    expect(await bottomPaddingWithInset(tester, 90), 90 + Layout.bottomGap);
+  });
+
+  testWidgets('bottom gap without a tab bar still clears the safe area', (tester) async {
+    expect(await bottomPaddingWithInset(tester, 34), 34 + Layout.bottomGap);
+  });
 }

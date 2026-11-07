@@ -105,7 +105,7 @@ class SelahPage extends StatelessWidget {
     }
 
     // The side padding centres the body at [maxWidth] on wide windows, with the gutter inside.
-    final bottom = 40 + MediaQuery.paddingOf(context).bottom;
+    final bottom = Layout.bottomGap + MediaQuery.paddingOf(context).bottom;
     final body = SliverSafeArea(
       top: false,
       bottom: false,
