@@ -198,14 +198,24 @@ iOS large and slim page titles use the same serif through `cupertinoOverrideThem
 | Tablet | 600–1023 | Bottom bar; two columns where they fit | Same |
 | Desktop | ≥ 1024 | Website layout: top navigation, centered content up to 1200, multi-column pages | n/a |
 
-*The top navigation and the desktop page layouts are coming in the next plan.* Until then, wide web screens still show the navigation rail and a centered column.
+**Website layout** (`siteLayout(context)`: not iOS, and at least 1024 px wide). iOS, iPad included, always keeps the glass tab bar.
+- **`SiteHeader`** replaces the tab bar:
+  - left: the Selah wordmark (serif),
+  - next to it: the same destinations as text links, the selected one green with a 2 px underline,
+  - right: the church (a menu for people in several churches) and the language menu.
 
-Desktop page direction:
-- **Hoje:** the reading in a main column; the week and events in a side column.
-- **Estudos:** a grid of study cards.
-- **Study page:** the overview and the days side by side.
-- **Reader:** one reading column, with the days in a sticky side column.
-- **Forms:** narrow and centered.
+  The study page and reader get it too, through `SiteFrame`.
+- **Pages have no app bar.** The back link and the `headlineMedium` title sit at the top of the content, which is centered at the page's `maxWidth`, or at `Layout.maxContent` for `SelahPage(wide: true)`.
+- **Page layouts:**
+  - **Hoje:** the day in the main column; the date, the week and the next three events in a 340 px side column.
+  - **Estudos:** the intro at reading width, the featured study as a horizontal card (thumbnail left, text right), and recent studies in a `CardGrid` of up to three columns.
+  - **Study page:** the summary at reading width, with the devotional path in a 380 px side column.
+  - **Reader:** the text at 680, with the study's days in a 280 px side column. The current day is marked green and isn't a link. The side column scrolls with the page.
+  - **Eventos:** the next event at reading width; later events in two columns.
+  - **Perfil:** one 640 px column.
+- **Language menu:** page-action copies of the language menu hide in this layout, because the header has it.
+
+Tablets (600–1023) keep the app layout and one column for now.
 
 ## Elevation & Depth
 
@@ -222,6 +232,9 @@ Soft, rounded and friendly, never sharp.
 ## Components
 
 All components live in `app/lib/src/app/design/` and read only tokens.
+- **Site header** (`SiteHeader`, `SiteFrame`): the desktop top bar, 64 px tall, on paper with an `outlineVariant` hairline. Links are text buttons, so they can take keyboard focus.
+- **Two columns** (`TwoColumn`): a main column and a fixed side column, `Space.xxl` apart. Use it only in the website layout.
+- **Card grid** (`CardGrid`): as many columns as fit (default 280 px minimum, three at most). Tiles in a row share a top edge and keep their width when a row isn't full.
 - **Hero card** (`HeroCard`): today's study. It has a green gradient (`heroStart` → `heroEnd`), paper-colored text in light mode (ink in dark mode), `Radii.card` and 22 padding. It holds an eyebrow, a serif title and a serif italic quote. It's the one large green surface per screen.
 - **Row** (`SelahRow`): raised paper, `Radii.row`, ink title, muted subtitle. Presses spring (`Pressable`).
 - **Tab bar** (`AdaptiveTabBar`): native glass on iOS 26, a frosted pill elsewhere on iOS, and a Material `NavigationBar` on raised paper on Android and web. The selected tab is green.
