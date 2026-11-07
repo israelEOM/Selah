@@ -21,6 +21,9 @@ ORIGIN = "https://selah-226.pages.dev"
 # Language → the page's path on the site.
 PAGES = {"es": "/", "pt": "/pt/", "en": "/en/"}
 
+# Language → the Open Graph locale.
+LOCALES = {"es": "es_ES", "pt": "pt_BR", "en": "en_US"}
+
 
 def _strings(lang: str) -> dict:
     with open(os.path.join(SRC, "strings", f"{lang}.json"), encoding="utf-8") as f:
@@ -47,6 +50,8 @@ def render(lang: str) -> str:
         strings,
         redirect_script=redirect_script,
         lang=lang,
+        og_locale=LOCALES[lang],
+        og_image=f"{ORIGIN}/site/img/og.png",
         canonical=ORIGIN + PAGES[lang],
         alternates=_alternates(),
     )
@@ -56,12 +61,28 @@ def render(lang: str) -> str:
     return page
 
 
+def sitemap() -> str:
+    """The three landing pages, each listing its language alternates."""
+    alternates = "".join(
+        f'\n    <xhtml:link rel="alternate" hreflang="{lang}" href="{ORIGIN}{path}"/>' for lang, path in PAGES.items()
+    )
+    urls = "".join(f"\n  <url>\n    <loc>{ORIGIN}{path}</loc>{alternates}\n  </url>" for path in PAGES.values())
+    return (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">'
+        f"{urls}\n</urlset>\n"
+    )
+
+
 def build(out_dir: str) -> None:
     for lang, path in PAGES.items():
         target = os.path.join(out_dir, path.lstrip("/"), "index.html")
         os.makedirs(os.path.dirname(target), exist_ok=True)
         with open(target, "w", encoding="utf-8") as f:
             f.write(render(lang))
+    shutil.copy(os.path.join(SRC, "robots.txt"), out_dir)
+    with open(os.path.join(out_dir, "sitemap.xml"), "w", encoding="utf-8") as f:
+        f.write(sitemap())
     shared = os.path.join(out_dir, "site")
     os.makedirs(shared, exist_ok=True)
     shutil.copy(os.path.join(SRC, "styles.css"), shared)

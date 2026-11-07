@@ -107,6 +107,35 @@ class BuildTest(unittest.TestCase):
                     self.assertIn(href, html)
                 self.assertIn("site.lang", html)
 
+    def test_meta_tags(self):
+        for lang, html in self.pages.items():
+            with self.subTest(lang=lang):
+                title = re.search(r"<title>([^<]+)</title>", html).group(1)
+                description = re.search(r'<meta name="description" content="([^"]+)"', html).group(1)
+                self.assertLessEqual(len(title), 60)
+                self.assertLessEqual(len(description), 160)
+                for prop in ["og:title", "og:description", "og:image", "og:url", "og:locale"]:
+                    self.assertRegex(html, rf'<meta property="{prop}" content="[^"]+"')
+                self.assertIn('<meta name="twitter:card" content="summary_large_image">', html)
+                self.assertRegex(html, r'<link rel="icon" href="/[^"]+"')
+
+    def test_og_image_is_absolute_and_exists(self):
+        image = re.search(r'<meta property="og:image" content="([^"]+)"', self.pages["es"]).group(1)
+        self.assertTrue(image.startswith("https://"))
+        self.assertTrue(os.path.isfile(os.path.join(self.out, image.split("/", 3)[3])))
+
+    def test_robots_and_sitemap(self):
+        with open(os.path.join(self.out, "robots.txt"), encoding="utf-8") as f:
+            robots = f.read()
+        self.assertIn("Disallow: /hoje", robots)
+        self.assertIn("Disallow: /c/", robots)
+        self.assertIn("Sitemap: https://", robots)
+        with open(os.path.join(self.out, "sitemap.xml"), encoding="utf-8") as f:
+            sitemap = f.read()
+        for path in ["/", "/pt/", "/en/"]:
+            self.assertIn(f"<loc>https://selah-226.pages.dev{path}</loc>", sitemap)
+        self.assertIn('hreflang="pt"', sitemap)
+
 
 if __name__ == "__main__":
     unittest.main()
