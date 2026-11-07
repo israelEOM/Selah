@@ -48,8 +48,9 @@ class _FakeRepository implements SelahRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-Future<(_FakeRepository, List<Uri>)> _pump(WidgetTester tester, List<ChurchEvent> events) async {
-  tester.view.physicalSize = const Size(800, 1800);
+Future<(_FakeRepository, List<Uri>)> _pump(WidgetTester tester, List<ChurchEvent> events,
+    {Size size = const Size(800, 1800), TargetPlatform? platform}) async {
+  tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   final fake = _FakeRepository(events);
@@ -57,7 +58,7 @@ Future<(_FakeRepository, List<Uri>)> _pump(WidgetTester tester, List<ChurchEvent
   await tester.pumpWidget(ProviderScope(
     overrides: [repositoryProvider.overrideWithValue(fake)],
     child: MaterialApp(
-      theme: selahLightTheme(),
+      theme: selahLightTheme().copyWith(platform: platform),
       locale: const Locale('es'),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
@@ -166,5 +167,11 @@ void main() {
     final texts = tester.widgetList<Text>(find.descendant(of: find.byType(HeroCard), matching: find.byType(Text)));
     expect(texts, isNotEmpty);
     expect(texts.where((t) => t.style?.color == accent), isEmpty);
+  });
+
+  testWidgets('later events sit in two columns on desktop', (tester) async {
+    final later = _event('Culto de oración', DateTime(2026, 11, 28, 19), DateTime(2026, 11, 28, 21));
+    await _pump(tester, [_women, _men, _youth, later], size: const Size(1280, 1000), platform: TargetPlatform.android);
+    expect(tester.getTopLeft(find.text(_youth.title)).dy, tester.getTopLeft(find.text(_men.title)).dy);
   });
 }

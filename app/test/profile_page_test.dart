@@ -22,7 +22,14 @@ Future<void> _pump(
   bool platformAdmin = false,
   List<Membership>? mine,
   ChurchRequest? request,
+  Size? size,
+  TargetPlatform? platform,
 }) async {
+  if (size != null) {
+    tester.view.physicalSize = size;
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+  }
   SharedPreferences.setMockInitialValues({});
   final router = GoRouter(initialLocation: '/profile', routes: [
     GoRoute(path: '/profile', builder: (_, _) => const ProfilePage()),
@@ -42,7 +49,7 @@ Future<void> _pump(
       if (request != null) myChurchRequestProvider.overrideWith((ref) async => request),
     ],
     child: MaterialApp.router(
-      theme: selahLightTheme(),
+      theme: selahLightTheme().copyWith(platform: platform),
       routerConfig: router,
       locale: const Locale('es'),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -165,5 +172,11 @@ void main() {
     } finally {
       debugDefaultTargetPlatformOverride = null;
     }
+  });
+
+  testWidgets('Perfil is a narrow column on desktop', (tester) async {
+    await _pump(tester, size: const Size(1280, 900), platform: TargetPlatform.android);
+    expect(tester.getSize(find.ancestor(of: find.text('Iglesia Vida Nueva'), matching: find.byType(Card)).first).width,
+        lessThanOrEqualTo(640));
   });
 }

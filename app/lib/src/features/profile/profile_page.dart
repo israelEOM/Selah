@@ -28,6 +28,8 @@ class ProfilePage extends ConsumerWidget {
     final request = shown?.status == ChurchRequestStatus.approved ? null : shown;
     return SelahPage(
         title: l.tabProfile,
+        // Settings read best narrow on a desktop.
+        maxWidth: siteLayout(context) ? 640 : 760,
         children: [
           Eyebrow(l.yourChurch),
           const SizedBox(height: 12),

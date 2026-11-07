@@ -30,8 +30,10 @@ class EventsPage extends ConsumerWidget {
     // The app can sit in memory for days, so what's stored may have ended since it was read.
     final events = ref.watch(upcomingEventsProvider(church.id)).whenData((events) =>
         events.where((e) => e.endsAt.isAfter(now)).toList()..sort((a, b) => a.startsAt.compareTo(b.startsAt)));
+    final site = siteLayout(context);
     return SelahPage(
       onRefresh: () => ref.refresh(upcomingEventsProvider(church.id).future),
+      wide: site,
       children: [
         Eyebrow(church.name),
         const SizedBox(height: Space.s),
@@ -42,16 +44,30 @@ class EventsPage extends ConsumerWidget {
           error: (_, _) => [Text(l.loadError, style: text.bodyMedium)],
           data: (events) => [
             if (events.isEmpty) Text(l.eventsNone, style: text.bodyLarge),
-            if (events.isNotEmpty) _NextEvent(event: events.first, today: now, open: open),
+            if (events.isNotEmpty)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: Layout.readingMeasure),
+                  child: _NextEvent(event: events.first, today: now, open: open),
+                ),
+              ),
             if (events.length > 1) ...[
               const SizedBox(height: Space.xl),
               Eyebrow(l.eventsLater),
               const SizedBox(height: Space.m),
-              for (final event in events.skip(1))
-                Padding(
-                  padding: const EdgeInsets.only(bottom: Space.s + 2),
-                  child: EventRow(event: event, open: open),
-                ),
+              if (site)
+                CardGrid(
+                  minTileWidth: 340,
+                  maxColumns: 2,
+                  children: [for (final event in events.skip(1)) EventRow(event: event, open: open)],
+                )
+              else
+                for (final event in events.skip(1))
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: Space.s + 2),
+                    child: EventRow(event: event, open: open),
+                  ),
             ],
           ],
         ),
