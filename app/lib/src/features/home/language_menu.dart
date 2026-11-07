@@ -9,15 +9,14 @@ import '../../l10n/locale.dart';
 const _languageNames = {'es': 'Español', 'en': 'English', 'pt': 'Português'};
 
 class LanguageMenu extends ConsumerWidget {
-  const LanguageMenu({super.key, this.inHeader = false});
+  const LanguageMenu({super.key, this.pageAction = false});
 
-  /// The website header's own copy. In the website layout the header carries the menu, so the copies in
-  /// page actions hide.
-  final bool inHeader;
+  /// A copy in a page's top actions. In the website layout the header already carries the menu, so these hide.
+  final bool pageAction;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (!inHeader && siteLayout(context)) return const SizedBox.shrink();
+    if (pageAction && siteLayout(context)) return const SizedBox.shrink();
     final current = ref.watch(appLocaleProvider).languageCode;
     return PopupMenuButton<String>(
       icon: const Icon(Icons.translate),

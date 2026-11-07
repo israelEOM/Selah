@@ -28,7 +28,7 @@ class StudyPage extends ConsumerWidget {
     final backTo = '/c/${church.slug}';
     SelahPage page(List<Widget> children) => SelahPage(
           backTo: backTo,
-          actions: const [LanguageMenu(), SizedBox(width: 8)],
+          actions: const [LanguageMenu(pageAction: true), SizedBox(width: 8)],
           children: children,
         );
     return study.when(
@@ -177,7 +177,7 @@ class _StudyBody extends ConsumerWidget {
       // The website layout: the summary at reading width on the left, the days beside it.
       return SelahPage(
         backTo: '/c/${church.slug}',
-        actions: const [LanguageMenu(), SizedBox(width: 8)],
+        actions: const [LanguageMenu(pageAction: true), SizedBox(width: 8)],
         wide: true,
         children: [
           TwoColumn(
@@ -196,7 +196,7 @@ class _StudyBody extends ConsumerWidget {
     }
     return SelahPage(
       backTo: '/c/${church.slug}',
-      actions: const [LanguageMenu(), SizedBox(width: 8)],
+      actions: const [LanguageMenu(pageAction: true), SizedBox(width: 8)],
       children: [...beforePath, path, ...afterPath],
     );
   }

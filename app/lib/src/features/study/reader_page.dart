@@ -41,7 +41,7 @@ class ReaderPage extends ConsumerWidget {
       if (original == null || s == null || day == null) {
         return SelahPage(
           backTo: backTo,
-          actions: const [LanguageMenu(), SizedBox(width: 8)],
+          actions: const [LanguageMenu(pageAction: true), SizedBox(width: 8)],
           children: [Text(l.studyNotFound, style: text.bodyLarge)],
         );
       }
@@ -54,13 +54,13 @@ class ReaderPage extends ConsumerWidget {
     return study.when(
       loading: () => SelahPage(
         backTo: backTo,
-        actions: const [LanguageMenu(), SizedBox(width: 8)],
+        actions: const [LanguageMenu(pageAction: true), SizedBox(width: 8)],
         maxWidth: 680,
         children: const [SkeletonList(hero: true, rows: 5)],
       ),
       error: (_, _) => SelahPage(
         backTo: backTo,
-        actions: const [LanguageMenu(), SizedBox(width: 8)],
+        actions: const [LanguageMenu(pageAction: true), SizedBox(width: 8)],
         children: [Text(l.loadError, style: text.bodyLarge)],
       ),
       data: loaded,
@@ -215,7 +215,7 @@ class _Day extends ConsumerWidget {
       // The website layout: the text at reading width, the study's days beside it.
       return SelahPage(
         backTo: '/c/${church.slug}/studies/${study.slug}',
-        actions: const [LanguageMenu(), SizedBox(width: 8)],
+        actions: const [LanguageMenu(pageAction: true), SizedBox(width: 8)],
         maxWidth: Layout.readingMeasure + Space.xxl + 280,
         children: [
           TwoColumn(
@@ -232,7 +232,7 @@ class _Day extends ConsumerWidget {
     }
     return SelahPage(
       backTo: '/c/${church.slug}/studies/${study.slug}',
-      actions: const [LanguageMenu(), SizedBox(width: 8)],
+      actions: const [LanguageMenu(pageAction: true), SizedBox(width: 8)],
       maxWidth: 680,
       children: content,
     );

@@ -43,7 +43,7 @@ class SiteHeaderTrailing extends ConsumerWidget {
               ? ChurchSwitcher(current: church, admin: false)
               : Text(church.name, style: Theme.of(context).textTheme.bodyMedium),
         const SizedBox(width: Space.s),
-        const LanguageMenu(inHeader: true),
+        const LanguageMenu(),
       ],
     );
   }

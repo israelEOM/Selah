@@ -10,6 +10,7 @@ import 'package:selah/src/app/theme_mode.dart';
 import 'package:selah/src/core/models.dart';
 import 'package:selah/src/data/current_church.dart';
 import 'package:selah/src/data/providers.dart';
+import 'package:selah/src/features/home/language_menu.dart';
 import 'package:selah/src/features/profile/profile_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -178,5 +179,10 @@ void main() {
     await _pump(tester, size: const Size(1280, 900), platform: TargetPlatform.android);
     expect(tester.getSize(find.ancestor(of: find.text('Iglesia Vida Nueva'), matching: find.byType(Card)).first).width,
         lessThanOrEqualTo(640));
+  });
+
+  testWidgets('Perfil on desktop still offers the language menu', (tester) async {
+    await _pump(tester, size: const Size(1280, 900), platform: TargetPlatform.android);
+    expect(find.descendant(of: find.byType(LanguageMenu), matching: find.byType(PopupMenuButton<String>)), findsOneWidget);
   });
 }
