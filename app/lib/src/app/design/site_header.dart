@@ -42,8 +42,9 @@ class SiteHeader extends StatelessWidget {
                   if (i > 0) const SizedBox(width: Space.s),
                   _Link(label: tab.label, selected: i == selected, onPressed: () => onSelect(i)),
                 ],
-                const Spacer(),
-                ?trailing,
+                // The trailing group takes what's left and shrinks (a long church name ellipsizes) before it
+                // can push the language menu off the edge.
+                Expanded(child: Align(alignment: Alignment.centerRight, child: trailing)),
               ],
             ),
           ),
@@ -66,7 +67,12 @@ class _Link extends StatelessWidget {
     final color = selected ? scheme.primary : scheme.onSurface;
     return TextButton(
       onPressed: onPressed,
-      style: TextButton.styleFrom(foregroundColor: color, textStyle: Theme.of(context).textTheme.labelLarge),
+      style: TextButton.styleFrom(foregroundColor: color, textStyle: Theme.of(context).textTheme.labelLarge).copyWith(
+        // A clear ring for keyboard users; the default focus tint is too faint on paper.
+        side: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.focused) ? BorderSide(color: scheme.primary, width: 2) : null,
+        ),
+      ),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: Space.xs),
         decoration: BoxDecoration(

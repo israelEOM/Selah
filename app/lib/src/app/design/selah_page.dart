@@ -132,6 +132,7 @@ class SelahPage extends StatelessWidget {
     );
 
     final scroll = CustomScrollView(
+      key: const PageStorageKey('selah-page'),
       physics: ios
           ? const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics())
           : const AlwaysScrollableScrollPhysics(),
@@ -176,7 +177,9 @@ class SelahPage extends StatelessWidget {
       ],
     ];
     return Scaffold(
+      // The same key as the app layout's scroll view, so crossing 1024 px keeps the scroll position.
       body: CustomScrollView(
+        key: const PageStorageKey('selah-page'),
         slivers: [
           SliverLayoutBuilder(
             builder: (context, constraints) {

@@ -174,4 +174,25 @@ void main() {
     await _pump(tester, [_women, _men, _youth, later], size: const Size(1280, 1000), platform: TargetPlatform.android);
     expect(tester.getTopLeft(find.text(_youth.title)).dy, tester.getTopLeft(find.text(_men.title)).dy);
   });
+
+  testWidgets('resizing across 1024 px keeps the scroll position', (tester) async {
+    final more = [
+      for (var d = 1; d <= 8; d++) _event('Evento $d', DateTime(2026, 11, 20 + d, 19), DateTime(2026, 11, 20 + d, 21)),
+    ];
+    await _pump(tester, [_women, ...more], size: const Size(1280, 600), platform: TargetPlatform.android);
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, -300));
+    await tester.pumpAndSettle();
+    final before = tester.state<ScrollableState>(find.byType(Scrollable).first).position.pixels;
+    expect(before, greaterThan(0));
+    tester.view.physicalSize = const Size(900, 600);
+    await tester.pumpAndSettle();
+    expect(tester.state<ScrollableState>(find.byType(Scrollable).first).position.pixels, before);
+  });
+
+  testWidgets('on a tablet the next event is as wide as the rows below it', (tester) async {
+    await _pump(tester, [_women, _men, _youth], size: const Size(900, 1200), platform: TargetPlatform.android);
+    final card = tester.getSize(find.byType(HeroCard)).width;
+    final row = tester.getSize(find.byType(EventRow).first).width;
+    expect(card, row);
+  });
 }

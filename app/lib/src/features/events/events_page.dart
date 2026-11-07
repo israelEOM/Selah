@@ -48,7 +48,7 @@ class EventsPage extends ConsumerWidget {
               Align(
                 alignment: Alignment.centerLeft,
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: Layout.readingMeasure),
+                  constraints: BoxConstraints(maxWidth: site ? Layout.readingMeasure : double.infinity),
                   child: _NextEvent(event: events.first, today: now, open: open),
                 ),
               ),

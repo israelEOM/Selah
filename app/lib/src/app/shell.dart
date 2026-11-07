@@ -41,7 +41,9 @@ class SiteHeaderTrailing extends ConsumerWidget {
         if (church != null)
           memberships.length > 1
               ? ChurchSwitcher(current: church, admin: false)
-              : Text(church.name, style: Theme.of(context).textTheme.bodyMedium),
+              : Flexible(
+                  child: Text(church.name, style: Theme.of(context).textTheme.bodyMedium, maxLines: 1, overflow: TextOverflow.ellipsis),
+                ),
         const SizedBox(width: Space.s),
         const LanguageMenu(),
       ],

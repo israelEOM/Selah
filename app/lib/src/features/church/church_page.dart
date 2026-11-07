@@ -50,7 +50,7 @@ class ChurchPage extends ConsumerWidget {
         Align(
           alignment: Alignment.centerLeft,
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: Layout.readingMeasure),
+            constraints: BoxConstraints(maxWidth: site ? Layout.readingMeasure : double.infinity),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

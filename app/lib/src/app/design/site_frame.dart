@@ -16,17 +16,20 @@ class SiteFrame extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (!siteLayout(context)) return child;
     final visible = visibleTabs(ref, AppLocalizations.of(context)!, current: selectedBranch);
     final branches = [for (final (b, _) in visible) b];
+    // One tree for both layouts, so crossing 1024 px doesn't rebuild the page.
     return Column(
       children: [
-        SiteHeader(
-          tabs: [for (final (_, tab) in visible) tab],
-          selected: branches.indexOf(selectedBranch),
-          onSelect: (i) => goToBranch(context, ref, branches[i]),
-          trailing: const SiteHeaderTrailing(),
-        ),
+        if (siteLayout(context))
+          SiteHeader(
+            tabs: [for (final (_, tab) in visible) tab],
+            selected: branches.indexOf(selectedBranch),
+            onSelect: (i) => goToBranch(context, ref, branches[i]),
+            trailing: const SiteHeaderTrailing(),
+          )
+        else
+          const SizedBox.shrink(),
         Expanded(child: child),
       ],
     );

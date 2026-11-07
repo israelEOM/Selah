@@ -137,4 +137,48 @@ void main() {
     expect(shown, findsOneWidget);
     expect(find.descendant(of: find.byKey(SiteHeader.headerKey), matching: shown), findsOneWidget);
   });
+
+  testWidgets('a long church name and large text never push the language menu off the header', (tester) async {
+    tester.view.physicalSize = const Size(1024, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    SharedPreferences.setMockInitialValues({});
+    const long = Church(id: 'A', slug: 'vida-nueva', name: 'Iglesia Cristiana Presbiteriana de Alcorcón y Comunidad de Madrid');
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        repositoryProvider.overrideWithValue(_FakeRepository()),
+        userIdProvider.overrideWith((ref) => Stream.value(null)),
+        myChurchesProvider.overrideWith((ref) async => const []),
+        isPlatformAdminProvider.overrideWith((ref) async => false),
+        currentChurchProvider.overrideWith((ref) async => long),
+        needsWelcomeProvider.overrideWith((ref) async => false),
+      ],
+      child: MaterialApp.router(
+        theme: selahLightTheme().copyWith(platform: TargetPlatform.android),
+        routerConfig: createRouter(initialLocation: '/profile'),
+        locale: const Locale('es'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(textScaler: const TextScaler.linear(1.5)),
+          child: child!,
+        ),
+      ),
+    ));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    final menu = find.descendant(of: find.byKey(SiteHeader.headerKey), matching: find.byType(LanguageMenu));
+    expect(tester.getRect(menu).right, lessThanOrEqualTo(1024));
+  });
+
+  testWidgets('a focused header link shows a primary outline', (tester) async {
+    await _pumpRouter(tester, '/');
+    final button = find.ancestor(of: _inHeader('Estudios'), matching: find.byType(TextButton));
+    Focus.of(tester.element(_inHeader('Estudios'))).requestFocus();
+    await tester.pumpAndSettle();
+    final material = tester.widget<Material>(find.descendant(of: button, matching: find.byType(Material)).first);
+    final side = (material.shape! as OutlinedBorder).side;
+    expect(side.color, selahLightTheme().colorScheme.primary);
+    expect(side.width, greaterThanOrEqualTo(2));
+  });
 }

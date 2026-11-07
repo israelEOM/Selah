@@ -173,4 +173,11 @@ void main() {
     await tester.scrollUntilVisible(find.text('Estudio cuatro'), 200, scrollable: find.byType(Scrollable).first);
     expect(top(tester, 'Estudio tres'), greaterThan(top(tester, 'Estudio dos')));
   });
+
+  testWidgets('on a tablet the church intro uses the full column', (tester) async {
+    await _pump(tester, size: const Size(900, 1200), platform: TargetPlatform.android);
+    final caps = tester.widgetList<ConstrainedBox>(find.byType(ConstrainedBox))
+        .where((b) => b.constraints.maxWidth == Layout.readingMeasure);
+    expect(caps, isEmpty);
+  });
 }
