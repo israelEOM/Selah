@@ -217,6 +217,19 @@ iOS large and slim page titles use the same serif through `cupertinoOverrideThem
 
 Tablets (600–1023) keep the app layout and one column for now.
 
+### Landing page
+
+The public front door at `/` (Spanish), `/pt/` and `/en/`. It's a static site in `site/`, not a Flutter screen: one template rendered per language by `site/build.py`, with the same tokens as CSS custom properties in `site/src/styles.css`.
+- **Returning members** (a church picked, or signed in) skip it and go straight to `/hoje`. Sign-in email links are forwarded to the app with their hash and query intact, and `/?home` always shows the page. The logic is `site/src/redirect.js`, inlined first in `<head>`.
+- **Sections, in order:**
+  1. The opening, like a book's facing pages: the conviction in the serif, and the verse as an epigraph under a short terracotta rule.
+  2. How it works, set like a table of contents through the week.
+  3. The app on a laptop and a phone, from the made-up demo church in `app/tool/demo_main.dart`.
+  4. Members and leaders, side by side and split by a rule, not cards.
+  5. The footer, with the language switcher.
+- **No eyebrow labels, no icon-card rows.** The only script is the redirect check. Each page stays within 250 KB of HTML, CSS and fonts before images.
+- **Routing:** the app answers its own addresses from `app.html`. The list lives once in `app/tool/routes.py`, which writes Cloudflare's `_redirects`.
+
 ## Elevation & Depth
 
 The design is mostly flat and tonal. Depth comes from surface lightness (paper → raised paper), not shadows. `Elevation.raised(brightness)` (one soft shadow at 8% ink, 24 blur, 6 down, in light mode, and none in dark mode) is reserved for floating elements; nothing uses it yet. The desktop top navigation and floating buttons will. On iOS 26 the tab bar is native Liquid Glass.
