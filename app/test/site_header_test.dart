@@ -109,4 +109,24 @@ void main() {
     final style = DefaultTextStyle.of(tester.element(_inHeader('Eventos'))).style.merge(eventos.style);
     expect(style.color, selahLightTheme().colorScheme.primary);
   });
+
+  testWidgets('a reader opened from a link shows the header with Estudos selected', (tester) async {
+    await _pumpRouter(tester, '/c/vida-nueva/studies/retiro/day/1');
+    expect(find.byKey(SiteHeader.headerKey), findsOneWidget);
+    final estudios = tester.widget<Text>(_inHeader('Estudios'));
+    final style = DefaultTextStyle.of(tester.element(_inHeader('Estudios'))).style.merge(estudios.style);
+    expect(style.color, selahLightTheme().colorScheme.primary);
+  });
+
+  testWidgets('the header on the study page goes to Hoje', (tester) async {
+    final router = await _pumpRouter(tester, '/c/vida-nueva/studies/retiro');
+    await tester.tap(_inHeader('Hoy'));
+    await tester.pumpAndSettle();
+    expect(_path(router), '/');
+  });
+
+  testWidgets('the study page on a phone has no header', (tester) async {
+    await _pumpRouter(tester, '/c/vida-nueva/studies/retiro', size: const Size(390, 844));
+    expect(find.byKey(SiteHeader.headerKey), findsNothing);
+  });
 }

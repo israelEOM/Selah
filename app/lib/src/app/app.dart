@@ -25,6 +25,7 @@ import '../features/today/today_page.dart';
 import '../features/welcome/welcome_page.dart';
 import '../l10n/locale.dart';
 import 'design/adaptive_tab_bar.dart';
+import 'design/site_frame.dart';
 import 'shell.dart';
 import 'theme.dart';
 import 'theme_mode.dart';
@@ -108,18 +109,22 @@ GoRouter createRouter({String initialLocation = '/'}) {
         _page(
           path: '/c/:church/studies/:slug',
           parentNavigatorKey: rootNavigatorKey,
-          builder: (_, state) => _inChurch(state, (church) => StudyPage(church: church, slug: state.pathParameters['slug']!)),
+          builder: (_, state) => SiteFrame(
+            child: _inChurch(state, (church) => StudyPage(church: church, slug: state.pathParameters['slug']!)),
+          ),
         ),
         _page(
           path: '/c/:church/studies/:slug/day/:number',
           parentNavigatorKey: rootNavigatorKey,
-          builder: (_, state) => _inChurch(
-            state,
-            (church) => ReaderPage(
-              church: church,
-              slug: state.pathParameters['slug']!,
-              dayNumber: int.tryParse(state.pathParameters['number']!) ?? 0,
-              initialStudy: state.extra is PublicStudy ? state.extra as PublicStudy : null,
+          builder: (_, state) => SiteFrame(
+            child: _inChurch(
+              state,
+              (church) => ReaderPage(
+                church: church,
+                slug: state.pathParameters['slug']!,
+                dayNumber: int.tryParse(state.pathParameters['number']!) ?? 0,
+                initialStudy: state.extra is PublicStudy ? state.extra as PublicStudy : null,
+              ),
             ),
           ),
         ),
