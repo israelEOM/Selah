@@ -1,0 +1,66 @@
+/* Selah landing page. Tokens mirror DESIGN.md; keep them in step with app/lib/src/app/theme.dart. */
+@font-face { font-family: "Source Serif 4"; src: url("/site/fonts/SourceSerif4-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Source Serif 4"; src: url("/site/fonts/SourceSerif4-It.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: "Source Serif 4"; src: url("/site/fonts/SourceSerif4-Semibold.woff2") format("woff2"); font-weight: 600; font-style: normal; font-display: swap; }
+
+:root {
+  color-scheme: light dark;
+  --paper: #FAF7F2;
+  --paper-raised: #F1EBE1;
+  --ink: #262320;
+  --ink-muted: #6F655A;
+  --green: #2F5D4A;
+  --on-green: #FAF7F2;
+  --hero-start: #2F5D4A;
+  --hero-end: #244A3B;
+  --hero-text: #FAF7F2;
+  --terracotta: #A65033;
+  --hairline: rgba(111, 101, 90, 0.3);
+
+  --serif: "Source Serif 4", Georgia, serif;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --space-xs: 4px; --space-s: 8px; --space-m: 12px; --space-l: 16px; --space-xl: 24px;
+  --space-xxl: 32px; --space-section: 40px; --space-xxxl: 48px;
+  --radius-control: 14px; --radius-row: 20px; --radius-card: 28px; --radius-chip: 999px;
+
+  --max-content: 1200px;
+  --reading: 680px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #1E1C1A;
+    --paper-raised: #272421;
+    --ink: #EDE8E1;
+    --ink-muted: #9C948A;
+    --green: #A9CDB8;
+    --on-green: #1E1C1A;
+    --hero-start: #26332C;
+    --hero-end: #1F2A24;
+    --hero-text: #EDE8E1;
+    --terracotta: #E0906E;
+    --hairline: rgba(156, 148, 138, 0.3);
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 17px/1.55 var(--sans); }
+img { max-width: 100%; height: auto; display: block; }
+a { color: var(--green); }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--green); outline-offset: 3px; border-radius: 6px; }
+
+h1, h2, h3 { font-family: var(--serif); font-weight: 600; letter-spacing: -0.01em; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2.25rem, 5vw, 3.5rem); line-height: 1.08; }
+h2 { font-size: clamp(1.75rem, 3.2vw, 2.25rem); line-height: 1.15; }
+h3 { font-size: 1.25rem; line-height: 1.3; }
+
+.wrap { width: 100%; max-width: var(--max-content); margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+@media (min-width: 600px) { .wrap { padding-left: var(--space-xl); padding-right: var(--space-xl); } }
+main > section { padding-block: var(--space-xxxl); }
+
+.top { border-bottom: 1px solid var(--hairline); }
+.top-inner { display: flex; align-items: center; justify-content: space-between; min-height: 64px; }
+.wordmark { font-family: var(--serif); font-weight: 600; font-size: 1.25rem; color: var(--ink); text-decoration: none; }
+.top-link { font-weight: 600; font-size: 15px; text-decoration: none; }
