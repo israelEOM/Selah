@@ -1,5 +1,6 @@
 // Runs first on the landing page, before it paints. Returning members go straight to Today, links back from
-// sign-in emails reach the app intact, and a first visit on the Spanish page follows the browser's language.
+// sign-in emails reach the app intact, and the Spanish root page follows the language picked on the
+// switcher, or the browser's on a first visit.
 function landingDecision({ search, hash, pathname, language, storage }) {
   var query = new URLSearchParams(search);
   if (/(?:^|[#&])(?:access_token|error|type)=/.test(hash) || query.has('code') || query.has('error')) {
@@ -15,11 +16,11 @@ function landingDecision({ search, hash, pathname, language, storage }) {
     return null;
   }
   if (member) return '/hoje';
-  if (pathname === '/' && chosen === null) {
-    var lang = (language || '').toLowerCase();
-    if (lang.indexOf('pt') === 0) return '/pt/';
-    if (lang.indexOf('en') === 0) return '/en/';
-  }
+  if (pathname !== '/') return null;
+  // A language picked on the switcher wins; otherwise a first visit follows the browser.
+  var lang = (chosen || language || '').toLowerCase();
+  if (lang.indexOf('pt') === 0) return '/pt/';
+  if (lang.indexOf('en') === 0) return '/en/';
   return null;
 }
 

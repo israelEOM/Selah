@@ -136,6 +136,15 @@ class BuildTest(unittest.TestCase):
             self.assertIn(f"<loc>https://selah-226.pages.dev{path}</loc>", sitemap)
         self.assertIn('hreflang="pt"', sitemap)
 
+    def test_wordmark_stays_in_the_page_language(self):
+        for lang, path in [("es", "/"), ("pt", "/pt/"), ("en", "/en/")]:
+            with self.subTest(lang=lang):
+                self.assertIn(f'<a class="wordmark" href="{path}">', self.pages[lang])
+
+    def test_robots_hides_the_app_shell_address(self):
+        with open(os.path.join(self.out, "robots.txt"), encoding="utf-8") as f:
+            self.assertIn("Disallow: /app", f.read())
+
 
 if __name__ == "__main__":
     unittest.main()

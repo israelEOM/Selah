@@ -52,6 +52,7 @@ def render(lang: str) -> str:
         lang=lang,
         og_locale=LOCALES[lang],
         og_image=f"{ORIGIN}/site/img/og.png",
+        home=PAGES[lang],
         canonical=ORIGIN + PAGES[lang],
         alternates=_alternates(),
     )

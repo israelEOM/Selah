@@ -55,3 +55,12 @@ test('storage that throws shows the landing page', () => {
 test('a member on a Portuguese browser goes to the app, not /pt/', () => {
   assert.equal(landingDecision(visit({ language: 'pt-BR', storage: storage({ 'flutter.church': '"selah"' }) })), '/hoje');
 });
+
+test('a chosen language sticks at the root', () => {
+  assert.equal(landingDecision(visit({ language: 'es-ES', storage: storage({ 'site.lang': 'en' }) })), '/en/');
+  assert.equal(landingDecision(visit({ language: 'en-US', storage: storage({ 'site.lang': 'pt' }) })), '/pt/');
+});
+
+test('a chosen language never moves you off a language page', () => {
+  assert.equal(landingDecision(visit({ pathname: '/en/', storage: storage({ 'site.lang': 'pt' }) })), null);
+});
