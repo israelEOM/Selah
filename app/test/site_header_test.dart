@@ -10,6 +10,7 @@ import 'package:selah/src/core/models.dart';
 import 'package:selah/src/data/current_church.dart';
 import 'package:selah/src/data/providers.dart';
 import 'package:selah/src/data/repository.dart';
+import 'package:selah/src/features/home/language_menu.dart';
 import 'package:selah/src/features/welcome/welcome_state.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -128,5 +129,12 @@ void main() {
   testWidgets('the study page on a phone has no header', (tester) async {
     await _pumpRouter(tester, '/c/vida-nueva/studies/retiro', size: const Size(390, 844));
     expect(find.byKey(SiteHeader.headerKey), findsNothing);
+  });
+
+  testWidgets('the study page on desktop has one language menu, in the header', (tester) async {
+    await _pumpRouter(tester, '/c/vida-nueva/studies/retiro');
+    final shown = find.descendant(of: find.byType(LanguageMenu), matching: find.byType(PopupMenuButton<String>));
+    expect(shown, findsOneWidget);
+    expect(find.descendant(of: find.byKey(SiteHeader.headerKey), matching: shown), findsOneWidget);
   });
 }

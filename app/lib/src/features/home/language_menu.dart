@@ -2,16 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../../app/theme.dart';
 import '../../l10n/locale.dart';
 
 /// Each language is named in itself, whatever the current interface language.
 const _languageNames = {'es': 'Español', 'en': 'English', 'pt': 'Português'};
 
 class LanguageMenu extends ConsumerWidget {
-  const LanguageMenu({super.key});
+  const LanguageMenu({super.key, this.inHeader = false});
+
+  /// The website header's own copy. In the website layout the header carries the menu, so the copies in
+  /// page actions hide.
+  final bool inHeader;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (!inHeader && siteLayout(context)) return const SizedBox.shrink();
     final current = ref.watch(appLocaleProvider).languageCode;
     return PopupMenuButton<String>(
       icon: const Icon(Icons.translate),
