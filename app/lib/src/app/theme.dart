@@ -124,9 +124,9 @@ const _light = _Palette(
   tones: SelahTones(
     surface: Color(0xFFF1EBE1),
     muted: Color(0xFF6F655A),
-    accent: Color(0xFFB0573A),
+    accent: Color(0xFFA65033),
     done: Color(0xFF2F5D4A),
-    today: Color(0xFFB0573A),
+    today: Color(0xFFA65033),
     heroStart: Color(0xFF2F5D4A),
     heroEnd: Color(0xFF244A3B),
   ),
@@ -172,7 +172,16 @@ ThemeData _build(_Palette p) {
         secondary: p.tones.accent,
         surface: p.background,
         onSurface: p.text,
+        // Every container steps from the page toward the raised surface, so none picks up the seed's green-gray.
+        surfaceContainerLowest: p.background,
+        surfaceContainerLow: Color.lerp(p.background, p.tones.surface, 0.25),
+        surfaceContainer: Color.lerp(p.background, p.tones.surface, 0.5),
+        surfaceContainerHigh: Color.lerp(p.background, p.tones.surface, 0.75),
         surfaceContainerHighest: p.tones.surface,
+        outline: p.tones.muted,
+        outlineVariant: p.tones.muted.withValues(alpha: 0.3),
+        inverseSurface: p.text,
+        onInverseSurface: p.background,
       );
   return ThemeData(
     brightness: p.brightness,
@@ -237,6 +246,13 @@ ThemeData _build(_Palette p) {
         shape: const StadiumBorder(),
         padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
         textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: p.primary,
+        side: BorderSide(color: p.primary),
+        shape: const StadiumBorder(),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(

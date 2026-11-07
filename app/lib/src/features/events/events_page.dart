@@ -79,7 +79,7 @@ class _NextEvent extends StatelessWidget {
     final url = event.url;
     final card = HeroCard(
       eyebrowAccessory: Text(heroDayLabel(event.localStart, today, l).toUpperCase(),
-          style: text.labelSmall?.copyWith(color: tones.accent, fontWeight: FontWeight.w700)),
+          style: text.labelSmall?.copyWith(color: onHero.withValues(alpha: 0.8))),
       title: event.title,
       footer: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

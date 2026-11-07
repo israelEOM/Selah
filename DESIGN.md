@@ -8,8 +8,7 @@ colors:
   ink-muted: "#6F655A"
   selah-green: "#2F5D4A"
   selah-green-deep: "#244A3B"
-  terracotta: "#B0573A"
-  hero-text: "#F5F0E6"
+  terracotta: "#A65033"
   charcoal-dark: "#1E1C1A"
   charcoal-raised-dark: "#272421"
   ink-dark: "#EDE8E1"
@@ -110,7 +109,7 @@ components:
     rounded: "{rounded.row}"
   hero-card:
     backgroundColor: "{colors.selah-green}"
-    textColor: "{colors.hero-text}"
+    textColor: "{colors.paper}"
     rounded: "{rounded.card}"
     padding: "22px"
   input:
@@ -145,16 +144,18 @@ Warm, low-saturation neutrals with one deep green and one earthy highlight.
 - **Selah green** (`#2F5D4A`; dark mode **sage** `#A9CDB8`): the hero card, primary buttons, the active tab, links and done ticks. In dark mode controls use sage so they don't glow, and the hero card uses deep green `#26332C` → `#1F2A24`.
 
 ### Secondary
-- **Terracotta** (`#B0573A`; dark `#E0906E`): highlights only. Use it for today's marker in the week row, unread or new items, progress, small badges and eyebrow labels. It's never a fill for a card, button, banner or gradient.
+- **Terracotta** (`#A65033`; dark `#E0906E`): highlights only. Use it for today's marker in the week row, unread or new items, progress, small badges and eyebrow labels on paper or raised paper. It's never a fill for a card, button, banner or gradient, and never sits on the green hero card (it fails contrast there).
 
 ### Neutral
 - **Paper** (`#FAF7F2`; dark **charcoal** `#1E1C1A`): the page background.
 - **Raised paper** (`#F1EBE1`; dark `#272421`): cards, rows, inputs and the tab bar. In dark mode, surfaces get lighter as they rise.
 - **Ink** (`#262320`; dark `#EDE8E1`): text.
 - **Muted ink** (`#6F655A`; dark `#9C948A`): secondary text, dates and captions.
-- **Hero text** (`#F5F0E6`): text on the green hero card.
+- **Text on the hero card:** paper `#FAF7F2` in light mode, ink `#EDE8E1` in dark mode (`onPrimary` / `onSurface`).
 
-**Contrast:** every text pair above meets WCAG AA (4.5:1) on both the page and raised surfaces, in both themes. `app/test/contrast_test.dart` enforces it, so run it whenever a color changes.
+**Contrast:** every text pair above meets WCAG AA (4.5:1) on both the page and raised surfaces, in both themes; borders (`outline`, muted ink) meet 3:1. `app/test/contrast_test.dart` enforces it, so run it whenever a color changes.
+
+**Material roles:** the Material `ColorScheme` is pinned to this palette. The `surfaceContainer*` roles step from paper to raised paper, `outline` is muted ink, and snackbars are ink on paper. No cool green-gray roles come from the seed color.
 
 ## Typography
 
@@ -177,7 +178,7 @@ Warm, low-saturation neutrals with one deep green and one earthy highlight.
 | `serifQuote()` | serif italic | 22 / 1.35 | 400 |
 | `serifReading()` | serif | 18 / 1.7 | 400 |
 
-iOS large and slim page titles use the same serif through `cupertinoOverrideTheme`. Pages use these roles; they never set a raw `fontSize`.
+iOS large and slim page titles use the same serif through `cupertinoOverrideTheme`. Pages use these roles; they never set a raw `fontSize`. The only exceptions are the frosted tab bar's 12 px label and Google's sign-in button (brand rules).
 
 ## Layout
 
@@ -208,7 +209,7 @@ Desktop page direction:
 
 ## Elevation & Depth
 
-The design is mostly flat and tonal. Depth comes from surface lightness (paper → raised paper), not shadows. Only floating elements, such as the tab bar, get `Elevation.raised(brightness)`: one soft shadow at 8% ink, 24 blur, 6 down, in light mode, and none in dark mode. On iOS 26 the tab bar is native Liquid Glass.
+The design is mostly flat and tonal. Depth comes from surface lightness (paper → raised paper), not shadows. `Elevation.raised(brightness)` (one soft shadow at 8% ink, 24 blur, 6 down, in light mode, and none in dark mode) is reserved for floating elements; nothing uses it yet. The desktop top navigation and floating buttons will. On iOS 26 the tab bar is native Liquid Glass.
 
 ## Shapes
 
@@ -221,10 +222,10 @@ Soft, rounded and friendly, never sharp.
 ## Components
 
 All components live in `app/lib/src/app/design/` and read only tokens.
-- **Hero card** (`HeroCard`): today's study. It has a green gradient (`heroStart` → `heroEnd`), hero-text color, `Radii.card` and 22 padding. It holds an eyebrow, a serif title and a serif italic quote. It's the one large green surface per screen.
+- **Hero card** (`HeroCard`): today's study. It has a green gradient (`heroStart` → `heroEnd`), paper-colored text in light mode (ink in dark mode), `Radii.card` and 22 padding. It holds an eyebrow, a serif title and a serif italic quote. It's the one large green surface per screen.
 - **Row** (`SelahRow`): raised paper, `Radii.row`, ink title, muted subtitle. Presses spring (`Pressable`).
 - **Tab bar** (`AdaptiveTabBar`): native glass on iOS 26, a frosted pill elsewhere on iOS, and a Material `NavigationBar` on raised paper on Android and web. The selected tab is green.
-- **Buttons:** primary is a filled green stadium with paper-colored text. Secondary is an outlined stadium in green.
+- **Buttons:** primary is a filled green stadium with paper-colored text. Secondary is an outlined stadium with green text and a green border.
 - **Inputs:** a raised paper fill with no border, `Radii.control`, and a 1.5 px green border on focus.
 - **Eyebrow** (`Eyebrow`): `labelSmall`, upper case, terracotta. It sits above a section heading.
 - **Skeletons** (`skeleton.dart`): raised-paper shapes matching the content while it loads; never a bare spinner on member screens.

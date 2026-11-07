@@ -11,7 +11,7 @@ void main() {
     expect(t.colorScheme.onSurface, const Color(0xFF262320));
     expect(t.colorScheme.primary, const Color(0xFF2F5D4A));
     expect(tones.surface, const Color(0xFFF1EBE1));
-    expect(tones.accent, const Color(0xFFB0573A));
+    expect(tones.accent, const Color(0xFFA65033));
     expect(tones.heroStart, const Color(0xFF2F5D4A));
   });
 

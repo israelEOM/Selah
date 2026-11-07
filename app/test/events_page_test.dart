@@ -159,4 +159,12 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     expect(fake.calls, 2);
   });
+
+  testWidgets('nothing on the event hero card is terracotta', (tester) async {
+    await _pump(tester, [_women, _men]);
+    final accent = selahLightTheme().extension<SelahTones>()!.accent;
+    final texts = tester.widgetList<Text>(find.descendant(of: find.byType(HeroCard), matching: find.byType(Text)));
+    expect(texts, isNotEmpty);
+    expect(texts.where((t) => t.style?.color == accent), isEmpty);
+  });
 }

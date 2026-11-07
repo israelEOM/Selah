@@ -25,8 +25,30 @@ void main() {
       expect(contrast(s.primary, bg), greaterThanOrEqualTo(4.5)); // links and labels
       expect(contrast(s.onPrimary, s.primary), greaterThanOrEqualTo(4.5)); // button text
       expect(contrast(tones.accent, bg), greaterThanOrEqualTo(4.5)); // small terracotta labels
-      expect(contrast(const Color(0xFFF5F0E6), tones.heroStart), greaterThanOrEqualTo(4.5)); // text on hero
-      expect(contrast(const Color(0xFFF5F0E6), tones.heroEnd), greaterThanOrEqualTo(4.5));
+      expect(contrast(tones.accent, tones.surface), greaterThanOrEqualTo(4.5)); // eyebrows inside cards
+      // HeroCard's text color: onPrimary in light mode, onSurface in dark mode.
+      final onHero = theme.brightness == Brightness.light ? s.onPrimary : s.onSurface;
+      expect(contrast(onHero, tones.heroStart), greaterThanOrEqualTo(4.5));
+      expect(contrast(onHero, tones.heroEnd), greaterThanOrEqualTo(4.5));
+      expect(contrast(s.outline, bg), greaterThanOrEqualTo(3)); // borders
+      expect(contrast(s.onInverseSurface, s.inverseSurface), greaterThanOrEqualTo(4.5)); // snackbars
+    });
+
+    test('$name surface containers are warm and never darker than the page in dark mode', () {
+      final s = theme.colorScheme;
+      final bg = theme.scaffoldBackgroundColor;
+      for (final c in [s.surfaceContainerLowest, s.surfaceContainerLow, s.surfaceContainer, s.surfaceContainerHigh, s.surfaceContainerHighest]) {
+        expect(c.r, greaterThanOrEqualTo(c.b), reason: '$c should lean warm, not green-gray');
+        expect(c.r, greaterThanOrEqualTo(c.g), reason: '$c should not lean green');
+        if (theme.brightness == Brightness.dark) {
+          expect(c.computeLuminance(), greaterThanOrEqualTo(bg.computeLuminance()), reason: '$c is darker than the page');
+        }
+      }
+    });
+
+    test('$name outlined buttons have a green border', () {
+      final side = theme.outlinedButtonTheme.style!.side!.resolve({});
+      expect(side!.color, theme.colorScheme.primary);
     });
 
     test('$name background is neither pure white nor pure black', () {

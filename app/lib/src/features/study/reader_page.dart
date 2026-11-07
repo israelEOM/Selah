@@ -198,7 +198,11 @@ class _Day extends ConsumerWidget {
           ),
         ],
         const SizedBox(height: 28),
-        Row(
+        // Wraps so the two buttons stack at large text sizes instead of overflowing.
+        Wrap(
+          alignment: day.number > 1 ? WrapAlignment.spaceBetween : WrapAlignment.end,
+          spacing: Space.m,
+          runSpacing: Space.s,
           children: [
             if (day.number > 1)
               TextButton.icon(
@@ -206,7 +210,6 @@ class _Day extends ConsumerWidget {
                 icon: const Icon(Icons.arrow_back, size: 18),
                 label: Text(l.previousDay),
               ),
-            const Spacer(),
             if (day.number < total)
               FilledButton(onPressed: () => _goToDay(context, dayPath(day.number + 1), original), child: Text(l.nextDay)),
           ],

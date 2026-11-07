@@ -57,7 +57,7 @@ final _json = {
   'devotional_days': [_day(3), _day(1), _day(2)],
 };
 
-Future<GoRouter> _pump(WidgetTester tester, String location, {Map<String, Object> prefs = const {}}) async {
+Future<GoRouter> _pump(WidgetTester tester, String location, {Map<String, Object> prefs = const {}, double textScale = 1}) async {
   SharedPreferences.setMockInitialValues(prefs);
   final router = GoRouter(initialLocation: location, routes: [
     GoRoute(path: '/', builder: (_, _) => const Text('HOME')),
@@ -83,6 +83,10 @@ Future<GoRouter> _pump(WidgetTester tester, String location, {Map<String, Object
       locale: const Locale('es'),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(textScale)),
+        child: child!,
+      ),
     ),
   ));
   await tester.pumpAndSettle();
@@ -286,5 +290,13 @@ void main() {
     await tester.tap(find.text('Título día 2'));
     await tester.pumpAndSettle();
     expect(extra, isA<PublicStudy>());
+  });
+
+  testWidgets('the reader fits at 200% text size', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/2', textScale: 2);
+    expect(find.text('Título día 2'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }
