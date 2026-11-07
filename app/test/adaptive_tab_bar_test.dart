@@ -91,9 +91,9 @@ Future<void> _pumpRouter(WidgetTester tester, String location, {TargetPlatform? 
   await tester.pumpAndSettle();
 }
 
-/// A 1000×800 window.
+/// A 1280×800 window: a desktop.
 void _wide(WidgetTester tester) {
-  tester.view.physicalSize = const Size(1000, 800);
+  tester.view.physicalSize = const Size(1280, 800);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
 }
@@ -161,11 +161,13 @@ void main() {
     expect((after - tester.getCenter(find.text('Perfil')).dx).abs(), lessThan(1));
   });
 
-  testWidgets('a wide Android window shows a navigation rail', (tester) async {
+  testWidgets('a desktop window shows the site header instead of a tab bar', (tester) async {
     _wide(tester);
     await _pumpRouter(tester, '/profile', platform: TargetPlatform.android);
-    expect(find.byType(NavigationRail), findsOneWidget);
+    expect(find.byKey(SiteHeader.headerKey), findsOneWidget);
+    expect(find.byType(NavigationRail), findsNothing);
     expect(find.byType(NavigationBar), findsNothing);
+    expect(find.descendant(of: find.byKey(SiteHeader.headerKey), matching: find.text('Perfil')), findsOneWidget);
   });
 
   testWidgets('a wide iPad window keeps the floating bar', (tester) async {

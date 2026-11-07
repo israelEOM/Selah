@@ -9,12 +9,12 @@ import '../../core/models.dart';
 import '../../data/providers.dart';
 import 'event_labels.dart';
 
-void _openExternally(Uri uri) => launchUrl(uri, mode: LaunchMode.externalApplication);
+void openExternally(Uri uri) => launchUrl(uri, mode: LaunchMode.externalApplication);
 
 /// A church's upcoming events from its own calendar: the next one first, then the rest. Events open on the
 /// church's site.
 class EventsPage extends ConsumerWidget {
-  const EventsPage({super.key, required this.church, this.open = _openExternally, this.now});
+  const EventsPage({super.key, required this.church, this.open = openExternally, this.now});
 
   final Church church;
   final void Function(Uri) open;
@@ -30,8 +30,10 @@ class EventsPage extends ConsumerWidget {
     // The app can sit in memory for days, so what's stored may have ended since it was read.
     final events = ref.watch(upcomingEventsProvider(church.id)).whenData((events) =>
         events.where((e) => e.endsAt.isAfter(now)).toList()..sort((a, b) => a.startsAt.compareTo(b.startsAt)));
+    final site = siteLayout(context);
     return SelahPage(
       onRefresh: () => ref.refresh(upcomingEventsProvider(church.id).future),
+      wide: site,
       children: [
         Eyebrow(church.name),
         const SizedBox(height: Space.s),
@@ -42,16 +44,30 @@ class EventsPage extends ConsumerWidget {
           error: (_, _) => [Text(l.loadError, style: text.bodyMedium)],
           data: (events) => [
             if (events.isEmpty) Text(l.eventsNone, style: text.bodyLarge),
-            if (events.isNotEmpty) _NextEvent(event: events.first, today: now, open: open),
+            if (events.isNotEmpty)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: site ? Layout.readingMeasure : double.infinity),
+                  child: _NextEvent(event: events.first, today: now, open: open),
+                ),
+              ),
             if (events.length > 1) ...[
               const SizedBox(height: Space.xl),
               Eyebrow(l.eventsLater),
               const SizedBox(height: Space.m),
-              for (final event in events.skip(1))
-                Padding(
-                  padding: const EdgeInsets.only(bottom: Space.s + 2),
-                  child: _EventRow(event: event, open: open),
-                ),
+              if (site)
+                CardGrid(
+                  minTileWidth: 340,
+                  maxColumns: 2,
+                  children: [for (final event in events.skip(1)) EventRow(event: event, open: open)],
+                )
+              else
+                for (final event in events.skip(1))
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: Space.s + 2),
+                    child: EventRow(event: event, open: open),
+                  ),
             ],
           ],
         ),
@@ -79,7 +95,7 @@ class _NextEvent extends StatelessWidget {
     final url = event.url;
     final card = HeroCard(
       eyebrowAccessory: Text(heroDayLabel(event.localStart, today, l).toUpperCase(),
-          style: text.labelSmall?.copyWith(color: tones.accent, fontWeight: FontWeight.w700)),
+          style: text.labelSmall?.copyWith(color: onHero.withValues(alpha: 0.8))),
       title: event.title,
       footer: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -107,8 +123,9 @@ class _NextEvent extends StatelessWidget {
 }
 
 /// A later event: its date badge, title and time.
-class _EventRow extends StatelessWidget {
-  const _EventRow({required this.event, required this.open});
+/// One event as a row: the date in a small block, the title and the times. Opens the event's page when it has one.
+class EventRow extends StatelessWidget {
+  const EventRow({super.key, required this.event, this.open = openExternally});
 
   final ChurchEvent event;
   final void Function(Uri) open;
@@ -130,7 +147,7 @@ class _EventRow extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 6),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(Radii.control),
             ),
             child: Column(children: [
               Text('${event.localStart.day}', style: text.titleLarge?.copyWith(fontWeight: FontWeight.w700)),

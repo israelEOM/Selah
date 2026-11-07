@@ -57,7 +57,19 @@ final _json = {
   'devotional_days': [_day(3), _day(1), _day(2)],
 };
 
-Future<GoRouter> _pump(WidgetTester tester, String location, {Map<String, Object> prefs = const {}}) async {
+Future<GoRouter> _pump(
+  WidgetTester tester,
+  String location, {
+  Map<String, Object> prefs = const {},
+  double textScale = 1,
+  Size? size,
+  TargetPlatform? platform,
+}) async {
+  if (size != null) {
+    tester.view.physicalSize = size;
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+  }
   SharedPreferences.setMockInitialValues(prefs);
   final router = GoRouter(initialLocation: location, routes: [
     GoRoute(path: '/', builder: (_, _) => const Text('HOME')),
@@ -78,11 +90,15 @@ Future<GoRouter> _pump(WidgetTester tester, String location, {Map<String, Object
           key == (churchId: 'A', slug: 'retiro-espiritual') ? PublicStudy.fromJson(_json) : null),
     ],
     child: MaterialApp.router(
-      theme: selahLightTheme(),
+      theme: selahLightTheme().copyWith(platform: platform),
       routerConfig: router,
       locale: const Locale('es'),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(textScale)),
+        child: child!,
+      ),
     ),
   ));
   await tester.pumpAndSettle();
@@ -286,5 +302,41 @@ void main() {
     await tester.tap(find.text('Título día 2'));
     await tester.pumpAndSettle();
     expect(extra, isA<PublicStudy>());
+  });
+
+  testWidgets('the reader fits at 200% text size', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/2', textScale: 2);
+    expect(find.text('Título día 2'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  const desktop = Size(1280, 900);
+
+  testWidgets('the study page puts the days beside the summary on desktop', (tester) async {
+    await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual', size: desktop, platform: TargetPlatform.android);
+    expect(tester.getTopLeft(find.text('Título día 1')).dx, greaterThan(tester.getTopRight(find.text('La necesidad del retiro espiritual')).dx));
+  });
+
+  testWidgets("the reader lists the study's days beside the text on desktop", (tester) async {
+    await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/2', size: desktop, platform: TargetPlatform.android);
+    for (final n in [1, 2, 3]) {
+      expect(find.textContaining('Título día $n'), findsWidgets);
+    }
+    expect(tester.getSize(find.text('Reflexión 2')).width, lessThanOrEqualTo(680));
+  });
+
+  testWidgets("tapping a day in the reader's side column opens it", (tester) async {
+    await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/2', size: desktop, platform: TargetPlatform.android);
+    await tester.tap(find.textContaining('Título día 3'));
+    await tester.pumpAndSettle();
+    expect(find.text('Reflexión 3'), findsOneWidget);
+  });
+
+  testWidgets('the reader on a phone has no side column', (tester) async {
+    await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/2', size: const Size(390, 844), platform: TargetPlatform.android);
+    expect(find.textContaining('Título día 1'), findsNothing);
+    expect(find.textContaining('Título día 3'), findsNothing);
   });
 }

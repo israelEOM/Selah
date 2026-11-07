@@ -22,10 +22,12 @@ class ChurchPage extends ConsumerWidget {
     final language = ref.watch(appLocaleProvider).languageCode;
     final roleState = ref.watch(churchRoleProvider(church.id));
     final signedIn = ref.watch(userIdProvider).value != null;
+    final site = siteLayout(context);
     return SelahPage(
       title: church.name,
       onRefresh: () => ref.refresh(publishedStudiesProvider(church.id).future),
       lazy: true,
+      wide: site,
       actions: [
         if (signedIn && roleState.hasValue && roleState.value == null)
           TextButton(
@@ -44,11 +46,23 @@ class ChurchPage extends ConsumerWidget {
         const SizedBox(width: 8),
       ],
       children: [
-        Eyebrow(l.heroEyebrow),
-        const SizedBox(height: Space.m),
-        Text('${l.tagline}.', style: text.displaySmall),
-        const SizedBox(height: Space.m),
-        Text(l.heroBody, style: text.bodyLarge),
+        // On a wide page the intro keeps a reading width.
+        Align(
+          alignment: Alignment.centerLeft,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: site ? Layout.readingMeasure : double.infinity),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Eyebrow(l.heroEyebrow),
+                const SizedBox(height: Space.m),
+                Text('${l.tagline}.', style: text.displaySmall),
+                const SizedBox(height: Space.m),
+                Text(l.heroBody, style: text.bodyLarge),
+              ],
+            ),
+          ),
+        ),
         const SizedBox(height: 36),
         ...studies.when(
           loading: () => [const SkeletonList(rows: 4)],
@@ -68,16 +82,28 @@ class ChurchPage extends ConsumerWidget {
               : [
                   Eyebrow(l.devotionalOfTheWeek),
                   const SizedBox(height: Space.m),
-                  Entrance(index: 0, child: _StudyTile(church, items.first.localizedTo(language), featured: true)),
+                  Entrance(
+                    index: 0,
+                    child: _StudyTile(church, items.first.localizedTo(language), featured: true, horizontal: site),
+                  ),
                   if (items.length > 1) ...[
                     const SizedBox(height: 36),
                     Eyebrow(l.recentStudies),
                     const SizedBox(height: Space.m),
-                    for (final (i, study) in items.skip(1).indexed)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: Space.m),
-                        child: Entrance(index: i + 1, child: _StudyTile(church, study.localizedTo(language))),
-                      ),
+                    if (site)
+                      CardGrid(
+                        minTileWidth: 300,
+                        children: [
+                          for (final (i, study) in items.skip(1).indexed)
+                            Entrance(index: i + 1, child: _StudyTile(church, study.localizedTo(language))),
+                        ],
+                      )
+                    else
+                      for (final (i, study) in items.skip(1).indexed)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: Space.m),
+                          child: Entrance(index: i + 1, child: _StudyTile(church, study.localizedTo(language))),
+                        ),
                   ],
                 ],
         ),
@@ -87,17 +113,48 @@ class ChurchPage extends ConsumerWidget {
 }
 
 class _StudyTile extends StatelessWidget {
-  const _StudyTile(this.church, this.study, {this.featured = false});
+  const _StudyTile(this.church, this.study, {this.featured = false, this.horizontal = false});
 
   final Church church;
   final StudyCard study;
   final bool featured;
+
+  /// The thumbnail on the left half and the text on the right, for the featured study on a wide page.
+  final bool horizontal;
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final text = Theme.of(context).textTheme;
     final radius = BorderRadius.circular(Radii.card);
+    final thumbnail = study.thumbnailUrl == null
+        ? null
+        : AspectRatio(
+            aspectRatio: featured ? 16 / 9 : 21 / 9,
+            child: Image.network(
+              study.thumbnailUrl!,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => ColoredBox(color: context.tones.surface),
+            ),
+          );
+    final details = Padding(
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(study.title, style: featured ? text.headlineSmall : text.titleLarge),
+          const SizedBox(height: 6),
+          Text(
+            [if (study.preacher != null) study.preacher!, l.daysCount(study.numberOfDays)].join(' · '),
+            style: text.bodyMedium,
+          ),
+          if (featured && study.centralMessage != null) ...[
+            const SizedBox(height: 10),
+            Text(study.centralMessage!, style: text.bodyMedium, maxLines: 3, overflow: TextOverflow.ellipsis),
+          ],
+        ],
+      ),
+    );
     return Pressable(
       onPressed: () => context.push('/c/${church.slug}/studies/${study.slug}'),
       borderRadius: radius,
@@ -106,38 +163,9 @@ class _StudyTile extends StatelessWidget {
         decoration: BoxDecoration(color: context.tones.surface, borderRadius: radius),
         child: ClipRRect(
           borderRadius: radius,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (study.thumbnailUrl != null)
-                AspectRatio(
-                  aspectRatio: featured ? 16 / 9 : 21 / 9,
-                  child: Image.network(
-                    study.thumbnailUrl!,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => ColoredBox(color: context.tones.surface),
-                  ),
-                ),
-              Padding(
-                padding: const EdgeInsets.all(18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(study.title, style: featured ? text.headlineSmall : text.titleLarge),
-                    const SizedBox(height: 6),
-                    Text(
-                      [if (study.preacher != null) study.preacher!, l.daysCount(study.numberOfDays)].join(' · '),
-                      style: text.bodyMedium,
-                    ),
-                    if (featured && study.centralMessage != null) ...[
-                      const SizedBox(height: 10),
-                      Text(study.centralMessage!, style: text.bodyMedium, maxLines: 3, overflow: TextOverflow.ellipsis),
-                    ],
-                  ],
-                ),
-              ),
-            ],
-          ),
+          child: horizontal
+              ? Row(children: [if (thumbnail != null) Expanded(child: thumbnail), Expanded(child: details)])
+              : Column(crossAxisAlignment: CrossAxisAlignment.start, children: [?thumbnail, details]),
         ),
       ),
     );

@@ -102,7 +102,7 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
       padding: const EdgeInsets.only(bottom: 24),
       child: Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: context.tones.surface, borderRadius: BorderRadius.circular(12)),
+        decoration: BoxDecoration(color: context.tones.surface, borderRadius: BorderRadius.circular(Radii.control)),
         child: Form(
           key: _form,
           child: Column(

@@ -29,7 +29,19 @@ class _FakeRepository implements SelahRepository {
 }
 
 Future<_FakeRepository> _pump(WidgetTester tester,
-    {String? userId, ChurchRole? role, bool failJoin = false, bool roleLoading = false, bool studiesLoading = false}) async {
+    {String? userId,
+    ChurchRole? role,
+    bool failJoin = false,
+    bool roleLoading = false,
+    bool studiesLoading = false,
+    List<StudyCard>? studies,
+    Size? size,
+    TargetPlatform? platform}) async {
+  if (size != null) {
+    tester.view.physicalSize = size;
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+  }
   final fake = _FakeRepository()..failJoin = failJoin;
   final router = GoRouter(initialLocation: '/c/vida-nueva', routes: [
     GoRoute(path: '/c/vida-nueva', builder: (_, _) => const ChurchPage(church: _church)),
@@ -45,12 +57,13 @@ Future<_FakeRepository> _pump(WidgetTester tester,
       churchRoleProvider('A').overrideWith((ref) => roleLoading ? Completer<ChurchRole?>().future : Future.value(role)),
       publishedStudiesProvider('A').overrideWith((ref) => studiesLoading
           ? Completer<List<StudyCard>>().future
-          : Future.value(const [
-              StudyCard(id: '1', slug: 'retiro-espiritual', title: 'La necesidad del retiro espiritual', numberOfDays: 3),
-            ])),
+          : Future.value(studies ??
+              const [
+                StudyCard(id: '1', slug: 'retiro-espiritual', title: 'La necesidad del retiro espiritual', numberOfDays: 3),
+              ])),
     ],
     child: MaterialApp.router(
-      theme: selahLightTheme(),
+      theme: selahLightTheme().copyWith(platform: platform),
       routerConfig: router,
       locale: const Locale('es'),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -127,5 +140,44 @@ void main() {
     } finally {
       debugDefaultTargetPlatformOverride = null;
     }
+  });
+
+  const fourStudies = [
+    StudyCard(id: '1', slug: 's1', title: 'Estudio uno', numberOfDays: 3),
+    StudyCard(id: '2', slug: 's2', title: 'Estudio dos', numberOfDays: 3),
+    StudyCard(id: '3', slug: 's3', title: 'Estudio tres', numberOfDays: 3),
+    StudyCard(id: '4', slug: 's4', title: 'Estudio cuatro', numberOfDays: 3),
+  ];
+  double top(WidgetTester tester, String title) => tester.getTopLeft(find.text(title)).dy;
+
+  testWidgets('recent studies sit in a grid on desktop', (tester) async {
+    await _pump(tester, studies: fourStudies, size: const Size(1280, 900), platform: TargetPlatform.android);
+    expect(top(tester, 'Estudio tres'), top(tester, 'Estudio dos'));
+    expect(top(tester, 'Estudio cuatro'), top(tester, 'Estudio dos'));
+  });
+
+  testWidgets('one study on desktop is not stretched across the page', (tester) async {
+    await _pump(
+      tester,
+      studies: const [StudyCard(id: '1', slug: 's1', title: 'Estudio uno', numberOfDays: 3, thumbnailUrl: 'https://example.com/t.jpg')],
+      size: const Size(1280, 900),
+      platform: TargetPlatform.android,
+    );
+    final card = tester.getSize(find.ancestor(of: find.text('Estudio uno'), matching: find.byType(Pressable)).first);
+    expect(card.width, lessThanOrEqualTo(1200));
+    expect(tester.getSize(find.byType(AspectRatio).first).width, lessThanOrEqualTo(card.width * 0.55));
+  });
+
+  testWidgets('recent studies stay a list on a phone', (tester) async {
+    await _pump(tester, studies: fourStudies, size: const Size(390, 844), platform: TargetPlatform.android);
+    await tester.scrollUntilVisible(find.text('Estudio cuatro'), 200, scrollable: find.byType(Scrollable).first);
+    expect(top(tester, 'Estudio tres'), greaterThan(top(tester, 'Estudio dos')));
+  });
+
+  testWidgets('on a tablet the church intro uses the full column', (tester) async {
+    await _pump(tester, size: const Size(900, 1200), platform: TargetPlatform.android);
+    final caps = tester.widgetList<ConstrainedBox>(find.byType(ConstrainedBox))
+        .where((b) => b.constraints.maxWidth == Layout.readingMeasure);
+    expect(caps, isEmpty);
   });
 }

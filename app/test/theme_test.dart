@@ -1,41 +1,75 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:selah/src/app/theme.dart';
 
 void main() {
-  test('light scheme uses the church palette', () {
+  test('light theme is warm paper with Selah green and terracotta', () {
     final t = selahLightTheme();
-    expect(t.colorScheme.primary, const Color(0xFF2E4A38));
-    expect(t.colorScheme.onSurface, const Color(0xFF0E2341));
-    expect(t.scaffoldBackgroundColor, Colors.white);
-    expect(t.extension<SelahTones>()!.accent, const Color(0xFFF15A24));
+    final tones = t.extension<SelahTones>()!;
+    expect(t.scaffoldBackgroundColor, const Color(0xFFFAF7F2));
+    expect(t.colorScheme.onSurface, const Color(0xFF262320));
+    expect(t.colorScheme.primary, const Color(0xFF2F5D4A));
+    expect(tones.surface, const Color(0xFFF1EBE1));
+    expect(tones.accent, const Color(0xFFA65033));
+    expect(tones.heroStart, const Color(0xFF2F5D4A));
   });
 
-  test('dark scheme is near-black with green accent', () {
+  test('dark theme is warm gray, not black, with sage and terracotta', () {
     final t = selahDarkTheme();
     final tones = t.extension<SelahTones>()!;
-    expect(t.brightness, Brightness.dark);
-    expect(t.scaffoldBackgroundColor, const Color(0xFF0B0B0C));
-    expect(tones.accent, const Color(0xFF5BC49A));
-    expect(tones.done, const Color(0xFFC9A46A));
+    expect(t.scaffoldBackgroundColor, const Color(0xFF1E1C1A));
+    expect(t.colorScheme.primary, const Color(0xFFA9CDB8));
+    expect(tones.surface, const Color(0xFF272421));
+    expect(tones.accent, const Color(0xFFE0906E));
+    expect(tones.heroStart, const Color(0xFF26332C));
   });
 
-  testWidgets('UI text uses the system font', (tester) async {
-    // Flutter fills in the platform font (Roboto on Android); what matters is
-    // that headings are no longer set in the serif.
-    expect(selahLightTheme().textTheme.titleLarge!.fontFamily, isNot('Georgia'));
-    late TextStyle quote;
+  testWidgets('headings and reading text use Source Serif 4, UI text does not', (tester) async {
+    final text = selahLightTheme().textTheme;
+    for (final style in [text.displaySmall, text.headlineMedium, text.headlineSmall, text.titleLarge]) {
+      expect(style!.fontFamily, 'Source Serif 4');
+    }
+    for (final style in [text.titleMedium, text.bodyLarge, text.bodyMedium, text.labelLarge, text.labelSmall]) {
+      expect(style!.fontFamily, isNot('Source Serif 4'));
+    }
+    expect(text.labelSmall!.color, selahLightTheme().extension<SelahTones>()!.accent);
+    late TextStyle quote, reading;
     await tester.pumpWidget(
       MaterialApp(
         theme: selahLightTheme(),
         home: Builder(
           builder: (context) {
             quote = serifQuote(context);
+            reading = serifReading(context);
             return const SizedBox();
           },
         ),
       ),
     );
-    expect(quote.fontFamily, 'Georgia');
+    expect(quote.fontFamily, 'Source Serif 4');
+    expect(quote.fontStyle, FontStyle.italic);
+    expect(reading.fontFamily, 'Source Serif 4');
+    expect(reading.fontSize, 18);
+  });
+
+  test('small text and the navigation bar use the palette, not seed tints', () {
+    for (final t in [selahLightTheme(), selahDarkTheme()]) {
+      final tones = t.extension<SelahTones>()!;
+      expect(t.textTheme.bodySmall!.fontSize, 13);
+      expect(t.textTheme.bodySmall!.color, tones.muted);
+      expect(t.textTheme.labelMedium!.fontSize, 12);
+      expect(t.navigationBarTheme.backgroundColor, tones.surface);
+      expect(t.navigationRailTheme.backgroundColor, t.scaffoldBackgroundColor);
+    }
+  });
+
+  test('iOS large titles use the serif in the theme text color', () {
+    for (final t in [selahLightTheme(), selahDarkTheme()]) {
+      final cupertino = t.cupertinoOverrideTheme!.textTheme!;
+      expect(cupertino.navLargeTitleTextStyle.fontFamily, 'Source Serif 4');
+      expect(cupertino.navLargeTitleTextStyle.color, t.colorScheme.onSurface);
+      expect(cupertino.navTitleTextStyle.fontFamily, 'Source Serif 4');
+    }
   });
 }

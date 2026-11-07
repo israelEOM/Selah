@@ -6,6 +6,8 @@ import '../../l10n/app_localizations.dart';
 import '../data/current_church.dart';
 import '../data/providers.dart';
 import '../features/welcome/welcome_state.dart';
+import '../features/church/church_switcher.dart';
+import '../features/home/language_menu.dart';
 import 'design/adaptive_tab_bar.dart';
 import 'theme.dart';
 
@@ -24,6 +26,88 @@ final showEventsTabProvider = Provider<bool>((ref) {
   final now = DateTime.now();
   return ref.watch(upcomingEventsProvider(church.id)).value?.any((e) => e.endsAt.isAfter(now)) ?? false;
 });
+
+/// The church (a menu when the person belongs to several) and the language, on the right of the website header.
+class SiteHeaderTrailing extends ConsumerWidget {
+  const SiteHeaderTrailing({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final church = ref.watch(currentChurchProvider).value;
+    final memberships = ref.watch(myChurchesProvider).value ?? const [];
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (church != null)
+          memberships.length > 1
+              ? ChurchSwitcher(current: church, admin: false)
+              : Flexible(
+                  child: Text(church.name, style: Theme.of(context).textTheme.bodyMedium, maxLines: 1, overflow: TextOverflow.ellipsis),
+                ),
+        const SizedBox(width: Space.s),
+        const LanguageMenu(),
+      ],
+    );
+  }
+}
+
+/// Goes to a tab's page from outside the shell (the study page and reader): Hoy (0), the current church's
+/// studies (1) or events (2), or Perfil (3). With no current church, the studies and events go to the list.
+Future<void> goToBranch(BuildContext context, WidgetRef ref, int branch) async {
+  if (branch == 0) return context.go('/');
+  if (branch == 3) return context.go('/profile');
+  String? slug;
+  try {
+    slug = (await ref.read(currentChurchProvider.future))?.slug;
+  } catch (_) {
+    slug = null;
+  }
+  if (!context.mounted) return;
+  if (slug == null) {
+    context.push('/churches');
+  } else {
+    context.go(branch == 1 ? '/c/$slug' : '/c/$slug/events');
+  }
+}
+
+/// The tabs shown, as (branch, tab) in order: Eventos only while there are events or while it's open.
+List<(int, SelahTab)> visibleTabs(WidgetRef ref, AppLocalizations l, {required int current}) {
+  final events = ref.watch(showEventsTabProvider) || current == 2;
+  final all = _allTabs(l);
+  return [for (final b in [0, 1, if (events) 2, 3]) (b, all[b])];
+}
+
+/// Every tab, by branch: Hoy, Estudios, Eventos and Perfil.
+List<SelahTab> _allTabs(AppLocalizations l) => [
+  SelahTab(
+    label: l.tabToday,
+    icon: Icons.wb_sunny_outlined,
+    selectedIcon: Icons.wb_sunny,
+    symbol: 'sun.max',
+    selectedSymbol: 'sun.max.fill',
+  ),
+  SelahTab(
+    label: l.tabStudies,
+    icon: Icons.menu_book_outlined,
+    selectedIcon: Icons.menu_book,
+    symbol: 'book',
+    selectedSymbol: 'book.fill',
+  ),
+  SelahTab(
+    label: l.tabEvents,
+    icon: Icons.event_outlined,
+    selectedIcon: Icons.event,
+    symbol: 'calendar',
+    selectedSymbol: 'calendar',
+  ),
+  SelahTab(
+    label: l.tabProfile,
+    icon: Icons.person_outline,
+    selectedIcon: Icons.person,
+    symbol: 'person',
+    selectedSymbol: 'person.fill',
+  ),
+];
 
 /// The member pages, with the tab bar floating under them.
 class SelahShell extends ConsumerStatefulWidget {
@@ -109,44 +193,6 @@ class _SelahShellState extends ConsumerState<SelahShell> {
     if (tabIndexFor(location) == 1) _studiesChurch = Uri.parse(location).pathSegments[1];
   }
 
-  /// The branches shown in the bar, in order: Eventos only while there are events (or while it's open).
-  List<int> _visibleBranches() {
-    final events = ref.watch(showEventsTabProvider) || widget.navigationShell.currentIndex == 2;
-    return [0, 1, if (events) 2, 3];
-  }
-
-  /// Every tab, by branch: Hoy, Estudios, Eventos and Perfil.
-  List<SelahTab> _tabs(AppLocalizations l) => [
-    SelahTab(
-      label: l.tabToday,
-      icon: Icons.wb_sunny_outlined,
-      selectedIcon: Icons.wb_sunny,
-      symbol: 'sun.max',
-      selectedSymbol: 'sun.max.fill',
-    ),
-    SelahTab(
-      label: l.tabStudies,
-      icon: Icons.menu_book_outlined,
-      selectedIcon: Icons.menu_book,
-      symbol: 'book',
-      selectedSymbol: 'book.fill',
-    ),
-    SelahTab(
-      label: l.tabEvents,
-      icon: Icons.event_outlined,
-      selectedIcon: Icons.event,
-      symbol: 'calendar',
-      selectedSymbol: 'calendar',
-    ),
-    SelahTab(
-      label: l.tabProfile,
-      icon: Icons.person_outline,
-      selectedIcon: Icons.person,
-      symbol: 'person',
-      selectedSymbol: 'person.fill',
-    ),
-  ];
-
   void _selectBranch(int branch) => switch (branch) {
         1 => _openStudies(),
         2 => _openEvents(),
@@ -156,41 +202,32 @@ class _SelahShellState extends ConsumerState<SelahShell> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    final branches = _visibleBranches();
+    final visible = visibleTabs(ref, l, current: widget.navigationShell.currentIndex);
+    final branches = [for (final (b, _) in visible) b];
     final selected = branches.indexOf(widget.navigationShell.currentIndex);
     _noteStudiesChurch();
-    final allTabs = _tabs(l);
-    final tabs = [for (final b in branches) allTabs[b]];
+    final tabs = [for (final (_, tab) in visible) tab];
     void select(int index) => _selectBranch(branches[index]);
-    final wide = uiPlatformOf(context) != UiPlatform.ios && MediaQuery.sizeOf(context).width >= kRailBreakpoint;
-    if (wide) {
-      return Scaffold(
-        body: Row(children: [
-          NavigationRail(
-            selectedIndex: selected,
-            labelType: NavigationRailLabelType.all,
-            onDestinationSelected: (index) {
-              SelahHaptics.selection();
-              select(index);
-            },
-            destinations: [
-              for (final tab in tabs)
-                NavigationRailDestination(
-                  icon: Icon(tab.icon),
-                  selectedIcon: Icon(tab.selectedIcon),
-                  label: Text(tab.label),
-                ),
-            ],
-          ),
-          Expanded(child: widget.navigationShell),
-        ]),
-      );
-    }
-    // The page runs under the bar, and its bottom inset grows by the bar's height so the last item still clears it.
+    final site = siteLayout(context);
+    // One tree for both layouts, so crossing 1024 px moves nothing and every tab keeps its stack. The page runs
+    // under the floating bar, and its bottom inset grows by the bar's height so the last item still clears it.
     return Scaffold(
-      extendBody: true,
-      body: widget.navigationShell,
-      bottomNavigationBar: AdaptiveTabBar(tabs: tabs, currentIndex: selected, onTap: select),
+      extendBody: !site,
+      body: Column(
+        children: [
+          if (site)
+            SiteHeader(
+              tabs: tabs,
+              selected: selected,
+              onSelect: select,
+              trailing: const SiteHeaderTrailing(),
+            )
+          else
+            const SizedBox.shrink(),
+          Expanded(child: widget.navigationShell),
+        ],
+      ),
+      bottomNavigationBar: site ? null : AdaptiveTabBar(tabs: tabs, currentIndex: selected, onTap: select),
     );
   }
 }

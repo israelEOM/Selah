@@ -48,8 +48,9 @@ class _FakeRepository implements SelahRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-Future<(_FakeRepository, List<Uri>)> _pump(WidgetTester tester, List<ChurchEvent> events) async {
-  tester.view.physicalSize = const Size(800, 1800);
+Future<(_FakeRepository, List<Uri>)> _pump(WidgetTester tester, List<ChurchEvent> events,
+    {Size size = const Size(800, 1800), TargetPlatform? platform}) async {
+  tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   final fake = _FakeRepository(events);
@@ -57,7 +58,7 @@ Future<(_FakeRepository, List<Uri>)> _pump(WidgetTester tester, List<ChurchEvent
   await tester.pumpWidget(ProviderScope(
     overrides: [repositoryProvider.overrideWithValue(fake)],
     child: MaterialApp(
-      theme: selahLightTheme(),
+      theme: selahLightTheme().copyWith(platform: platform),
       locale: const Locale('es'),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
@@ -158,5 +159,40 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     await tester.pump(const Duration(seconds: 1));
     expect(fake.calls, 2);
+  });
+
+  testWidgets('nothing on the event hero card is terracotta', (tester) async {
+    await _pump(tester, [_women, _men]);
+    final accent = selahLightTheme().extension<SelahTones>()!.accent;
+    final texts = tester.widgetList<Text>(find.descendant(of: find.byType(HeroCard), matching: find.byType(Text)));
+    expect(texts, isNotEmpty);
+    expect(texts.where((t) => t.style?.color == accent), isEmpty);
+  });
+
+  testWidgets('later events sit in two columns on desktop', (tester) async {
+    final later = _event('Culto de oración', DateTime(2026, 11, 28, 19), DateTime(2026, 11, 28, 21));
+    await _pump(tester, [_women, _men, _youth, later], size: const Size(1280, 1000), platform: TargetPlatform.android);
+    expect(tester.getTopLeft(find.text(_youth.title)).dy, tester.getTopLeft(find.text(_men.title)).dy);
+  });
+
+  testWidgets('resizing across 1024 px keeps the scroll position', (tester) async {
+    final more = [
+      for (var d = 1; d <= 8; d++) _event('Evento $d', DateTime(2026, 11, 20 + d, 19), DateTime(2026, 11, 20 + d, 21)),
+    ];
+    await _pump(tester, [_women, ...more], size: const Size(1280, 600), platform: TargetPlatform.android);
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, -300));
+    await tester.pumpAndSettle();
+    final before = tester.state<ScrollableState>(find.byType(Scrollable).first).position.pixels;
+    expect(before, greaterThan(0));
+    tester.view.physicalSize = const Size(900, 600);
+    await tester.pumpAndSettle();
+    expect(tester.state<ScrollableState>(find.byType(Scrollable).first).position.pixels, before);
+  });
+
+  testWidgets('on a tablet the next event is as wide as the rows below it', (tester) async {
+    await _pump(tester, [_women, _men, _youth], size: const Size(900, 1200), platform: TargetPlatform.android);
+    final card = tester.getSize(find.byType(HeroCard)).width;
+    final row = tester.getSize(find.byType(EventRow).first).width;
+    expect(card, row);
   });
 }

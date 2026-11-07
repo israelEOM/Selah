@@ -10,6 +10,7 @@ import 'package:selah/src/app/theme_mode.dart';
 import 'package:selah/src/core/models.dart';
 import 'package:selah/src/data/current_church.dart';
 import 'package:selah/src/data/providers.dart';
+import 'package:selah/src/features/home/language_menu.dart';
 import 'package:selah/src/features/profile/profile_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -22,7 +23,14 @@ Future<void> _pump(
   bool platformAdmin = false,
   List<Membership>? mine,
   ChurchRequest? request,
+  Size? size,
+  TargetPlatform? platform,
 }) async {
+  if (size != null) {
+    tester.view.physicalSize = size;
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+  }
   SharedPreferences.setMockInitialValues({});
   final router = GoRouter(initialLocation: '/profile', routes: [
     GoRoute(path: '/profile', builder: (_, _) => const ProfilePage()),
@@ -42,7 +50,7 @@ Future<void> _pump(
       if (request != null) myChurchRequestProvider.overrideWith((ref) async => request),
     ],
     child: MaterialApp.router(
-      theme: selahLightTheme(),
+      theme: selahLightTheme().copyWith(platform: platform),
       routerConfig: router,
       locale: const Locale('es'),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -165,5 +173,16 @@ void main() {
     } finally {
       debugDefaultTargetPlatformOverride = null;
     }
+  });
+
+  testWidgets('Perfil is a narrow column on desktop', (tester) async {
+    await _pump(tester, size: const Size(1280, 900), platform: TargetPlatform.android);
+    expect(tester.getSize(find.ancestor(of: find.text('Iglesia Vida Nueva'), matching: find.byType(Card)).first).width,
+        lessThanOrEqualTo(640));
+  });
+
+  testWidgets('Perfil on desktop still offers the language menu', (tester) async {
+    await _pump(tester, size: const Size(1280, 900), platform: TargetPlatform.android);
+    expect(find.descendant(of: find.byType(LanguageMenu), matching: find.byType(PopupMenuButton<String>)), findsOneWidget);
   });
 }

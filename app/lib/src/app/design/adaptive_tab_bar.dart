@@ -9,9 +9,6 @@ import '../theme.dart';
 /// opens on top of the tabs.
 export 'package:cupertino_native_better/cupertino_native_better.dart' show CNTabBarRouteObserver;
 
-/// Wider than this, Android and web swap the bottom bar for a rail on the left.
-const double kRailBreakpoint = 840;
-
 /// One tab: a Material icon pair for Flutter-drawn bars and an SF Symbol pair for the native one.
 class SelahTab {
   const SelahTab({
