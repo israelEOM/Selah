@@ -366,7 +366,8 @@ void main() {
   });
 
   testWidgets('a lazy SelahPage keeps the body centred at its max width', (tester) async {
-    tester.view.physicalSize = const Size(1200, 800);
+    // A tablet width: the desktop website layout is covered in responsive_test.dart.
+    tester.view.physicalSize = const Size(1000, 800);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(
@@ -374,7 +375,7 @@ void main() {
     );
     final row = tester.getRect(find.ancestor(of: find.text('item'), matching: find.byType(SizedBox)).first);
     expect(row.width, 760 - 2 * (Space.xl - 4));
-    expect(row.center.dx, 600);
+    expect(row.center.dx, 500);
   });
 
   testWidgets('SelahPage on Android uses a large Material app bar', (tester) async {

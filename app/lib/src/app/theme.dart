@@ -11,6 +11,7 @@ export 'design/hero_card.dart';
 export 'design/navigation.dart';
 export 'design/platform.dart';
 export 'design/pressable.dart';
+export 'design/responsive.dart';
 export 'design/selah_row.dart';
 export 'design/selah_page.dart';
 export 'design/skeleton.dart';
