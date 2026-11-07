@@ -6,7 +6,9 @@ import sys
 
 from routes import resolve
 
-ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "build", "web")
+# The folder to serve: build/web by default, or another build given after the port (the demo uses build/demo).
+ROOT = os.path.abspath(sys.argv[2]) if len(sys.argv) > 2 else os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "..", "build", "web")
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
