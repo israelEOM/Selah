@@ -16,6 +16,7 @@
   --hero-text: #FAF7F2;
   --terracotta: #A65033;
   --hairline: rgba(111, 101, 90, 0.3);
+  --bezel: #262320;
 
   --serif: "Source Serif 4", Georgia, serif;
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -41,6 +42,7 @@
     --hero-text: #EDE8E1;
     --terracotta: #E0906E;
     --hairline: rgba(156, 148, 138, 0.3);
+    --bezel: #4A4540;
   }
 }
 
@@ -60,7 +62,105 @@ h3 { font-size: 1.25rem; line-height: 1.3; }
 @media (min-width: 600px) { .wrap { padding-left: var(--space-xl); padding-right: var(--space-xl); } }
 main > section { padding-block: var(--space-xxxl); }
 
+::selection { background: color-mix(in srgb, var(--green) 22%, transparent); }
+html { scrollbar-color: var(--ink-muted) var(--paper); caret-color: var(--green); }
+p { margin: 0; }
+p + p { margin-top: var(--space-l); }
+
+/* Header */
 .top { border-bottom: 1px solid var(--hairline); }
 .top-inner { display: flex; align-items: center; justify-content: space-between; min-height: 64px; }
 .wordmark { font-family: var(--serif); font-weight: 600; font-size: 1.25rem; color: var(--ink); text-decoration: none; }
-.top-link { font-weight: 600; font-size: 15px; text-decoration: none; }
+.top-link { font-weight: 600; font-size: 15px; text-decoration: none; text-underline-offset: 4px; }
+.top-link:hover { text-decoration: underline; }
+
+/* Buttons */
+.button {
+  display: inline-block; font: 600 15px/1.2 var(--sans); text-decoration: none;
+  padding: 16px 24px; border-radius: var(--radius-chip);
+  background: var(--green); color: var(--on-green);
+  transition: transform 150ms cubic-bezier(.2, .8, .2, 1), box-shadow 150ms;
+}
+.button:hover { box-shadow: 0 6px 20px color-mix(in srgb, var(--green) 25%, transparent); transform: translateY(-1px); }
+.button:active { transform: translateY(0) scale(.98); }
+.button-quiet { background: transparent; color: var(--green); box-shadow: inset 0 0 0 1.5px var(--green); }
+.button-quiet:hover { box-shadow: inset 0 0 0 1.5px var(--green), 0 6px 20px color-mix(in srgb, var(--green) 15%, transparent); }
+
+/* Opening: a title page. Generous top margin, the conviction set large, the verse as an epigraph under a rule. */
+.opening { padding-block: clamp(56px, 10vw, 128px) clamp(48px, 8vw, 96px); }
+.opening-inner > * { max-width: var(--reading); }
+.opening h1 { max-width: 14ch; }
+/* Wide screens: the conviction on the left, its verse and invitation on the right, like a book's facing pages. */
+@media (min-width: 960px) {
+  .opening-inner { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); column-gap: var(--space-xxxl); align-items: end; }
+  .opening h1 { grid-column: 1; grid-row: 1 / span 3; align-self: start; font-size: clamp(3rem, 5.2vw, 4.5rem); }
+  .opening .epigraph { grid-column: 2; margin-top: 0; }
+  .opening .lede, .opening-inner > p:last-child { grid-column: 2; }
+}
+.epigraph { margin: var(--space-xxl) 0 0; padding-top: var(--space-xl); position: relative; }
+.epigraph::before {
+  content: ""; position: absolute; top: 0; left: 0; width: 72px; height: 2px; background: var(--terracotta);
+  transform-origin: left; animation: rule 700ms cubic-bezier(.16, 1, .3, 1) both 200ms;
+}
+.epigraph p { font: italic 400 clamp(1.25rem, 2.4vw, 1.5rem)/1.4 var(--serif); }
+.epigraph cite { display: block; margin-top: var(--space-s); font: 600 13px/1.4 var(--sans); font-style: normal; color: var(--ink-muted); letter-spacing: .02em; }
+.lede { margin-top: var(--space-xl) !important; color: var(--ink); font-size: 1.125rem; line-height: 1.6; }
+.opening .button { margin-top: var(--space-xxl); }
+@keyframes rule { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) { .epigraph::before { animation: none; } .button { transition: none; } }
+
+/* How it works: the week as a table of contents, with dotted leaders between the day and what happens. */
+.how { border-top: 1px solid var(--hairline); }
+.week { list-style: none; margin: var(--space-xl) 0 0; padding: 0; max-width: 960px; counter-reset: step; }
+.week li {
+  display: grid; grid-template-columns: auto 1fr; gap: var(--space-s) var(--space-l);
+  padding-block: var(--space-l); border-bottom: 1px solid var(--hairline); align-items: baseline;
+}
+.when { font: 600 1.25rem/1.3 var(--serif); }
+.leader { display: none; }
+.what { grid-column: 1 / -1; color: var(--ink-muted); max-width: 60ch; }
+@media (min-width: 760px) {
+  .week li { grid-template-columns: max-content minmax(48px, 1fr) minmax(0, 32rem); }
+  .leader { display: block; border-bottom: 2px dotted var(--hairline); transform: translateY(-6px); }
+  .what { grid-column: auto; }
+}
+
+/* Glimpse: the laptop, with the phone resting in front of it. */
+.glimpse { background: var(--paper-raised); }
+.glimpse-inner { display: grid; gap: var(--space-xxl); }
+.glimpse-copy { max-width: var(--reading); }
+.glimpse-copy p { margin-top: var(--space-m); color: var(--ink-muted); }
+.devices { position: relative; margin: 0; padding-bottom: 8%; }
+.devices .laptop {
+  width: 88%; border-radius: 14px; border: 1px solid var(--hairline);
+  box-shadow: 0 24px 60px -24px rgba(38, 35, 32, .35);
+}
+.devices .phone img {
+  position: absolute; right: 0; bottom: 0; width: 26%; border-radius: 22px;
+  border: 6px solid var(--bezel); box-shadow: 0 20px 40px -16px rgba(38, 35, 32, .45);
+}
+@media (min-width: 960px) {
+  .glimpse-inner { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); align-items: center; }
+}
+
+/* Members and leaders: two columns split by a rule, not cards. */
+.audiences-inner { display: grid; gap: var(--space-xxxl); }
+.audience { max-width: 34rem; }
+.audience p { margin-top: var(--space-m); }
+.audience .button { margin-top: var(--space-l); }
+@media (min-width: 760px) {
+  .audiences-inner { grid-template-columns: 1fr 1fr; gap: 0; }
+  .audience + .audience { border-left: 1px solid var(--hairline); padding-left: var(--space-xxxl); }
+  .audience:first-child { padding-right: var(--space-xxxl); }
+}
+
+/* Footer */
+.foot { border-top: 1px solid var(--hairline); padding-block: var(--space-xxl); font-size: 15px; }
+.foot-inner { display: flex; flex-wrap: wrap; gap: var(--space-l) var(--space-xxl); align-items: center; justify-content: space-between; }
+.foot-note { color: var(--ink-muted); }
+.languages { display: flex; gap: var(--space-l); }
+.languages a { color: var(--ink-muted); text-decoration: none; }
+.languages a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 4px; }
+html[lang="es"] .languages a[hreflang="es"],
+html[lang="pt"] .languages a[hreflang="pt"],
+html[lang="en"] .languages a[hreflang="en"] { color: var(--ink); font-weight: 600; }

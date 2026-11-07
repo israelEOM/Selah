@@ -74,6 +74,39 @@ class BuildTest(unittest.TestCase):
                 self.assertIn("landingDecision", head)
                 self.assertLess(head.index("<script>"), head.index('rel="stylesheet"'))
 
+    def test_calls_to_action_point_at_the_app(self):
+        for lang, html in self.pages.items():
+            with self.subTest(lang=lang):
+                for href in ['href="/churches"', 'href="/login?next=%2Fwelcome%3Fstep%3Dleader"', 'href="/hoje"']:
+                    self.assertIn(href, html)
+
+    def test_images_have_alt_and_size(self):
+        for lang, html in self.pages.items():
+            with self.subTest(lang=lang):
+                images = re.findall(r"<img\b[^>]*>", html)
+                self.assertGreaterEqual(len(images), 2)
+                for img in images:
+                    self.assertRegex(img, r'alt="[^"]+"')
+                    self.assertRegex(img, r'width="\d+"')
+                    self.assertRegex(img, r'height="\d+"')
+
+    def test_one_h1_per_page(self):
+        for lang, html in self.pages.items():
+            with self.subTest(lang=lang):
+                self.assertEqual(len(re.findall(r"<h1\b", html)), 1)
+
+    def test_scripture_is_cited(self):
+        for lang, html in self.pages.items():
+            with self.subTest(lang=lang):
+                self.assertRegex(html, r"(?s)<blockquote\b.*?<cite\b.*?</blockquote>")
+
+    def test_language_switcher_links_every_language(self):
+        for lang, html in self.pages.items():
+            with self.subTest(lang=lang):
+                for href in ['href="/"', 'href="/pt/"', 'href="/en/"']:
+                    self.assertIn(href, html)
+                self.assertIn("site.lang", html)
+
 
 if __name__ == "__main__":
     unittest.main()
