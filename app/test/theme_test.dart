@@ -24,22 +24,31 @@ void main() {
     expect(tones.heroStart, const Color(0xFF26332C));
   });
 
-  testWidgets('UI text uses the system font', (tester) async {
-    // Flutter fills in the platform font (Roboto on Android); what matters is
-    // that headings are no longer set in the serif.
-    expect(selahLightTheme().textTheme.titleLarge!.fontFamily, isNot('Georgia'));
-    late TextStyle quote;
+  testWidgets('headings and reading text use Source Serif 4, UI text does not', (tester) async {
+    final text = selahLightTheme().textTheme;
+    for (final style in [text.displaySmall, text.headlineMedium, text.headlineSmall, text.titleLarge]) {
+      expect(style!.fontFamily, 'Source Serif 4');
+    }
+    for (final style in [text.titleMedium, text.bodyLarge, text.bodyMedium, text.labelLarge, text.labelSmall]) {
+      expect(style!.fontFamily, isNot('Source Serif 4'));
+    }
+    expect(text.labelSmall!.color, selahLightTheme().extension<SelahTones>()!.accent);
+    late TextStyle quote, reading;
     await tester.pumpWidget(
       MaterialApp(
         theme: selahLightTheme(),
         home: Builder(
           builder: (context) {
             quote = serifQuote(context);
+            reading = serifReading(context);
             return const SizedBox();
           },
         ),
       ),
     );
-    expect(quote.fontFamily, 'Georgia');
+    expect(quote.fontFamily, 'Source Serif 4');
+    expect(quote.fontStyle, FontStyle.italic);
+    expect(reading.fontFamily, 'Source Serif 4');
+    expect(reading.fontSize, 18);
   });
 }

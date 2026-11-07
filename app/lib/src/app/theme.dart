@@ -13,8 +13,8 @@ export 'design/selah_page.dart';
 export 'design/skeleton.dart';
 export 'design/tokens.dart';
 
-const _serif = 'Georgia';
-const _serifFallback = ['Times New Roman', 'serif'];
+const _serif = 'Source Serif 4';
+const _serifFallback = ['Georgia', 'serif'];
 
 /// Colors beyond [ColorScheme] that the Today page and rows need.
 @immutable
@@ -75,7 +75,7 @@ extension SelahThemeX on BuildContext {
   SelahTones get tones => Theme.of(this).extension<SelahTones>()!;
 }
 
-/// Georgia for the hero quote.
+/// The serif, in italic, for the hero quote.
 TextStyle serifQuote(BuildContext context) => TextStyle(
   fontFamily: _serif,
   fontFamilyFallback: _serifFallback,
@@ -85,7 +85,7 @@ TextStyle serifQuote(BuildContext context) => TextStyle(
   color: Theme.of(context).colorScheme.onSurface,
 );
 
-/// Georgia for long reading text (reflection, application, prayer).
+/// The serif for long reading text (reflection, application, prayer).
 TextStyle serifReading(BuildContext context) => TextStyle(
   fontFamily: _serif,
   fontFamilyFallback: _serifFallback,
@@ -146,12 +146,15 @@ const _dark = _Palette(
   ),
 );
 
+/// Headings are set in the serif.
 TextStyle _heading(double size, Color color, {double height = 1.15}) =>
     TextStyle(
+      fontFamily: _serif,
+      fontFamilyFallback: _serifFallback,
       fontSize: size,
       height: height,
-      fontWeight: FontWeight.w700,
-      letterSpacing: -0.5,
+      fontWeight: FontWeight.w600,
+      letterSpacing: -0.3,
       color: color,
     );
 
@@ -175,21 +178,19 @@ ThemeData _build(_Palette p) {
     extensions: [p.tones],
     pageTransitionsTheme: selahPageTransitions(),
     textTheme: TextTheme(
-      displaySmall: _heading(40, p.text),
+      displaySmall: _heading(40, p.text, height: 1.1),
       headlineMedium: _heading(30, p.text),
       headlineSmall: _heading(24, p.text, height: 1.25),
       titleLarge: _heading(20, p.text, height: 1.3),
-      bodyLarge: TextStyle(fontSize: 17, height: 1.6, color: p.text),
-      bodyMedium: TextStyle(
-        fontSize: 15,
-        height: 1.55,
-        color: p.text.withValues(alpha: 0.75),
-      ),
+      titleMedium: TextStyle(fontSize: 17, height: 1.35, fontWeight: FontWeight.w600, color: p.text),
+      bodyLarge: TextStyle(fontSize: 17, height: 1.55, color: p.text),
+      bodyMedium: TextStyle(fontSize: 15, height: 1.5, color: p.tones.muted),
+      labelLarge: TextStyle(fontSize: 15, height: 1.2, fontWeight: FontWeight.w600, color: p.text),
       labelSmall: TextStyle(
         fontSize: 11,
         fontWeight: FontWeight.w700,
-        letterSpacing: 2,
-        color: p.primary,
+        letterSpacing: 1.5,
+        color: p.tones.accent,
       ),
     ),
     appBarTheme: AppBarTheme(
