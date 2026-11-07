@@ -41,8 +41,11 @@ def render(lang: str) -> str:
         raise ValueError(f"{lang}.json is missing {sorted(missing)}")
     with open(os.path.join(SRC, "index.html"), encoding="utf-8") as f:
         template = Template(f.read())
+    with open(os.path.join(SRC, "redirect.js"), encoding="utf-8") as f:
+        redirect_script = f.read()
     page = template.substitute(
         strings,
+        redirect_script=redirect_script,
         lang=lang,
         canonical=ORIGIN + PAGES[lang],
         alternates=_alternates(),

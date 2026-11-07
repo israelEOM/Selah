@@ -67,6 +67,13 @@ class BuildTest(unittest.TestCase):
             with self.subTest(lang=lang):
                 self.assertLessEqual(len(html.encode("utf-8")) + shared, 250 * 1024)
 
+    def test_redirect_inlined_first(self):
+        for lang, html in self.pages.items():
+            with self.subTest(lang=lang):
+                head = html.split("</head>")[0]
+                self.assertIn("landingDecision", head)
+                self.assertLess(head.index("<script>"), head.index('rel="stylesheet"'))
+
 
 if __name__ == "__main__":
     unittest.main()
