@@ -12,6 +12,7 @@ import '../../data/current_church.dart';
 import '../../data/progress.dart';
 import '../../data/providers.dart';
 import '../../l10n/locale.dart';
+import '../events/events_page.dart';
 import '../home/church_picker_page.dart';
 import '../study/translation_banner.dart';
 import 'part_tick.dart';
@@ -77,11 +78,46 @@ class _Today extends ConsumerWidget {
       _WeekRow(doneDates: ref.watch(doneDatesProvider).value ?? const {}, now: now),
       const SizedBox(height: Space.xl),
     ];
-    Widget page(List<Widget> children) => SelahPage(
+    Widget page(List<Widget> children) {
+      if (!siteLayout(context)) {
+        return SelahPage(
           title: l.tabToday,
           onRefresh: () => refreshToday(ref, church.id),
           children: [...header, ...children],
         );
+      }
+      // The website layout: the day on the left; the date, the week and what's coming up on the right.
+      final events = (ref.watch(upcomingEventsProvider(church.id)).value ?? const <ChurchEvent>[])
+          .where((e) => e.endsAt.isAfter(now))
+          .take(3)
+          .toList();
+      return SelahPage(
+        title: l.tabToday,
+        wide: true,
+        children: [
+          TwoColumn(
+            main: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children),
+            side: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ...header,
+                if (events.isNotEmpty) ...[
+                  const SizedBox(height: Space.section - Space.xl),
+                  Eyebrow(l.eventsLater),
+                  const SizedBox(height: Space.m),
+                  for (final event in events)
+                    Padding(padding: const EdgeInsets.only(bottom: Space.s), child: EventRow(event: event)),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton(onPressed: () => context.go('/c/${church.slug}/events'), child: Text(l.tabEvents)),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      );
+    }
     final loading = page(const [SkeletonList(hero: true, rows: 3)]);
     return ref.watch(newestStudyProvider(church.id)).when(
           loading: () => loading,

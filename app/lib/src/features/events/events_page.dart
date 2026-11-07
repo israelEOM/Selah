@@ -9,12 +9,12 @@ import '../../core/models.dart';
 import '../../data/providers.dart';
 import 'event_labels.dart';
 
-void _openExternally(Uri uri) => launchUrl(uri, mode: LaunchMode.externalApplication);
+void openExternally(Uri uri) => launchUrl(uri, mode: LaunchMode.externalApplication);
 
 /// A church's upcoming events from its own calendar: the next one first, then the rest. Events open on the
 /// church's site.
 class EventsPage extends ConsumerWidget {
-  const EventsPage({super.key, required this.church, this.open = _openExternally, this.now});
+  const EventsPage({super.key, required this.church, this.open = openExternally, this.now});
 
   final Church church;
   final void Function(Uri) open;
@@ -50,7 +50,7 @@ class EventsPage extends ConsumerWidget {
               for (final event in events.skip(1))
                 Padding(
                   padding: const EdgeInsets.only(bottom: Space.s + 2),
-                  child: _EventRow(event: event, open: open),
+                  child: EventRow(event: event, open: open),
                 ),
             ],
           ],
@@ -107,8 +107,9 @@ class _NextEvent extends StatelessWidget {
 }
 
 /// A later event: its date badge, title and time.
-class _EventRow extends StatelessWidget {
-  const _EventRow({required this.event, required this.open});
+/// One event as a row: the date in a small block, the title and the times. Opens the event's page when it has one.
+class EventRow extends StatelessWidget {
+  const EventRow({super.key, required this.event, this.open = openExternally});
 
   final ChurchEvent event;
   final void Function(Uri) open;

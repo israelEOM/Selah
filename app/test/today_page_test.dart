@@ -65,7 +65,14 @@ Future<void> _pump(
   double textScale = 1,
   Widget Function(GoRouterState)? reader,
   List<Override> overrides = const [],
+  Size? size,
+  TargetPlatform? platform,
 }) async {
+  if (size != null) {
+    tester.view.physicalSize = size;
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+  }
   SharedPreferences.setMockInitialValues(prefs);
   final router = GoRouter(initialLocation: '/', routes: [
     GoRoute(path: '/', builder: (_, _) => const TodayPage()),
@@ -87,7 +94,7 @@ Future<void> _pump(
     ],
     child: Consumer(
       builder: (context, ref, _) => MaterialApp.router(
-        theme: selahLightTheme(),
+        theme: selahLightTheme().copyWith(platform: platform),
         routerConfig: router,
         locale: ref.watch(appLocaleProvider),
         builder: (context, child) => MediaQuery(
@@ -306,5 +313,47 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await _pump(tester, textScale: 2);
     expect(tester.takeException(), isNull);
+  });
+
+  ChurchEvent event(String title, DateTime start) => ChurchEvent(
+        uid: title,
+        title: title,
+        startsAt: start.toUtc(),
+        endsAt: start.add(const Duration(hours: 2)).toUtc(),
+        localStart: start,
+        localEnd: start.add(const Duration(hours: 2)),
+        allDay: false,
+      );
+  final twoEvents = [event('Culto de oración', DateTime(2026, 10, 29, 19)), event('Reunión de jóvenes', DateTime(2026, 10, 31, 18))];
+  const desktop = Size(1280, 900);
+
+  testWidgets('Hoje on desktop puts the week beside the day', (tester) async {
+    await _pump(tester, size: desktop, platform: TargetPlatform.android, overrides: [
+      upcomingEventsProvider.overrideWith((ref, id) async => twoEvents),
+    ]);
+    expect(tester.getTopLeft(find.byKey(const ValueKey('week'))).dx, greaterThan(tester.getTopRight(find.byType(HeroCard)).dx));
+  });
+
+  testWidgets('Hoje on desktop lists upcoming events in the side column', (tester) async {
+    await _pump(tester, size: desktop, platform: TargetPlatform.android, overrides: [
+      upcomingEventsProvider.overrideWith((ref, id) async => twoEvents),
+    ]);
+    expect(find.text('Culto de oración'), findsOneWidget);
+    expect(find.text('Reunión de jóvenes'), findsOneWidget);
+  });
+
+  testWidgets('Hoje on desktop with no events has no events section', (tester) async {
+    await _pump(tester, size: desktop, platform: TargetPlatform.android, overrides: [
+      upcomingEventsProvider.overrideWith((ref, id) async => const []),
+    ]);
+    expect(find.text(AppLocalizations.of(tester.element(find.byType(TodayPage)))!.eventsLater), findsNothing);
+  });
+
+  testWidgets('Hoje on a phone is unchanged', (tester) async {
+    await _pump(tester, size: const Size(390, 844), platform: TargetPlatform.android, overrides: [
+      upcomingEventsProvider.overrideWith((ref, id) async => twoEvents),
+    ]);
+    expect(find.text('Culto de oración'), findsNothing);
+    expect(tester.getTopLeft(find.byKey(const ValueKey('week'))).dy, lessThan(tester.getTopLeft(find.byType(HeroCard)).dy));
   });
 }
