@@ -11,7 +11,7 @@ import '../features/home/language_menu.dart';
 import 'design/adaptive_tab_bar.dart';
 import 'theme.dart';
 
-/// Which branch a location belongs to: Hoy (0), Estudios (1), Eventos (2) or Perfil (3).
+/// Which branch a location belongs to: Hoy (0, at /hoje), Estudios (1), Eventos (2) or Perfil (3).
 int tabIndexFor(String location) {
   if (RegExp(r'^/c/[^/]+/events/?$').hasMatch(location)) return 2;
   if (location.startsWith('/c/')) return 1;
@@ -54,7 +54,7 @@ class SiteHeaderTrailing extends ConsumerWidget {
 /// Goes to a tab's page from outside the shell (the study page and reader): Hoy (0), the current church's
 /// studies (1) or events (2), or Perfil (3). With no current church, the studies and events go to the list.
 Future<void> goToBranch(BuildContext context, WidgetRef ref, int branch) async {
-  if (branch == 0) return context.go('/');
+  if (branch == 0) return context.go('/hoje');
   if (branch == 3) return context.go('/profile');
   String? slug;
   try {

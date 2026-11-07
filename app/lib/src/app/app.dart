@@ -70,6 +70,9 @@ GoRouter createRouter({String initialLocation = '/'}) {
   return GoRouter(
       navigatorKey: rootNavigatorKey,
       initialLocation: initialLocation,
+      // Today lives at /hoje so the website's root can hold the landing page. Everything that still goes to `/`
+      // (the native apps' start, in-app links) lands on Today.
+      redirect: (_, state) => state.uri.path == '/' ? Uri(path: '/hoje', query: state.uri.query.isEmpty ? null : state.uri.query).toString() : null,
       // Hides the native glass bar while a page opens above the tabs.
       observers: [CNTabBarRouteObserver()],
       routes: [
@@ -82,7 +85,7 @@ GoRouter createRouter({String initialLocation = '/'}) {
             child: SelahShell(navigationShell: navigationShell),
           ),
           branches: [
-            StatefulShellBranch(routes: [_page(path: '/', builder: (_, _) => const TodayPage())]),
+            StatefulShellBranch(routes: [_page(path: '/hoje', builder: (_, _) => const TodayPage())]),
             StatefulShellBranch(
               // go_router wants a location it can open on its own. Estudios never uses it: the tab goes to a real
               // church first and never calls goBranch with initialLocation (see SelahShell), so this placeholder

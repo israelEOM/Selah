@@ -75,7 +75,7 @@ void main() {
 
   testWidgets('an old link to a study that no longer exists goes home', (tester) async {
     final router = await _pump(tester, '/studies/nada');
-    expect(_path(router), '/');
+    expect(_path(router), '/hoje');
   });
 
   testWidgets('/churches opens the church picker without the tab bar', (tester) async {
@@ -108,6 +108,6 @@ void main() {
     final router = await _pump(tester, '/admin', churches: const [
       Membership(church: _otra, role: ChurchRole.member),
     ]);
-    expect(_path(router), '/');
+    expect(_path(router), '/hoje');
   });
 }
