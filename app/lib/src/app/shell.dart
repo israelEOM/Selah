@@ -6,7 +6,10 @@ import '../../l10n/app_localizations.dart';
 import '../data/current_church.dart';
 import '../data/providers.dart';
 import '../features/welcome/welcome_state.dart';
+import '../features/church/church_switcher.dart';
+import '../features/home/language_menu.dart';
 import 'design/adaptive_tab_bar.dart';
+import 'design/site_header.dart';
 import 'theme.dart';
 
 /// Which branch a location belongs to: Hoy (0), Estudios (1), Eventos (2) or Perfil (3).
@@ -153,6 +156,23 @@ class _SelahShellState extends ConsumerState<SelahShell> {
         _ => _goTab(branch),
       };
 
+  /// The church (a menu when the person belongs to several) and the language, on the right of the header.
+  Widget _headerTrailing() {
+    final church = ref.watch(currentChurchProvider).value;
+    final memberships = ref.watch(myChurchesProvider).value ?? const [];
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (church != null)
+          memberships.length > 1
+              ? ChurchSwitcher(current: church, admin: false)
+              : Text(church.name, style: Theme.of(context).textTheme.bodyMedium),
+        const SizedBox(width: Space.s),
+        const LanguageMenu(),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
@@ -162,35 +182,26 @@ class _SelahShellState extends ConsumerState<SelahShell> {
     final allTabs = _tabs(l);
     final tabs = [for (final b in branches) allTabs[b]];
     void select(int index) => _selectBranch(branches[index]);
-    final wide = uiPlatformOf(context) != UiPlatform.ios && MediaQuery.sizeOf(context).width >= kRailBreakpoint;
-    if (wide) {
-      return Scaffold(
-        body: Row(children: [
-          NavigationRail(
-            selectedIndex: selected,
-            labelType: NavigationRailLabelType.all,
-            onDestinationSelected: (index) {
-              SelahHaptics.selection();
-              select(index);
-            },
-            destinations: [
-              for (final tab in tabs)
-                NavigationRailDestination(
-                  icon: Icon(tab.icon),
-                  selectedIcon: Icon(tab.selectedIcon),
-                  label: Text(tab.label),
-                ),
-            ],
-          ),
-          Expanded(child: widget.navigationShell),
-        ]),
-      );
-    }
-    // The page runs under the bar, and its bottom inset grows by the bar's height so the last item still clears it.
+    final site = siteLayout(context);
+    // One tree for both layouts, so crossing 1024 px moves nothing and every tab keeps its stack. The page runs
+    // under the floating bar, and its bottom inset grows by the bar's height so the last item still clears it.
     return Scaffold(
-      extendBody: true,
-      body: widget.navigationShell,
-      bottomNavigationBar: AdaptiveTabBar(tabs: tabs, currentIndex: selected, onTap: select),
+      extendBody: !site,
+      body: Column(
+        children: [
+          if (site)
+            SiteHeader(
+              tabs: tabs,
+              selected: selected,
+              onSelect: select,
+              trailing: _headerTrailing(),
+            )
+          else
+            const SizedBox.shrink(),
+          Expanded(child: widget.navigationShell),
+        ],
+      ),
+      bottomNavigationBar: site ? null : AdaptiveTabBar(tabs: tabs, currentIndex: selected, onTap: select),
     );
   }
 }

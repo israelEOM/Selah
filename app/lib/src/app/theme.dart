@@ -13,6 +13,7 @@ export 'design/platform.dart';
 export 'design/pressable.dart';
 export 'design/responsive.dart';
 export 'design/selah_row.dart';
+export 'design/site_header.dart';
 export 'design/selah_page.dart';
 export 'design/skeleton.dart';
 export 'design/tokens.dart';
