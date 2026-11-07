@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'design/tokens.dart';
@@ -187,13 +188,34 @@ ThemeData _build(_Palette p) {
       titleMedium: TextStyle(fontSize: 17, height: 1.35, fontWeight: FontWeight.w600, color: p.text),
       bodyLarge: TextStyle(fontSize: 17, height: 1.55, color: p.text),
       bodyMedium: TextStyle(fontSize: 15, height: 1.5, color: p.tones.muted),
+      bodySmall: TextStyle(fontSize: 13, height: 1.45, color: p.tones.muted),
       labelLarge: TextStyle(fontSize: 15, height: 1.2, fontWeight: FontWeight.w600, color: p.text),
+      labelMedium: TextStyle(fontSize: 12, height: 1.3, fontWeight: FontWeight.w600, color: p.text),
       labelSmall: TextStyle(
         fontSize: 11,
         fontWeight: FontWeight.w700,
         letterSpacing: 1.5,
         color: p.tones.accent,
       ),
+    ),
+    // iOS large and slim titles come from the Cupertino theme, not the Material text theme.
+    cupertinoOverrideTheme: CupertinoThemeData(
+      brightness: p.brightness,
+      primaryColor: p.primary,
+      textTheme: CupertinoTextThemeData(
+        primaryColor: p.primary,
+        navLargeTitleTextStyle: _heading(34, p.text, height: 1.15),
+        navTitleTextStyle: _heading(17, p.text, height: 1.3),
+      ),
+    ),
+    navigationBarTheme: NavigationBarThemeData(
+      backgroundColor: p.tones.surface,
+      surfaceTintColor: Colors.transparent,
+      indicatorColor: p.primary.withValues(alpha: 0.16),
+    ),
+    navigationRailTheme: NavigationRailThemeData(
+      backgroundColor: p.background,
+      indicatorColor: p.primary.withValues(alpha: 0.16),
     ),
     appBarTheme: AppBarTheme(
       backgroundColor: p.background,

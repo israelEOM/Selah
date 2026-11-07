@@ -148,7 +148,7 @@ class _Day extends ConsumerWidget {
             ),
             tick(DayPart.reading, l.bibleReading),
           ]),
-          Text(l.externalReaderNote, style: text.bodyMedium?.copyWith(fontSize: 12)),
+          Text(l.externalReaderNote, style: text.bodySmall),
         ],
         if (day.reflection != null)
           ReadingSection(
@@ -186,7 +186,7 @@ class _Day extends ConsumerWidget {
               children: [
                 Text(day.prayer!, style: reading.copyWith(fontStyle: FontStyle.italic)),
                 const SizedBox(height: 8),
-                Text(l.prayerNote, style: text.bodyMedium?.copyWith(fontSize: 12)),
+                Text(l.prayerNote, style: text.bodySmall),
               ],
             ),
           ),

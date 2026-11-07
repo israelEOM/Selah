@@ -47,7 +47,7 @@ class TranslationBanner extends ConsumerWidget {
         crossAxisAlignment: WrapCrossAlignment.center,
         spacing: 8,
         children: [
-          if (message.isNotEmpty) Text(message, style: text.bodyMedium?.copyWith(fontSize: 13)),
+          if (message.isNotEmpty) Text(message, style: text.bodySmall),
           ?action,
         ],
       ),

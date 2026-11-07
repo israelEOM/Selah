@@ -65,7 +65,7 @@ class _StudyBody extends ConsumerWidget {
         TranslationBanner(shown: study, original: original, language: language),
         if (study.sermon.thumbnailUrl != null)
           ClipRRect(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(Radii.row),
             child: AspectRatio(
               aspectRatio: 16 / 9,
               child: Image.network(
@@ -172,7 +172,7 @@ class _StudyBody extends ConsumerWidget {
             ),
           ),
         const SizedBox(height: 32),
-        Text(l.aiNotice, style: text.bodyMedium?.copyWith(fontSize: 13)),
+        Text(l.aiNotice, style: text.bodySmall),
       ],
     );
   }

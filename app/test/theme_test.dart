@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:selah/src/app/theme.dart';
@@ -50,5 +51,25 @@ void main() {
     expect(quote.fontStyle, FontStyle.italic);
     expect(reading.fontFamily, 'Source Serif 4');
     expect(reading.fontSize, 18);
+  });
+
+  test('small text and the navigation bar use the palette, not seed tints', () {
+    for (final t in [selahLightTheme(), selahDarkTheme()]) {
+      final tones = t.extension<SelahTones>()!;
+      expect(t.textTheme.bodySmall!.fontSize, 13);
+      expect(t.textTheme.bodySmall!.color, tones.muted);
+      expect(t.textTheme.labelMedium!.fontSize, 12);
+      expect(t.navigationBarTheme.backgroundColor, tones.surface);
+      expect(t.navigationRailTheme.backgroundColor, t.scaffoldBackgroundColor);
+    }
+  });
+
+  test('iOS large titles use the serif in the theme text color', () {
+    for (final t in [selahLightTheme(), selahDarkTheme()]) {
+      final cupertino = t.cupertinoOverrideTheme!.textTheme!;
+      expect(cupertino.navLargeTitleTextStyle.fontFamily, 'Source Serif 4');
+      expect(cupertino.navLargeTitleTextStyle.color, t.colorScheme.onSurface);
+      expect(cupertino.navTitleTextStyle.fontFamily, 'Source Serif 4');
+    }
   });
 }

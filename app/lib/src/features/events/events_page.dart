@@ -130,7 +130,7 @@ class _EventRow extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 6),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(Radii.control),
             ),
             child: Column(children: [
               Text('${event.localStart.day}', style: text.titleLarge?.copyWith(fontWeight: FontWeight.w700)),

@@ -115,7 +115,7 @@ class _Badge extends StatelessWidget {
         children: [
           Icon(Icons.check, size: 14, color: color),
           const SizedBox(width: 4),
-          Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color)),
+          Text(label, style: Theme.of(context).textTheme.labelMedium?.copyWith(color: color)),
         ],
       ),
     );
