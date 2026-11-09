@@ -90,16 +90,16 @@ late _FakeRepository _lastFake;
 void main() {
   test('tabIndexFor maps locations to tabs', () {
     expect(tabIndexFor('/'), 0);
-    expect(tabIndexFor('/hoje'), 0);
+    expect(tabIndexFor('/today'), 0);
     expect(tabIndexFor('/c/x'), 1);
     expect(tabIndexFor('/c/x/studies/s/day/2'), 1);
     expect(tabIndexFor('/c/x/events'), 2);
     expect(tabIndexFor('/profile'), 3);
   });
 
-  testWidgets('the root redirects to /hoje', (tester) async {
+  testWidgets('the root redirects to /today', (tester) async {
     final router = await _pump(tester, '/');
-    expect(_path(router), '/hoje');
+    expect(_path(router), '/today');
     expect(find.byType(TodayPage), findsOneWidget);
   });
 
@@ -198,7 +198,7 @@ void main() {
     expect(_path(router), '/welcome');
     router.go('/');
     await tester.pumpAndSettle();
-    expect(_path(router), '/hoje');
+    expect(_path(router), '/today');
     await tester.tap(find.text('Perfil'));
     await tester.pumpAndSettle();
     expect(_path(router), '/profile');

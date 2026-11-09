@@ -32,12 +32,12 @@ class ResolveTest(unittest.TestCase):
         self.assertEqual(self.rel("/pt/"), os.path.join("pt", "index.html"))
 
     def test_app_routes_are_served_app_html(self):
-        for path in ["/hoje", "/c/x/studies/s/day/2", "/join/abc", "/login", "/profile", "/churches/new"]:
+        for path in ["/today", "/c/x/studies/s/day/2", "/join/abc", "/login", "/profile", "/churches/new"]:
             with self.subTest(path=path):
                 self.assertEqual(self.rel(path), "app.html")
 
     def test_query_strings_are_ignored(self):
-        self.assertEqual(self.rel("/hoje?x=1"), "app.html")
+        self.assertEqual(self.rel("/today?x=1"), "app.html")
         self.assertEqual(self.rel("/?home"), "index.html")
 
     def test_assets_are_served_as_files(self):
@@ -46,7 +46,7 @@ class ResolveTest(unittest.TestCase):
     def test_unknown_paths_get_the_landing_page_like_cloudflare(self):
         # Cloudflare Pages answers unknown paths with the root index.html when there's no 404.html.
         self.assertEqual(self.rel("/nope"), "index.html")
-        self.assertEqual(self.rel("/hoje/"), "index.html")
+        self.assertEqual(self.rel("/today/"), "index.html")
 
     def test_the_rewrite_target_serves_the_app(self):
         self.assertEqual(self.rel("/app"), "app.html")
@@ -62,7 +62,7 @@ class HtmlRedirectTest(unittest.TestCase):
         self.assertEqual(html_redirect("/app.html?x=1"), "/app?x=1")
 
     def test_other_addresses_do_not_redirect(self):
-        for path in ["/", "/hoje", "/pt/", "/main.dart.js"]:
+        for path in ["/", "/today", "/pt/", "/main.dart.js"]:
             with self.subTest(path=path):
                 self.assertIsNone(html_redirect(path))
 

@@ -19,7 +19,7 @@ cd app
 flutter run -d chrome --dart-define-from-file=config/beta.json
 ```
 
-Or build the app and the landing page together and serve the result the way Cloudflare does (the landing page at `/`, the app at `/hoje` and every other app address, deep links work, nothing is cached):
+Or build the app and the landing page together and serve the result the way Cloudflare does (the landing page at `/`, the app at `/today` and every other app address, deep links work, nothing is cached):
 
 ```sh
 cd app

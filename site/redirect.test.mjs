@@ -13,9 +13,9 @@ function storage(items = {}) {
 const visit = (over = {}) => ({ search: '', hash: '', pathname: '/', language: 'es-ES', storage: storage(), ...over });
 
 test('auth returns go to the app with hash and query', () => {
-  assert.equal(landingDecision(visit({ hash: '#access_token=x&type=signup' })), '/hoje#access_token=x&type=signup');
-  assert.equal(landingDecision(visit({ search: '?code=abc' })), '/hoje?code=abc');
-  assert.equal(landingDecision(visit({ hash: '#error=access_denied' })), '/hoje#error=access_denied');
+  assert.equal(landingDecision(visit({ hash: '#access_token=x&type=signup' })), '/today#access_token=x&type=signup');
+  assert.equal(landingDecision(visit({ search: '?code=abc' })), '/today?code=abc');
+  assert.equal(landingDecision(visit({ hash: '#error=access_denied' })), '/today#error=access_denied');
 });
 
 test('?home shows the landing page even for members', () => {
@@ -23,11 +23,11 @@ test('?home shows the landing page even for members', () => {
 });
 
 test('a stored church goes to Today', () => {
-  assert.equal(landingDecision(visit({ storage: storage({ 'flutter.church': '"selah"' }) })), '/hoje');
+  assert.equal(landingDecision(visit({ storage: storage({ 'flutter.church': '"selah"' }) })), '/today');
 });
 
 test('a Supabase session goes to Today', () => {
-  assert.equal(landingDecision(visit({ storage: storage({ 'sb-abc-auth-token': '{}' }) })), '/hoje');
+  assert.equal(landingDecision(visit({ storage: storage({ 'sb-abc-auth-token': '{}' }) })), '/today');
 });
 
 test('a newcomer on the Spanish page stays', () => {
@@ -53,7 +53,7 @@ test('storage that throws shows the landing page', () => {
 });
 
 test('a member on a Portuguese browser goes to the app, not /pt/', () => {
-  assert.equal(landingDecision(visit({ language: 'pt-BR', storage: storage({ 'flutter.church': '"selah"' }) })), '/hoje');
+  assert.equal(landingDecision(visit({ language: 'pt-BR', storage: storage({ 'flutter.church': '"selah"' }) })), '/today');
 });
 
 test('a chosen language sticks at the root', () => {

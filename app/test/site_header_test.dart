@@ -123,7 +123,7 @@ void main() {
     final router = await _pumpRouter(tester, '/c/vida-nueva/studies/retiro');
     await tester.tap(_inHeader('Hoy'));
     await tester.pumpAndSettle();
-    expect(_path(router), '/hoje');
+    expect(_path(router), '/today');
   });
 
   testWidgets('the study page on a phone has no header', (tester) async {

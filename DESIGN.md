@@ -220,7 +220,7 @@ Tablets (600–1023) keep the app layout and one column for now.
 ### Landing page
 
 The public front door at `/` (Spanish), `/pt/` and `/en/`. It's a static site in `site/`, not a Flutter screen: one template rendered per language by `site/build.py`, with the same tokens as CSS custom properties in `site/src/styles.css`.
-- **Returning members** (a church picked, or signed in) skip it and go straight to `/hoje`. Sign-in email links are forwarded to the app with their hash and query intact, and `/?home` always shows the page. The logic is `site/src/redirect.js`, inlined first in `<head>`.
+- **Returning members** (a church picked, or signed in) skip it and go straight to `/today`. Sign-in email links are forwarded to the app with their hash and query intact, and `/?home` always shows the page. The logic is `site/src/redirect.js`, inlined first in `<head>`.
 - **Sections, in order:**
   1. The opening, like a book's facing pages: the conviction in the serif, and the verse as an epigraph under a short terracotta rule.
   2. How it works, set like a table of contents through the week.

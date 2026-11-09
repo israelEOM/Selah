@@ -9,7 +9,7 @@ from urllib.parse import urlsplit
 
 # Every address the app answers. `/x/*` covers the paths below /x; the bare path is listed on its own.
 APP_ROUTES = [
-    "/hoje",
+    "/today",
     "/c/*",
     "/profile",
     "/churches",

@@ -4,7 +4,7 @@
 function landingDecision({ search, hash, pathname, language, storage }) {
   var query = new URLSearchParams(search);
   if (/(?:^|[#&])(?:access_token|error|type)=/.test(hash) || query.has('code') || query.has('error')) {
-    return '/hoje' + search + hash;
+    return '/today' + search + hash;
   }
   if (query.has('home')) return null;
   var member, chosen;
@@ -15,7 +15,7 @@ function landingDecision({ search, hash, pathname, language, storage }) {
   } catch (e) {
     return null;
   }
-  if (member) return '/hoje';
+  if (member) return '/today';
   if (pathname !== '/') return null;
   // A language picked on the switcher wins; otherwise a first visit follows the browser.
   var lang = (chosen || language || '').toLowerCase();

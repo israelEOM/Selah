@@ -77,7 +77,7 @@ class BuildTest(unittest.TestCase):
     def test_calls_to_action_point_at_the_app(self):
         for lang, html in self.pages.items():
             with self.subTest(lang=lang):
-                for href in ['href="/churches"', 'href="/login?next=%2Fwelcome%3Fstep%3Dleader"', 'href="/hoje"']:
+                for href in ['href="/churches"', 'href="/login?next=%2Fwelcome%3Fstep%3Dleader"', 'href="/today"']:
                     self.assertIn(href, html)
 
     def test_images_have_alt_and_size(self):
@@ -127,7 +127,7 @@ class BuildTest(unittest.TestCase):
     def test_robots_and_sitemap(self):
         with open(os.path.join(self.out, "robots.txt"), encoding="utf-8") as f:
             robots = f.read()
-        self.assertIn("Disallow: /hoje", robots)
+        self.assertIn("Disallow: /today", robots)
         self.assertIn("Disallow: /c/", robots)
         self.assertIn("Sitemap: https://", robots)
         with open(os.path.join(self.out, "sitemap.xml"), encoding="utf-8") as f:
