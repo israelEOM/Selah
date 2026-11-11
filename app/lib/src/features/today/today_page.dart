@@ -170,6 +170,16 @@ class _Today extends ConsumerWidget {
           data: (original) {
             if (original == null) {
               return page([
+                const Center(
+                  child: SelahArt(
+                    artKey: 'scene-empty-studies',
+                    fixed: true,
+                    seed: 'empty-studies',
+                    width: double.infinity,
+                    height: 180,
+                  ),
+                ),
+                const SizedBox(height: Space.l),
                 Text(l.noStudiesYetToday, style: text.bodyLarge),
                 const SizedBox(height: Space.l),
                 Align(

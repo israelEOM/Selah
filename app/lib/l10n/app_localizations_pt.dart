@@ -460,6 +460,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get followChurch => 'Seguir';
 
   @override
+  String get followingChurch => 'Seguindo';
+
+  @override
   String get roleOwner => 'Proprietário';
 
   @override

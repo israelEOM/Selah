@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../../app/design/art.dart';
 import '../../app/theme.dart';
 import '../../core/models.dart';
 import '../../data/providers.dart';
@@ -43,7 +44,17 @@ class EventsPage extends ConsumerWidget {
           loading: () => [const SkeletonList(rows: 3)],
           error: (_, _) => [Text(l.loadError, style: text.bodyMedium)],
           data: (events) => [
-            if (events.isEmpty) Text(l.eventsNone, style: text.bodyLarge),
+            if (events.isEmpty) ...[
+              const SelahArt(
+                artKey: 'scene-empty-events',
+                fixed: true,
+                seed: 'empty-events',
+                width: double.infinity,
+                height: 180,
+              ),
+              const SizedBox(height: Space.l),
+              Text(l.eventsNone, style: text.bodyLarge),
+            ],
             if (events.isNotEmpty)
               Align(
                 alignment: Alignment.centerLeft,

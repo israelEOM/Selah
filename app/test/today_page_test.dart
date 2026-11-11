@@ -124,6 +124,11 @@ Future<void> _tap(WidgetTester tester, Finder finder) async {
 Finder _weekChecks() => find.descendant(of: find.byKey(const ValueKey('week')), matching: find.byIcon(Icons.check));
 
 void main() {
+  testWidgets('the empty studies page shows its scene', (tester) async {
+    await _pump(tester, noStudy: true);
+    expect(find.byWidgetPredicate((w) => w is SelahArt && w.artKey == 'scene-empty-studies'), findsOneWidget);
+  });
+
   testWidgets('shows day 1 of a fresh study', (tester) async {
     await _pump(tester);
     expect(find.text('Iglesia Vida Nueva'), findsOneWidget);

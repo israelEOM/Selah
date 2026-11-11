@@ -196,6 +196,7 @@
   "allChurches": "Churches on Selah",
   "createChurch": "Create a church",
   "followChurch": "Follow",
+  "followingChurch": "Following",
   "roleOwner": "Owner",
   "roleEditor": "Editor",
   "roleMember": "Member",

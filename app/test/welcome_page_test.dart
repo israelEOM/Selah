@@ -1,10 +1,14 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:selah/l10n/app_localizations.dart';
+import 'package:selah/src/app/design/art.dart';
 import 'package:selah/src/app/theme.dart';
+import 'package:selah/src/data/progress.dart';
+import 'package:selah/src/features/today/part_style.dart';
 import 'package:selah/src/core/models.dart';
 import 'package:selah/src/data/providers.dart';
 import 'package:selah/src/data/repository.dart';
@@ -39,7 +43,8 @@ class _FakeRepository implements SelahRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-Future<_FakeRepository> _pump(WidgetTester tester, {String? failWith, String location = '/welcome'}) async {
+Future<_FakeRepository> _pump(WidgetTester tester,
+    {String? failWith, String location = '/welcome', bool reduceMotion = false, bool settle = true}) async {
   SharedPreferences.setMockInitialValues({});
   final fake = _FakeRepository()..failWith = failWith;
   final router = GoRouter(initialLocation: location, routes: [
@@ -59,16 +64,19 @@ Future<_FakeRepository> _pump(WidgetTester tester, {String? failWith, String loc
       theme: selahLightTheme(),
       routerConfig: router,
       locale: const Locale('es'),
+      builder: (context, child) =>
+          MediaQuery(data: MediaQuery.of(context).copyWith(disableAnimations: reduceMotion), child: child!),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
     ),
   ));
-  await tester.pumpAndSettle();
+  if (settle) await tester.pumpAndSettle();
   return fake;
 }
 
 Future<void> _tap(WidgetTester tester, String text) async {
   await tester.ensureVisible(find.text(text));
+  await tester.pump();
   await tester.tap(find.text(text));
   await tester.pumpAndSettle();
 }
@@ -79,7 +87,48 @@ Future<void> _sendRequest(WidgetTester tester) async {
   await _tap(tester, 'Enviar solicitud');
 }
 
+Finder _scene() => find.byWidgetPredicate((w) => w is SelahArt && w.artKey == 'scene-welcome' && w.height == 250);
+
 void main() {
+  testWidgets('welcome shows its scene and both choices', (tester) async {
+    await _pump(tester);
+    expect(_scene(), findsOneWidget);
+    expect(find.text('Soy miembro de una iglesia'), findsOneWidget);
+    expect(find.text('Soy pastor o líder: quiero traer mi iglesia a Selah'), findsOneWidget);
+    expect(find.byWidgetPredicate((w) => w is PartIcon && w.part == DayPart.reading), findsOneWidget);
+    expect(find.byWidgetPredicate((w) => w is PartIcon && w.part == DayPart.reflection), findsOneWidget);
+  });
+
+  testWidgets('tapping a welcome choice gives a selection haptic', (tester) async {
+    final calls = <String>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+      if (call.method == 'HapticFeedback.vibrate') calls.add(call.arguments as String);
+      return null;
+    });
+    addTearDown(() => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, null));
+    await _pump(tester);
+    await tester.tap(find.text('Soy miembro de una iglesia'));
+    await tester.pumpAndSettle();
+    expect(calls, contains('HapticFeedbackType.selectionClick'));
+  });
+
+  testWidgets('the welcome scene does not move with Reduce Motion', (tester) async {
+    await _pump(tester, reduceMotion: true, settle: false);
+    final first = tester.getTopLeft(_scene());
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(tester.getTopLeft(_scene()), first);
+    await tester.pumpAndSettle();
+    expect(tester.getTopLeft(_scene()), first);
+  });
+
+  testWidgets('the welcome scene rises into place without Reduce Motion', (tester) async {
+    await _pump(tester, settle: false);
+    await tester.pump(const Duration(milliseconds: 50));
+    final early = tester.getTopLeft(_scene());
+    await tester.pumpAndSettle();
+    expect(tester.getTopLeft(_scene()).dy, lessThan(early.dy));
+  });
+
   testWidgets('shows the question', (tester) async {
     await _pump(tester);
     expect(find.text('¿Cómo vas a usar Selah?'), findsOneWidget);
@@ -140,7 +189,7 @@ void main() {
       await _pump(tester);
       expect(tester.takeException(), isNull);
       expect(find.byType(FilledButton), findsNothing);
-      expect(find.byIcon(Icons.people_outline), findsOneWidget);
+      expect(find.byType(PartIcon), findsNWidgets(2));
     } finally {
       debugDefaultTargetPlatformOverride = null;
     }

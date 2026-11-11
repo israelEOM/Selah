@@ -57,6 +57,19 @@ abstract final class Motion {
   static const ripple = Duration(milliseconds: 600);
   static const staggerStep = Duration(milliseconds: 40);
 
+  /// A scene settling in: the fade and the rise, and how far it rises.
+  static const sceneIn = Duration(milliseconds: 600);
+  static const sceneRise = 12.0;
+
+  /// The sign-in scene's slow parallax: one full loop, and how far it drifts either way.
+  static const drift = Duration(seconds: 20);
+  static const driftDistance = 6.0;
+
+  /// A refused sign-in shaking the fields.
+  static const shake = Duration(milliseconds: 400);
+  static const shakeDistance = 8.0;
+  static const shakeOscillations = 3;
+
   /// Moment A: the light rising in the hero card, and the finish line's wait and rise.
   static const glow = Duration(milliseconds: 1800);
   static const finishDelay = Duration(milliseconds: 700);

@@ -461,6 +461,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get followChurch => 'Follow';
 
   @override
+  String get followingChurch => 'Following';
+
+  @override
   String get roleOwner => 'Owner';
 
   @override

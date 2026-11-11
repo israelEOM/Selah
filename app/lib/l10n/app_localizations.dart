@@ -904,6 +904,12 @@ abstract class AppLocalizations {
   /// **'Seguir'**
   String get followChurch;
 
+  /// No description provided for @followingChurch.
+  ///
+  /// In es, this message translates to:
+  /// **'Siguiendo'**
+  String get followingChurch;
+
   /// No description provided for @roleOwner.
   ///
   /// In es, this message translates to:

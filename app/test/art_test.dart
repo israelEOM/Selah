@@ -102,6 +102,15 @@ void main() {
     expect(find.byType(Hero), findsNothing);
   });
 
+  testWidgets('a fixed scene keeps its key instead of being swapped for a pickable one', (tester) async {
+    await _pump(tester, const SelahArt(artKey: 'scene-welcome', fixed: true, seed: 's', width: 100, height: 80), language: 'es');
+    await tester.pumpAndSettle();
+    expect(find.bySemanticsLabel('Bienvenida'), findsOneWidget);
+    await _pump(tester, const SelahArt(artKey: 'scene-welcome', seed: 's', width: 100, height: 80), language: 'es');
+    await tester.pumpAndSettle();
+    expect(find.bySemanticsLabel('Bienvenida'), findsNothing);
+  });
+
   testWidgets('the circle shape clips round', (tester) async {
     await _pump(tester, const SelahArt(seed: 's', width: 50, height: 50, shape: ArtShape.circle));
     await tester.pumpAndSettle();

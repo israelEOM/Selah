@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:selah/src/app/design/art.dart';
 import 'package:selah/src/app/theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -76,6 +77,14 @@ Future<_FakeRepository> _pump(
 }
 
 void main() {
+  testWidgets('the invitation shows a round invite scene', (tester) async {
+    await _pump(tester);
+    expect(
+      find.byWidgetPredicate((w) => w is SelahArt && w.artKey == 'scene-invite' && w.shape == ArtShape.circle && w.width == 120),
+      findsOneWidget,
+    );
+  });
+
   final es = AppLocalizationsEs();
 
   testWidgets('signed out sees the church and role and signs in to join', (tester) async {

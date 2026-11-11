@@ -12,6 +12,7 @@ export 'design/navigation.dart';
 export 'design/platform.dart';
 export 'design/pressable.dart';
 export 'design/responsive.dart';
+export 'design/scene.dart';
 export 'design/selah_row.dart';
 export 'design/site_header.dart';
 export 'design/selah_page.dart';

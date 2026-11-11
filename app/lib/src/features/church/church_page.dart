@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../../app/design/art.dart';
 import '../../app/theme.dart';
 import '../../core/models.dart';
 import '../../data/providers.dart';
@@ -78,7 +79,17 @@ class ChurchPage extends ConsumerWidget {
             ),
           ],
           data: (items) => items.isEmpty
-              ? [Text(l.noStudiesYet, style: text.bodyMedium)]
+              ? [
+                  const SelahArt(
+                    artKey: 'scene-empty-studies',
+                    fixed: true,
+                    seed: 'empty-studies',
+                    width: double.infinity,
+                    height: 180,
+                  ),
+                  const SizedBox(height: Space.l),
+                  Text(l.noStudiesYet, style: text.bodyMedium),
+                ]
               : [
                   Eyebrow(l.devotionalOfTheWeek),
                   const SizedBox(height: Space.m),

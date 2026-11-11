@@ -74,6 +74,7 @@ class SelahArt extends ConsumerWidget {
     this.width,
     this.height,
     this.heroTag,
+    this.fixed = false,
   });
 
   final String? artKey;
@@ -85,10 +86,14 @@ class SelahArt extends ConsumerWidget {
   /// Makes the art a [Hero] with this tag, unless Reduce Motion is on.
   final Object? heroTag;
 
+  /// A fixed scene (welcome, empty states): [artKey] is used as given instead of being checked against the pickable
+  /// library, so these scenes are never swapped for a study picture.
+  final bool fixed;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final library = ref.watch(artLibraryProvider).value ?? const <ArtEntry>[];
-    final resolved = resolveArtKey(artKey, seed, library);
+    final resolved = fixed ? (artKey ?? '') : resolveArtKey(artKey, seed, library);
     final entry = library.where((e) => e.key == resolved).firstOrNull;
     final language = ref.watch(appLocaleProvider).languageCode;
     final placeholder = ArtPlaceholder(seed: seed);
