@@ -94,7 +94,7 @@ void main() {
     final p = await togglePart('s1', d, DayPart.prayer, now);
     expect(p.isDone(d), isFalse);
     expect(p.days[1]!.doneOn, isNull);
-    expect(await loadTicksByDate(), isEmpty);
+    expect((await loadTicksByDate())['2026-10-28']!.complete, isFalse);
   });
 
   test('old read marks count as done without a date', () async {
