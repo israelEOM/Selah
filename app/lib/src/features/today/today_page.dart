@@ -191,12 +191,7 @@ class _Today extends ConsumerWidget {
                         ),
                       ),
                     );
-                    final todaysDay = switch (state) {
-                      DayToDo(:final day) || DoneForToday(:final day) => day,
-                      NoStudy() || AllDone() => null,
-                    };
-                    // A past date shows the day worked on that date, else the one Today shows.
-                    final day = past == null ? todaysDay : dayOnDate(study: study, ticks: ticks, date: past) ?? todaysDay;
+                    final day = dayForSelection(study: study, progress: progress, ticks: ticks, date: past, now: now);
                     if (day == null) {
                       return page(switch (state) {
                         AllDone(:final passage, :final takeaway) => [
@@ -226,16 +221,17 @@ class _Today extends ConsumerWidget {
                       });
                     }
                     final done = progress.isDone(day);
+                    final moment = _momentA(ref, original, day, done);
                     final next = past == null && state is DoneForToday ? state.next : null;
                     return page([
-                      ..._devotional(context, ref, study, original, day, progress, on: past),
+                      ..._devotional(context, ref, study, original, day, progress, on: past, moment: moment),
                       if (past != null && !done) ...[
                         const SizedBox(height: Space.s),
                         Text(l.pastDayNotTooLate, style: text.bodyLarge?.copyWith(color: context.tones.muted)),
                       ],
                       if (done) ...[
                         const SizedBox(height: Space.l),
-                        FinishLine(past: past != null, animate: _momentA(context, ref, original, day, done)),
+                        FinishLine(past: past != null, animate: moment),
                       ],
                       if (next != null)
                         Padding(
@@ -258,7 +254,7 @@ class _Today extends ConsumerWidget {
 
   /// Whether moment A should play for [day] now: it was just finished by a tick. Today clears the mark once the moment
   /// has started, so it plays once; the widgets let a started moment run to its end.
-  bool _momentA(BuildContext context, WidgetRef ref, PublicStudy original, DevotionalDay day, bool done) {
+  bool _momentA(WidgetRef ref, PublicStudy original, DevotionalDay day, bool done) {
     final just = ref.watch(justFinishedProvider);
     final play = done && just == (studyId: original.id, day: day.number);
     if (play) {
@@ -271,7 +267,8 @@ class _Today extends ConsumerWidget {
 
   String _dayPath(PublicStudy study, int n) => '/c/${church.slug}/studies/${study.slug}/day/$n';
 
-  /// The day's hero card and one row per part. Ticks are dated [on] when a past date is picked.
+  /// The day's hero card and one row per part. Ticks are dated [on] when a past date is picked; [moment] plays the
+  /// card's part of moment A.
   List<Widget> _devotional(
     BuildContext context,
     WidgetRef ref,
@@ -280,6 +277,7 @@ class _Today extends ConsumerWidget {
     DevotionalDay day,
     StudyProgress progress, {
     String? on,
+    required bool moment,
   }) {
     final l = AppLocalizations.of(context)!;
     final progressId = original.id;
@@ -299,7 +297,7 @@ class _Today extends ConsumerWidget {
             title: day.title,
             quote: day.mainIdea,
             glow: done,
-            animateGlow: _momentA(context, ref, original, day, done),
+            animateGlow: moment,
           ),
         ),
       ),

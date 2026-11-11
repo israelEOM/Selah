@@ -104,4 +104,31 @@ void main() {
       expect(dayOnDate(study: s, ticks: {'2026-10-26': on('s1', 9)}, date: '2026-10-26'), isNull);
     });
   });
+
+  group('dayForSelection', () {
+    final now = DateTime(2026, 10, 27, 9);
+    DateTicks on(int day) => DateTicks(parts: const {DayPart.reflection}, complete: true, lastDay: (studyId: 's1', day: day));
+
+    test('today shows the day todayFor shows, finished or not', () {
+      expect(dayForSelection(study: s, progress: const StudyProgress({}), ticks: const {}, date: null, now: now)?.number, 1);
+      final p = StudyProgress({1: finished('2026-10-27')});
+      expect(dayForSelection(study: s, progress: p, ticks: const {}, date: null, now: now)?.number, 1);
+    });
+
+    test('a past date shows the day worked on it', () {
+      final p = StudyProgress({1: finished('2026-10-26')});
+      expect(dayForSelection(study: s, progress: p, ticks: {'2026-10-26': on(1)}, date: '2026-10-26', now: now)?.number, 1);
+    });
+
+    test('a past date with nothing done shows the first unfinished day, not today\'s finished one', () {
+      final p = StudyProgress({1: finished('2026-10-27')});
+      expect(dayForSelection(study: s, progress: p, ticks: {'2026-10-27': on(1)}, date: '2026-10-26', now: now)?.number, 2);
+    });
+
+    test('is null when every day is finished and nothing was done that date', () {
+      final p = StudyProgress({for (var i = 1; i <= 5; i++) i: finished('2026-10-20')});
+      expect(dayForSelection(study: s, progress: p, ticks: const {}, date: null, now: now), isNull);
+      expect(dayForSelection(study: s, progress: p, ticks: const {}, date: '2026-10-26', now: now), isNull);
+    });
+  });
 }

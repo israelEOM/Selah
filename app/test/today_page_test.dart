@@ -404,6 +404,32 @@ void main() {
       expect(find.text('No es tarde. Aún puedes terminar este día.'), findsOneWidget);
     });
 
+    testWidgets('a past date with nothing done shows the first unfinished day when today\'s is finished', (tester) async {
+      await _pump(tester, prefs: {
+        'progress:study-1': '{"1":{"parts":["reading","reflection","prayer"],"doneOn":"2026-10-27",'
+            '"partsOn":{"reading":"2026-10-27","reflection":"2026-10-27","prayer":"2026-10-27"}}}',
+      });
+      expect(find.text('Día 1 del camino'), findsOneWidget);
+      await _tap(tester, find.byKey(const ValueKey('week-0')));
+      expect(find.text('Día 2 del camino'), findsOneWidget);
+      expect(find.text('Día 1 del camino'), findsNothing);
+      expect(find.text('No es tarde. Aún puedes terminar este día.'), findsOneWidget);
+      expect(find.byType(FinishLine), findsNothing);
+    });
+
+    testWidgets('a tick on a picked date lands on that date even after midnight passes', (tester) async {
+      var now = DateTime(2026, 10, 27, 23, 59);
+      await _pump(tester, clock: () => now);
+      await _tap(tester, find.byKey(const ValueKey('week-0')));
+      // Midnight passes with the app open, before Today's refresh runs.
+      now = DateTime(2026, 10, 28, 0, 0, 0, 500);
+      await _tap(tester, find.byKey(const ValueKey('tick-reading')));
+      final ticks = await loadTicksByDate();
+      expect(ticks['2026-10-26']?.parts, {DayPart.reading});
+      expect(ticks['2026-10-28'], isNull);
+      expect(ticks['2026-10-27'], isNull);
+    });
+
     testWidgets('ticks made on a past date fill that date and say Not too late until done', (tester) async {
       await _pump(tester);
       await _tap(tester, find.byKey(const ValueKey('week-0')));

@@ -160,9 +160,3 @@ Future<Map<String, DateTicks>> loadTicksByDate() async {
 final studyProgressProvider = FutureProvider.autoDispose.family<StudyProgress, String>((ref, studyId) => loadProgress(studyId));
 
 final ticksByDateProvider = FutureProvider.autoDispose<Map<String, DateTicks>>((ref) => loadTicksByDate());
-
-Future<void> tickPart(WidgetRef ref, String studyId, DevotionalDay day, DayPart part, DateTime now, {String? on}) async {
-  await togglePart(studyId, day, part, now, on: on);
-  ref.invalidate(studyProgressProvider(studyId));
-  ref.invalidate(ticksByDateProvider);
-}
