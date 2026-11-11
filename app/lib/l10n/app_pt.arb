@@ -104,6 +104,8 @@
   "published": "Estudio publicado. Ya está disponible para la iglesia.",
   "regenerateDevotional": "Regenerar devocional",
   "regenerateAll": "Volver a analizar todo",
+  "changeImage": "Cambiar imagen",
+  "pickImage": "Elige una imagen",
   "watchMoment": "Assistir a este momento ({time})",
   "@watchMoment": {
     "placeholders": {

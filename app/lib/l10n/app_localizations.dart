@@ -598,6 +598,18 @@ abstract class AppLocalizations {
   /// **'Volver a analizar todo'**
   String get regenerateAll;
 
+  /// No description provided for @changeImage.
+  ///
+  /// In es, this message translates to:
+  /// **'Cambiar imagen'**
+  String get changeImage;
+
+  /// No description provided for @pickImage.
+  ///
+  /// In es, this message translates to:
+  /// **'Elige una imagen'**
+  String get pickImage;
+
   /// No description provided for @watchMoment.
   ///
   /// In es, this message translates to:

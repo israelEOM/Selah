@@ -287,6 +287,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get regenerateAll => 'Volver a analizar todo';
 
   @override
+  String get changeImage => 'Cambiar imagen';
+
+  @override
+  String get pickImage => 'Elige una imagen';
+
+  @override
   String watchMoment(String time) {
     return 'Ver este momento ($time)';
   }

@@ -168,6 +168,11 @@ class SelahRepository {
         'published_at': published ? DateTime.now().toUtc().toIso8601String() : null,
       }).eq('id', studyId);
 
+  Future<void> setStudyArt(String studyId, String? key) => _client.from('studies').update({'art_key': key}).eq('id', studyId);
+
+  Future<void> setDayArt(String studyId, int dayNumber, String? key) =>
+      _client.from('devotional_days').update({'art_key': key}).eq('study_id', studyId).eq('day_number', dayNumber);
+
   /// Admin view of a study's translations, hidden ones included.
   Future<List<Map<String, dynamic>>> translations(String studyId) =>
       _client.from('study_translations').select().eq('study_id', studyId).order('language', ascending: true);

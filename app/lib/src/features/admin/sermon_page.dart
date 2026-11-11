@@ -3,12 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../../app/design/art.dart';
 import '../../app/theme.dart';
 import '../../core/format.dart';
 import '../../core/models.dart';
 import '../../data/providers.dart';
 import '../church/church_scope.dart';
 import 'admin_gate.dart';
+import 'art_picker.dart';
 
 const _translateTargets = {'languages': ['en', 'pt']};
 const _steps = ['transcript', 'analysis', 'summary', 'devotional'];
@@ -320,6 +322,12 @@ class _StudyState extends ConsumerState<_Study> {
     if (mounted) setState(() => _notice = notice);
   }
 
+  Future<void> _changeArt(String? current, Future<void> Function(String key) save) async {
+    final key = await showArtPicker(context, current: current);
+    if (key == null) return;
+    await _run(() => save(key));
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
@@ -345,6 +353,12 @@ class _StudyState extends ConsumerState<_Study> {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text(l.studySection, style: text.headlineSmall),
       const SizedBox(height: 10),
+      SelahArt(key: const Key('study-art'), artKey: study['art_key'] as String?, seed: study['id'] as String, width: 220, height: 140),
+      TextButton(
+        onPressed: () => _changeArt(study['art_key'] as String?, (key) => repo.setStudyArt(study['id'] as String, key)),
+        child: Text(l.changeImage),
+      ),
+      const SizedBox(height: 10),
       Text(study['central_message'] as String? ?? '', style: text.bodyLarge),
       if ((summary['key_takeaways'] as List?)?.isNotEmpty ?? false) ...[
         const SizedBox(height: 14),
@@ -360,6 +374,19 @@ class _StudyState extends ConsumerState<_Study> {
             clipBehavior: Clip.antiAlias,
             child: ExpansionTile(
               shape: const Border(),
+              leading: InkWell(
+                onTap: () => _changeArt(
+                  day['art_key'] as String?,
+                  (key) => repo.setDayArt(study['id'] as String, day['day_number'] as int, key),
+                ),
+                child: SelahArt(
+                  key: Key('day-art-${day['day_number']}'),
+                  artKey: day['art_key'] as String?,
+                  seed: '${study['id']}-${day['day_number']}',
+                  width: 48,
+                  height: 48,
+                ),
+              ),
               title: Text('${l.dayLabel(day['day_number'] as int)} · ${day['title']}', style: text.titleLarge),
               subtitle: Text(day['bible_reading'] as String? ?? ''),
               childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
