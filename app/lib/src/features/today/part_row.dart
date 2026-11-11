@@ -80,7 +80,14 @@ class PartHop extends StatefulWidget {
 
 class _PartHopState extends State<PartHop> with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(vsync: this, duration: Motion.hop, value: 1);
-  late final Animation<double> _curve = CurvedAnimation(parent: _controller, curve: Curves.easeOutBack);
+  late final Animation<double> _scale = TweenSequence<double>([
+    TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.25).chain(CurveTween(curve: Curves.easeOutBack)), weight: 50),
+    TweenSequenceItem(tween: Tween(begin: 1.25, end: 1.0).chain(CurveTween(curve: Curves.easeInOut)), weight: 50),
+  ]).animate(_controller);
+  late final Animation<double> _tilt = TweenSequence<double>([
+    TweenSequenceItem(tween: Tween(begin: 0.0, end: -8.0).chain(CurveTween(curve: Curves.easeOutBack)), weight: 50),
+    TweenSequenceItem(tween: Tween(begin: -8.0, end: 0.0).chain(CurveTween(curve: Curves.easeInOut)), weight: 50),
+  ]).animate(_controller);
 
   @override
   void didUpdateWidget(PartHop old) {
@@ -96,14 +103,11 @@ class _PartHopState extends State<PartHop> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
-    animation: _curve,
+    animation: _controller,
     child: widget.child,
-    builder: (context, child) {
-      final bump = math.sin(math.pi * _curve.value.clamp(0.0, 1.0));
-      return Transform.rotate(
-        angle: -8 * math.pi / 180 * bump,
-        child: Transform.scale(scale: 1 + 0.25 * bump, child: child),
-      );
-    },
+    builder: (context, child) => Transform.rotate(
+      angle: _tilt.value * math.pi / 180,
+      child: Transform.scale(key: const ValueKey('hop-scale'), scale: _scale.value, child: child),
+    ),
   );
 }

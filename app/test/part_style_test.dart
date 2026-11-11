@@ -45,15 +45,21 @@ void main() {
     expect(find.byKey(const ValueKey('tick-ripple')), findsNothing);
   });
 
+  testWidgets('the icon hops when ticked without Reduce Motion', (tester) async {
+    await tester.pumpWidget(row(false));
+    await tester.pumpWidget(row(true));
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(tester.widget<Transform>(find.byKey(const ValueKey('hop-scale'))).transform.storage[0], greaterThan(1.0));
+    await tester.pumpAndSettle();
+    expect(tester.widget<Transform>(find.byKey(const ValueKey('hop-scale'))).transform.storage[0], 1.0);
+  });
+
   testWidgets('no ripple and no hop with Reduce Motion', (tester) async {
     await tester.pumpWidget(row(false, reduce: true));
     await tester.pumpWidget(row(true, reduce: true));
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.byKey(const ValueKey('tick-ripple')), findsNothing);
-    final hop = tester.widget<Transform>(
-      find.descendant(of: find.byType(PartHop), matching: find.byType(Transform)).first,
-    );
-    expect(hop.transform.storage[0], 1.0);
+    expect(tester.widget<Transform>(find.byKey(const ValueKey('hop-scale'))).transform.storage[0], 1.0);
   });
 
   testWidgets('PartIcon falls back to an icon when the image is missing', (tester) async {
