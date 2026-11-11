@@ -9,10 +9,10 @@ import unittest
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
-from build import build  # noqa: E402
+from build import HERO_WIDTHS, build  # noqa: E402
 
 LANGUAGES = {"es": "index.html", "pt": os.path.join("pt", "index.html"), "en": os.path.join("en", "index.html")}
-FONTS = ["SourceSerif4-Regular.woff2", "SourceSerif4-It.woff2", "SourceSerif4-Semibold.woff2"]
+FONTS = ["InterVariable-latin.woff2", "SourceSerif4-It.woff2"]
 
 
 class BuildTest(unittest.TestCase):
@@ -89,6 +89,20 @@ class BuildTest(unittest.TestCase):
                     self.assertRegex(img, r'alt="[^"]+"')
                     self.assertRegex(img, r'width="\d+"')
                     self.assertRegex(img, r'height="\d+"')
+
+    def test_hero_photo_when_present(self):
+        present = os.path.isfile(os.path.join(HERE, "src", "img", f"hero-{HERO_WIDTHS[-1]}.webp"))
+        for lang, html in self.pages.items():
+            with self.subTest(lang=lang):
+                if present:
+                    self.assertRegex(html, r'<picture class="hero-media"><img [^>]*fetchpriority="high"')
+                else:
+                    self.assertNotIn("hero-media", html)
+
+    def test_one_accent_button(self):
+        for lang, html in self.pages.items():
+            with self.subTest(lang=lang):
+                self.assertEqual(html.count("pill-primary"), 1)
 
     def test_one_h1_per_page(self):
         for lang, html in self.pages.items():

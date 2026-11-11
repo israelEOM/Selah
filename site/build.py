@@ -36,6 +36,23 @@ def _alternates() -> str:
     return "\n    ".join(links)
 
 
+# The hero photo at each width written by site/hero.py, smallest first.
+HERO_WIDTHS = [720, 1280, 1920]
+
+
+def _hero_media(alt: str) -> str:
+    """The hero <picture>, or nothing when the photo hasn't been added yet (the CSS gradient stands in)."""
+    files = [(w, f"hero-{w}.webp") for w in HERO_WIDTHS if os.path.isfile(os.path.join(SRC, "img", f"hero-{w}.webp"))]
+    if not files:
+        return ""
+    srcset = ", ".join(f"/site/img/{name} {w}w" for w, name in files)
+    largest = files[-1][1]
+    return (
+        f'<picture class="hero-media"><img src="/site/img/{largest}" srcset="{srcset}" sizes="100vw" '
+        f'width="1920" height="1280" alt="{alt}" fetchpriority="high" decoding="async"></picture>'
+    )
+
+
 def render(lang: str) -> str:
     """The page for [lang]. Fails when a strings file lacks a key the Spanish one has, or a placeholder is left."""
     strings = _strings(lang)
@@ -55,6 +72,7 @@ def render(lang: str) -> str:
         home=PAGES[lang],
         canonical=ORIGIN + PAGES[lang],
         alternates=_alternates(),
+        hero_media=_hero_media(strings["alt_hero"]),
     )
     left = re.findall(r"\$\{[^}]*\}", page)
     if left:

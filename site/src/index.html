@@ -19,70 +19,72 @@
     <meta property="og:locale" content="${og_locale}">
     <meta name="twitter:card" content="summary_large_image">
     ${alternates}
-    <link rel="preload" href="/site/fonts/SourceSerif4-Semibold.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/site/fonts/InterVariable-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="/site/styles.css">
   </head>
   <body>
     <header class="top">
       <div class="wrap top-inner">
         <a class="wordmark" href="${home}">Selah</a>
-        <a class="top-link" href="/today">${open_app}</a>
+        <a class="pill pill-ghost pill-small" href="/today">${open_app}</a>
       </div>
     </header>
 
     <main>
-      <!-- The opening reads like the first page of a well-made book: the conviction, then the verse as its epigraph. -->
-      <section class="opening">
-        <div class="wrap opening-inner">
+      <!-- Full-bleed opening at blue hour: someone alone with the Word, the conviction and its verse set over the photo. -->
+      <section class="hero">
+        ${hero_media}
+        <div class="hero-shade" aria-hidden="true"></div>
+        <div class="wrap hero-inner">
           <h1>${hero_heading}</h1>
-          <blockquote class="epigraph">
+          <blockquote class="verse">
             <p>“${verse_text}”</p>
             <cite>${verse_cite}</cite>
           </blockquote>
           <p class="lede">${hero_lede}</p>
-          <p><a class="button" href="/churches">${cta_start}</a></p>
+          <p class="actions">
+            <a class="pill pill-primary" href="/churches">${cta_start}</a>
+            <a class="pill pill-ghost" href="/today">${open_app}</a>
+          </p>
         </div>
       </section>
 
-      <!-- How it works follows the week itself, so it reads like a table of contents. -->
-      <section class="how" aria-labelledby="how-heading">
+      <!-- How it works follows the week: three steps on graphite cards, numbered, no icons. -->
+      <section class="section how" aria-labelledby="how-heading">
         <div class="wrap">
           <h2 id="how-heading">${how_heading}</h2>
-          <ol class="week">
-            <li><span class="when">${step1_when}</span><span class="leader" aria-hidden="true"></span><span class="what">${step1_text}</span></li>
-            <li><span class="when">${step2_when}</span><span class="leader" aria-hidden="true"></span><span class="what">${step2_text}</span></li>
-            <li><span class="when">${step3_when}</span><span class="leader" aria-hidden="true"></span><span class="what">${step3_text}</span></li>
+          <ol class="steps">
+            <li class="card"><span class="step-number" aria-hidden="true">01</span><h3>${step1_when}</h3><p>${step1_text}</p></li>
+            <li class="card"><span class="step-number" aria-hidden="true">02</span><h3>${step2_when}</h3><p>${step2_text}</p></li>
+            <li class="card"><span class="step-number" aria-hidden="true">03</span><h3>${step3_when}</h3><p>${step3_text}</p></li>
           </ol>
         </div>
       </section>
 
-      <section class="glimpse" aria-labelledby="glimpse-heading">
+      <section class="section glimpse" aria-labelledby="glimpse-heading">
         <div class="wrap glimpse-inner">
           <div class="glimpse-copy">
             <h2 id="glimpse-heading">${glimpse_heading}</h2>
             <p>${glimpse_text}</p>
           </div>
-          <figure class="devices">
+          <figure class="card devices">
             <img class="laptop" src="/site/img/laptop-today-light.webp" width="1600" height="1000" alt="${alt_laptop}" loading="lazy" decoding="async">
-            <picture class="phone">
-              <source srcset="/site/img/phone-today-dark.webp" media="(prefers-color-scheme: dark)">
-              <img src="/site/img/phone-today-light.webp" width="438" height="950" alt="${alt_phone}" loading="lazy" decoding="async">
-            </picture>
+            <img class="phone" src="/site/img/phone-today-dark.webp" width="438" height="950" alt="${alt_phone}" loading="lazy" decoding="async">
           </figure>
         </div>
       </section>
 
-      <section class="audiences">
+      <section class="section audiences">
         <div class="wrap audiences-inner">
-          <div class="audience">
+          <div class="card audience">
             <h2>${members_heading}</h2>
             <p>${members_text}</p>
-            <p><a class="button" href="/churches">${members_cta}</a></p>
+            <p><a class="pill pill-ghost" href="/churches">${members_cta}</a></p>
           </div>
-          <div class="audience">
+          <div class="card audience">
             <h2>${leaders_heading}</h2>
             <p>${leaders_text}</p>
-            <p><a class="button button-quiet" href="/login?next=%2Fwelcome%3Fstep%3Dleader">${leaders_cta}</a></p>
+            <p><a class="pill pill-ghost" href="/login?next=%2Fwelcome%3Fstep%3Dleader">${leaders_cta}</a></p>
           </div>
         </div>
       </section>
@@ -90,13 +92,13 @@
 
     <footer class="foot">
       <div class="wrap foot-inner">
-        <p class="foot-note">${footer_note}</p>
+        <a class="wordmark" href="${home}">Selah</a>
         <nav class="languages" aria-label="${language_label}">
           <a href="/" hreflang="es" lang="es" onclick="try{localStorage.setItem('site.lang','es')}catch(e){}">Español</a>
           <a href="/pt/" hreflang="pt" lang="pt" onclick="try{localStorage.setItem('site.lang','pt')}catch(e){}">Português</a>
           <a href="/en/" hreflang="en" lang="en" onclick="try{localStorage.setItem('site.lang','en')}catch(e){}">English</a>
         </nav>
-        <a class="top-link" href="/today">${open_app}</a>
+        <p class="foot-note">${footer_note} · <a href="/today">${open_app}</a></p>
       </div>
     </footer>
   </body>

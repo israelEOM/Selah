@@ -219,15 +219,19 @@ Tablets (600–1023) keep the app layout and one column for now.
 
 ### Landing page
 
-The public front door at `/` (Spanish), `/pt/` and `/en/`. It's a static site in `site/`, not a Flutter screen: one template rendered per language by `site/build.py`, with the same tokens as CSS custom properties in `site/src/styles.css`.
+The public front door at `/` (Spanish), `/pt/` and `/en/`. It's a static site in `site/`, not a Flutter screen: one template rendered per language by `site/build.py`, styled in `site/src/styles.css`.
+- **Its own look: blue hour.** Unlike the app's warm paper, the landing is dark only. Its pieces:
+  - **Surfaces:** a near-black canvas (`#171A1D`) with graphite cards one step lighter (`#1F2326`, 12 radius, 32 padding). There are no borders and no shadows.
+  - **Type:** Inter for UI and headings, at intermediate weights (480 for headings, 530 for the H1). Source Serif italic is used only for the verse.
+  - **Color:** Selah's green (`#3E7A61`) is the one accent, and it fills exactly one control, the hero's "start reading" pill. Every other control is a ghost pill with an ivory hairline.
 - **Returning members** (a church picked, or signed in) skip it and go straight to `/today`. Sign-in email links are forwarded to the app with their hash and query intact, and `/?home` always shows the page. The logic is `site/src/redirect.js`, inlined first in `<head>`.
 - **Sections, in order:**
-  1. The opening, like a book's facing pages: the conviction in the serif, and the verse as an epigraph under a short terracotta rule.
-  2. How it works, set like a table of contents through the week.
-  3. The app on a laptop and a phone, from the made-up demo church in `app/tool/demo_main.dart`.
-  4. Members and leaders, side by side and split by a rule, not cards.
+  1. The full-bleed hero: a photo of someone reading the Bible at dawn, with the conviction, the verse under a short green rule, the lede and the two pills. The top bar floats over it. `site/hero.py <photo>` writes `hero-{720,1280,1920}.webp` and `og.png`. Without those files the hero falls back to a blue-hour gradient.
+  2. How it works: three numbered graphite cards through the week (Sunday, during the week, each day).
+  3. The app on a laptop and a phone, on a graphite card, from the made-up demo church in `app/tool/demo_main.dart`.
+  4. Members and leaders: two graphite cards side by side.
   5. The footer, with the language switcher.
-- **No eyebrow labels, no icon-card rows.** The only script is the redirect check. Each page stays within 250 KB of HTML, CSS and fonts before images.
+- **No eyebrow labels and no icons on the cards.** The only script is the redirect check. Each page stays within 250 KB of HTML, CSS and fonts before images.
 - **Routing:** the app answers its own addresses from `app.html`. The list lives once in `app/tool/routes.py`, which writes Cloudflare's `_redirects`.
 
 ## Elevation & Depth
