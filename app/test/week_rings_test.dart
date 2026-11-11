@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:selah/l10n/app_localizations.dart';
@@ -187,5 +188,32 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('screen readers hear the state of each day and can activate it', (tester) async {
+    final handle = tester.ensureSemantics();
+    final picked = <String>[];
+    await tester.pumpWidget(
+      host(
+        rings({
+          '2026-10-26': const DateTicks(parts: {DayPart.reading}, complete: false, lastDay: null),
+          '2026-10-27': const DateTicks(parts: {DayPart.reading, DayPart.reflection, DayPart.prayer}, complete: true, lastDay: null),
+        }, onSelect: picked.add),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.bySemanticsLabel('Tuesday, today, done'), findsOneWidget);
+    expect(find.bySemanticsLabel('Monday, 1 of 3 parts'), findsOneWidget);
+    expect(find.bySemanticsLabel('Wednesday, nothing yet'), findsOneWidget);
+
+    final monday = tester.getSemantics(find.bySemanticsLabel('Monday, 1 of 3 parts'));
+    expect(monday.getSemanticsData().hasAction(SemanticsAction.tap), isTrue);
+    tester.semantics.tap(find.semantics.byLabel('Monday, 1 of 3 parts'));
+    await tester.pump();
+    expect(picked, ['2026-10-26']);
+
+    final friday = tester.getSemantics(find.bySemanticsLabel('Friday, nothing yet'));
+    expect(friday.getSemanticsData().hasAction(SemanticsAction.tap), isFalse);
+    handle.dispose();
   });
 }

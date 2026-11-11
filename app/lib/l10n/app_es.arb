@@ -339,5 +339,27 @@
   "eventsDetails": "Ver detalles",
   "eventsLater": "Después",
   "eventsAllDay": "Todo el día",
-  "eventsNone": "No hay próximos eventos."
+  "eventsNone": "No hay próximos eventos.",
+  "weekDaySemantics": "{day}, {state}",
+  "@weekDaySemantics": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "state": {
+        "type": "String"
+      }
+    }
+  },
+  "weekStateToday": "hoy",
+  "weekStateDone": "completo",
+  "weekStateParts": "{n} de 3 partes",
+  "@weekStateParts": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "weekStateNone": "sin partes aún"
 }

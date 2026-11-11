@@ -751,4 +751,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get eventsNone => 'No upcoming events.';
+
+  @override
+  String weekDaySemantics(String day, String state) {
+    return '$day, $state';
+  }
+
+  @override
+  String get weekStateToday => 'today';
+
+  @override
+  String get weekStateDone => 'done';
+
+  @override
+  String weekStateParts(int n) {
+    return '$n of 3 parts';
+  }
+
+  @override
+  String get weekStateNone => 'nothing yet';
 }

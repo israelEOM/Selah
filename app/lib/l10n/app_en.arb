@@ -303,5 +303,10 @@
   "eventsDetails": "See details",
   "eventsLater": "Later",
   "eventsAllDay": "All day",
-  "eventsNone": "No upcoming events."
+  "eventsNone": "No upcoming events.",
+  "weekDaySemantics": "{day}, {state}",
+  "weekStateToday": "today",
+  "weekStateDone": "done",
+  "weekStateParts": "{n} of 3 parts",
+  "weekStateNone": "nothing yet"
 }

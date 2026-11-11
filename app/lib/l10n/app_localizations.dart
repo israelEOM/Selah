@@ -1431,6 +1431,36 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'No hay próximos eventos.'**
   String get eventsNone;
+
+  /// No description provided for @weekDaySemantics.
+  ///
+  /// In es, this message translates to:
+  /// **'{day}, {state}'**
+  String weekDaySemantics(String day, String state);
+
+  /// No description provided for @weekStateToday.
+  ///
+  /// In es, this message translates to:
+  /// **'hoy'**
+  String get weekStateToday;
+
+  /// No description provided for @weekStateDone.
+  ///
+  /// In es, this message translates to:
+  /// **'completo'**
+  String get weekStateDone;
+
+  /// No description provided for @weekStateParts.
+  ///
+  /// In es, this message translates to:
+  /// **'{n} de 3 partes'**
+  String weekStateParts(int n);
+
+  /// No description provided for @weekStateNone.
+  ///
+  /// In es, this message translates to:
+  /// **'sin partes aún'**
+  String get weekStateNone;
 }
 
 class _AppLocalizationsDelegate
