@@ -28,14 +28,55 @@ void main() {
     expect(p.isDone(d), isTrue);
     expect(p.days[1]!.doneOn, '2026-10-28');
     expect((await loadProgress('s1')).isDone(d), isTrue);
-    expect(await loadDoneDates(), contains('2026-10-28'));
+  });
+
+  test('each tick records its own date', () async {
+    final d = day(1);
+    await togglePart('s1', d, DayPart.reading, DateTime(2026, 10, 27, 9));
+    final p = await togglePart('s1', d, DayPart.reflection, DateTime(2026, 10, 28, 9));
+    expect(p.days[1]!.partsOn, {DayPart.reading: '2026-10-27', DayPart.reflection: '2026-10-28'});
+    final byDate = await loadTicksByDate();
+    expect(byDate['2026-10-27']!.parts, {DayPart.reading});
+    expect(byDate['2026-10-28']!.parts, {DayPart.reflection});
+    expect(byDate['2026-10-28']!.complete, isFalse);
+  });
+
+  test('a tick made for a past date lands on that date and finishes the day there', () async {
+    final d = day(1);
+    for (final part in DayPart.values) {
+      await togglePart('s1', d, part, DateTime(2026, 10, 28, 9), on: '2026-10-27');
+    }
+    final byDate = await loadTicksByDate();
+    expect(byDate['2026-10-27']!.complete, isTrue);
+    expect(byDate['2026-10-27']!.lastDay, (studyId: 's1', day: 1));
+    expect(byDate.containsKey('2026-10-28'), isFalse);
+    expect((await loadProgress('s1')).days[1]!.doneOn, '2026-10-27');
+  });
+
+  test('unticking removes the part from its date', () async {
+    await togglePart('s1', day(1), DayPart.reading, now);
+    await togglePart('s1', day(1), DayPart.reading, now);
+    expect(await loadTicksByDate(), isEmpty);
+  });
+
+  test('progress saved before part dates still loads and lands on doneOn', () async {
+    SharedPreferences.setMockInitialValues({
+      'progress:s1': '{"1":{"parts":["reading","reflection","prayer"],"doneOn":"2026-10-20"},"2":{"parts":["reading"],"doneOn":null}}',
+      'read:s2': ['1'],
+    });
+    final byDate = await loadTicksByDate();
+    expect(byDate.keys, ['2026-10-20']);
+    expect(byDate['2026-10-20']!.complete, isTrue);
+    expect((await loadProgress('s1')).days[2]!.parts, {DayPart.reading});
   });
 
   test('done dates span studies', () async {
     final d = day(1, reading: null, prayer: null);
     await togglePart('s1', d, DayPart.reflection, DateTime(2026, 10, 27));
     await togglePart('s2', d, DayPart.reflection, DateTime(2026, 10, 28));
-    expect(await loadDoneDates(), {'2026-10-27', '2026-10-28'});
+    final byDate = await loadTicksByDate();
+    expect(byDate.keys.toSet(), {'2026-10-27', '2026-10-28'});
+    expect(byDate['2026-10-28']!.lastDay, (studyId: 's2', day: 1));
   });
 
   test('a day without prayer is done after reading and reflection', () async {
@@ -53,7 +94,7 @@ void main() {
     final p = await togglePart('s1', d, DayPart.prayer, now);
     expect(p.isDone(d), isFalse);
     expect(p.days[1]!.doneOn, isNull);
-    expect(await loadDoneDates(), isEmpty);
+    expect(await loadTicksByDate(), isEmpty);
   });
 
   test('old read marks count as done without a date', () async {
@@ -62,7 +103,7 @@ void main() {
     expect(p.isDone(day(1)), isTrue);
     expect(p.isDone(day(2)), isTrue);
     expect(p.isDone(day(3)), isFalse);
-    expect(await loadDoneDates(), isEmpty);
+    expect(await loadTicksByDate(), isEmpty);
   });
 
   test('progress is per study', () async {

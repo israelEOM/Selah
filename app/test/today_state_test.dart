@@ -72,16 +72,6 @@ void main() {
     expect(r.takeaway, isNull);
   });
 
-  test('weekCircles ignores other weeks and spans studies', () {
-    final circles = weekCircles({'2026-10-26', '2026-10-27', '2026-10-28', '2026-10-21'}, DateTime(2026, 10, 29));
-    expect(circles, [true, true, true, false, false, false, false]);
-  });
-
-  test('weekCircles on a Sunday covers the week before it', () {
-    final circles = weekCircles({'2026-10-26', '2026-11-01'}, DateTime(2026, 11, 1));
-    expect(circles, [true, false, false, false, false, false, true]);
-  });
-
   test('a malformed summary is ignored rather than crashing', () {
     final days = {for (var i = 1; i <= 5; i++) i: finished('2026-10-27')};
     final now = DateTime(2026, 10, 29);

@@ -75,7 +75,7 @@ class _Today extends ConsumerWidget {
         ],
       ),
       const SizedBox(height: Space.l),
-      _WeekRow(doneDates: ref.watch(doneDatesProvider).value ?? const {}, now: now),
+      _WeekRow(ticks: ref.watch(ticksByDateProvider).value ?? const {}, now: now),
       const SizedBox(height: Space.xl),
     ];
     Widget page(List<Widget> children) {
@@ -270,17 +270,17 @@ void _openBible(String reference, String versionCode) =>
 
 /// Monday to Sunday, today ringed and finished days filled with a check that springs in.
 class _WeekRow extends StatelessWidget {
-  const _WeekRow({required this.doneDates, required this.now});
+  const _WeekRow({required this.ticks, required this.now});
 
-  final Set<String> doneDates;
+  final Map<String, DateTicks> ticks;
   final DateTime now;
 
   @override
   Widget build(BuildContext context) {
     final locale = AppLocalizations.of(context)!.localeName;
     final tones = context.tones;
-    final done = weekCircles(doneDates, now);
     final monday = DateTime(now.year, now.month, now.day - (now.weekday - 1));
+    final done = [for (var i = 0; i < 7; i++) ticks[localDate(DateTime(monday.year, monday.month, monday.day + i))]?.complete ?? false];
     return Row(
       key: const ValueKey('week'),
       mainAxisAlignment: MainAxisAlignment.spaceBetween,

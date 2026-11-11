@@ -44,9 +44,3 @@ TodayState todayFor({required PublicStudy? study, required StudyProgress progres
   final dayOfYear = DateTime.utc(now.year, now.month, now.day).difference(DateTime.utc(now.year)).inDays + 1; // utc: DST-proof
   return AllDone(passage, takeaways.isEmpty ? null : takeaways[dayOfYear % takeaways.length]);
 }
-
-/// Monday to Sunday of `now`'s week, true where a day was finished.
-List<bool> weekCircles(Set<String> doneDates, DateTime now) {
-  final monday = DateTime(now.year, now.month, now.day - (now.weekday - 1));
-  return [for (var i = 0; i < 7; i++) doneDates.contains(localDate(DateTime(monday.year, monday.month, monday.day + i)))];
-}
