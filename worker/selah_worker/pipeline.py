@@ -2,7 +2,7 @@
 import re
 from datetime import datetime, timezone
 
-from selah_worker import ai, youtube
+from selah_worker import ai, art, youtube
 from selah_worker.bible import parse_reference
 from selah_worker.db import client
 from selah_worker.grounding import fold, locate, window_end, window_start
