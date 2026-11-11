@@ -20,11 +20,15 @@ const _library = [
 ];
 
 class _FakeRepository implements SelahRepository {
+  bool fail = false;
   (String, String?)? studyArt;
   (String, int, String?)? dayArt;
 
   @override
-  Future<void> setStudyArt(String studyId, String? key) async => studyArt = (studyId, key);
+  Future<void> setStudyArt(String studyId, String? key) async {
+        if (fail) throw Exception('network');
+        studyArt = (studyId, key);
+      }
 
   @override
   Future<void> setDayArt(String studyId, int dayNumber, String? key) async => dayArt = (studyId, dayNumber, key);
@@ -84,6 +88,17 @@ Future<_FakeRepository> _pump(WidgetTester tester) async {
 String? _shown(WidgetTester tester, Key key) => tester.widget<SelahArt>(find.byKey(key)).artKey;
 
 void main() {
+  testWidgets('a failed save says so plainly', (tester) async {
+    final fake = await _pump(tester);
+    fake.fail = true;
+    await tester.tap(find.text('Cambiar imagen'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('art-tile-dove')));
+    await tester.pumpAndSettle();
+    expect(find.text(AppLocalizations.of(tester.element(find.byType(SermonPage)))!.genericError), findsOneWidget);
+    expect(find.textContaining('ya hay'), findsNothing);
+  });
+
   testWidgets("changing a study's image saves it and shows it", (tester) async {
     final fake = await _pump(tester);
     await tester.tap(find.text('Cambiar imagen'));

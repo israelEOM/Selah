@@ -287,7 +287,7 @@ class _StudyState extends ConsumerState<_Study> {
   late int _days = (widget.detail.study?['number_of_days'] as int?) ?? 5;
   String? _notice;
 
-  Future<void> _run(Future<void> Function() action, {String? notice}) async {
+  Future<void> _run(Future<void> Function() action, {String? notice, String? error}) async {
     final l = AppLocalizations.of(context)!;
     try {
       await action();
@@ -296,7 +296,7 @@ class _StudyState extends ConsumerState<_Study> {
       ref.invalidate(publishedStudiesProvider(widget.churchId));
       if (mounted) setState(() => _notice = notice);
     } catch (_) {
-      if (mounted) setState(() => _notice = l.jobAlreadyRunning);
+      if (mounted) setState(() => _notice = error ?? l.jobAlreadyRunning);
     }
   }
 
@@ -324,8 +324,8 @@ class _StudyState extends ConsumerState<_Study> {
 
   Future<void> _changeArt(String? current, Future<void> Function(String key) save) async {
     final key = await showArtPicker(context, current: current);
-    if (key == null) return;
-    await _run(() => save(key));
+    if (key == null || !mounted) return;
+    await _run(() => save(key), error: AppLocalizations.of(context)!.genericError);
   }
 
   @override
@@ -374,17 +374,21 @@ class _StudyState extends ConsumerState<_Study> {
             clipBehavior: Clip.antiAlias,
             child: ExpansionTile(
               shape: const Border(),
-              leading: InkWell(
-                onTap: () => _changeArt(
-                  day['art_key'] as String?,
-                  (key) => repo.setDayArt(study['id'] as String, day['day_number'] as int, key),
-                ),
-                child: SelahArt(
-                  key: Key('day-art-${day['day_number']}'),
-                  artKey: day['art_key'] as String?,
-                  seed: '${study['id']}-${day['day_number']}',
-                  width: 48,
-                  height: 48,
+              leading: Tooltip(
+                message: l.changeImage,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(Radii.card),
+                  onTap: () => _changeArt(
+                    day['art_key'] as String?,
+                    (key) => repo.setDayArt(study['id'] as String, day['day_number'] as int, key),
+                  ),
+                  child: SelahArt(
+                    key: Key('day-art-${day['day_number']}'),
+                    artKey: day['art_key'] as String?,
+                    seed: '${study['id']}-${day['day_number']}',
+                    width: 48,
+                    height: 48,
+                  ),
                 ),
               ),
               title: Text('${l.dayLabel(day['day_number'] as int)} · ${day['title']}', style: text.titleLarge),
