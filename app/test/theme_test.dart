@@ -15,6 +15,33 @@ void main() {
     expect(tones.heroStart, const Color(0xFF2F5D4A));
   });
 
+  test('light part palette matches the spec', () {
+    final p = selahLightTheme().extension<PartPalette>()!;
+    expect(p.reading.color, const Color(0xFF2F5D4A));
+    expect(p.reflection.color, const Color(0xFFB8732E));
+    expect(p.prayer.color, const Color(0xFF5E6A9C));
+    expect(p.reflection.tint, const Color(0xFFF5EBDD));
+    expect(p.prayer.soft, const Color(0xFFD7DAEA));
+  });
+
+  test('dark theme has a part palette', () => expect(selahDarkTheme().extension<PartPalette>(), isNotNull));
+
+  testWidgets('context.partPalette reads the theme extension', (tester) async {
+    late PartPalette p;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: selahLightTheme(),
+        home: Builder(
+          builder: (context) {
+            p = context.partPalette;
+            return const SizedBox();
+          },
+        ),
+      ),
+    );
+    expect(p.reading.color, const Color(0xFF2F5D4A));
+  });
+
   test('dark theme is warm gray, not black, with sage and terracotta', () {
     final t = selahDarkTheme();
     final tones = t.extension<SelahTones>()!;

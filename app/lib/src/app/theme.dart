@@ -80,6 +80,53 @@ extension SelahThemeX on BuildContext {
   SelahTones get tones => Theme.of(this).extension<SelahTones>()!;
 }
 
+/// One part's colour: [color] for marks and fills, [tint] for a quiet background, [soft] for an unfilled track.
+@immutable
+class PartTone {
+  const PartTone({required this.color, required this.tint, required this.soft});
+
+  final Color color;
+  final Color tint;
+  final Color soft;
+
+  static PartTone lerp(PartTone a, PartTone b, double t) => PartTone(
+    color: Color.lerp(a.color, b.color, t)!,
+    tint: Color.lerp(a.tint, b.tint, t)!,
+    soft: Color.lerp(a.soft, b.soft, t)!,
+  );
+}
+
+/// The colours of the three parts of a day. They mark those parts and nothing else.
+@immutable
+class PartPalette extends ThemeExtension<PartPalette> {
+  const PartPalette({required this.reading, required this.reflection, required this.prayer});
+
+  final PartTone reading;
+  final PartTone reflection;
+  final PartTone prayer;
+
+  @override
+  PartPalette copyWith({PartTone? reading, PartTone? reflection, PartTone? prayer}) => PartPalette(
+    reading: reading ?? this.reading,
+    reflection: reflection ?? this.reflection,
+    prayer: prayer ?? this.prayer,
+  );
+
+  @override
+  PartPalette lerp(ThemeExtension<PartPalette>? other, double t) {
+    if (other is! PartPalette) return this;
+    return PartPalette(
+      reading: PartTone.lerp(reading, other.reading, t),
+      reflection: PartTone.lerp(reflection, other.reflection, t),
+      prayer: PartTone.lerp(prayer, other.prayer, t),
+    );
+  }
+}
+
+extension PartPaletteX on BuildContext {
+  PartPalette get partPalette => Theme.of(this).extension<PartPalette>()!;
+}
+
 /// The serif, in italic, for the hero quote.
 TextStyle serifQuote(BuildContext context) => TextStyle(
   fontFamily: _serif,
@@ -107,6 +154,7 @@ class _Palette {
     required this.primary,
     required this.onPrimary,
     required this.tones,
+    required this.parts,
   });
 
   final Brightness brightness;
@@ -115,6 +163,7 @@ class _Palette {
   final Color primary;
   final Color onPrimary;
   final SelahTones tones;
+  final PartPalette parts;
 }
 
 const _light = _Palette(
@@ -132,6 +181,11 @@ const _light = _Palette(
     heroStart: Color(0xFF2F5D4A),
     heroEnd: Color(0xFF244A3B),
   ),
+  parts: PartPalette(
+    reading: PartTone(color: Color(0xFF2F5D4A), tint: Color(0xFFE6EEE8), soft: Color(0xFFD3E2D8)),
+    reflection: PartTone(color: Color(0xFFB8732E), tint: Color(0xFFF5EBDD), soft: Color(0xFFEEDCC2)),
+    prayer: PartTone(color: Color(0xFF5E6A9C), tint: Color(0xFFE8E9F2), soft: Color(0xFFD7DAEA)),
+  ),
 );
 
 const _dark = _Palette(
@@ -148,6 +202,11 @@ const _dark = _Palette(
     today: Color(0xFFE0906E),
     heroStart: Color(0xFF26332C),
     heroEnd: Color(0xFF1F2A24),
+  ),
+  parts: PartPalette(
+    reading: PartTone(color: Color(0xFFA9CDB8), tint: Color(0xFF27332C), soft: Color(0xFF33443A)),
+    reflection: PartTone(color: Color(0xFFE2B27A), tint: Color(0xFF392F23), soft: Color(0xFF4A3C2A)),
+    prayer: PartTone(color: Color(0xFFB4BDEB), tint: Color(0xFF2B2F42), soft: Color(0xFF393E58)),
   ),
 );
 
@@ -189,7 +248,7 @@ ThemeData _build(_Palette p) {
     brightness: p.brightness,
     colorScheme: scheme,
     scaffoldBackgroundColor: p.background,
-    extensions: [p.tones],
+    extensions: [p.tones, p.parts],
     pageTransitionsTheme: selahPageTransitions(),
     textTheme: TextTheme(
       displaySmall: _heading(40, p.text, height: 1.1),

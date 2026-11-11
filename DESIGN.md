@@ -17,6 +17,24 @@ colors:
   hero-green-dark: "#26332C"
   hero-green-deep-dark: "#1F2A24"
   terracotta-dark: "#E0906E"
+  part-reading: "#2F5D4A"
+  part-reading-tint: "#E6EEE8"
+  part-reading-soft: "#D3E2D8"
+  part-reflection: "#B8732E"
+  part-reflection-tint: "#F5EBDD"
+  part-reflection-soft: "#EEDCC2"
+  part-prayer: "#5E6A9C"
+  part-prayer-tint: "#E8E9F2"
+  part-prayer-soft: "#D7DAEA"
+  part-reading-dark: "#A9CDB8"
+  part-reading-tint-dark: "#27332C"
+  part-reading-soft-dark: "#33443A"
+  part-reflection-dark: "#E2B27A"
+  part-reflection-tint-dark: "#392F23"
+  part-reflection-soft-dark: "#4A3C2A"
+  part-prayer-dark: "#B4BDEB"
+  part-prayer-tint-dark: "#2B2F42"
+  part-prayer-soft-dark: "#393E58"
 typography:
   display:
     fontFamily: "Source Serif 4, Georgia, serif"
@@ -145,6 +163,17 @@ Warm, low-saturation neutrals with one deep green and one earthy highlight.
 
 ### Secondary
 - **Terracotta** (`#A65033`; dark `#E0906E`): highlights only. Use it for today's marker in the week row, unread or new items, progress, small badges and eyebrow labels on paper or raised paper. It's never a fill for a card, button, banner or gradient, and never sits on the green hero card (it fails contrast there).
+
+### Part colours
+Each day has three parts, and each has its own colour, from `PartPalette` (`context.partPalette`) in `theme.dart`. A tone has a `color` for marks and fills, a `tint` for a quiet background and a `soft` for an unfilled track.
+
+| Part | Colour | Tint | Soft | Dark colour | Dark tint | Dark soft |
+|---|---|---|---|---|---|---|
+| Reading (green) | `#2F5D4A` | `#E6EEE8` | `#D3E2D8` | `#A9CDB8` | `#27332C` | `#33443A` |
+| Reflection (amber) | `#B8732E` | `#F5EBDD` | `#EEDCC2` | `#E2B27A` | `#392F23` | `#4A3C2A` |
+| Prayer (dusk blue) | `#5E6A9C` | `#E8E9F2` | `#D7DAEA` | `#B4BDEB` | `#2B2F42` | `#393E58` |
+
+**The rule:** part colours mark the three parts of a day, and only those. Don't use them as general accents, and terracotta keeps its role as the small highlight. Each colour reaches 3:1 on its own tint, and a paper check mark on it reaches 3:1 (non-text), enforced by `app/test/contrast_test.dart`.
 
 ### Neutral
 - **Paper** (`#FAF7F2`; dark **charcoal** `#1E1C1A`): the page background.
