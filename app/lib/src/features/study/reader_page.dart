@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../../app/design/art.dart';
 import '../../app/theme.dart';
 import '../../core/format.dart';
 import '../../core/models.dart';
@@ -206,6 +207,8 @@ class _DayState extends ConsumerState<_Day> {
           quote: day.mainIdea,
         ),
       ),
+      const SizedBox(height: Space.l),
+      SelahArt(artKey: day.artKey, seed: '${original.id}-${day.number}', height: 120),
       if (day.bibleReading != null) ...[
         const SizedBox(height: Space.l),
         Column(

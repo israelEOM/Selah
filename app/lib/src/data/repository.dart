@@ -13,7 +13,7 @@ class SelahRepository {
   Future<List<StudyCard>> publishedStudies(String churchId) async {
     final rows = await _client
         .from('studies')
-        .select('id, slug, title, number_of_days, central_message, published_at, '
+        .select('id, slug, title, number_of_days, central_message, published_at, art_key, '
             'sermons!studies_sermon_id_fkey(thumbnail_url, preacher, channel, sermon_date), '
             'study_translations(language, title, central_message)')
         .eq('church_id', churchId)
@@ -26,7 +26,7 @@ class SelahRepository {
   Future<PublicStudy?> studyBySlug(String churchId, String slug) async {
     final row = await _client
         .from('studies')
-        .select('id, slug, title, number_of_days, bible_version_code, output_language, summary, central_message, published_at, '
+        .select('id, slug, title, number_of_days, bible_version_code, output_language, summary, central_message, published_at, art_key, '
             'sermons!studies_sermon_id_fkey(youtube_video_id, title, preacher, channel, thumbnail_url, sermon_date), devotional_days(*), study_translations(*)')
         .eq('church_id', churchId)
         .eq('slug', slug)
@@ -39,7 +39,7 @@ class SelahRepository {
   Future<PublicStudy?> newestStudy(String churchId) async {
     final row = await _client
         .from('studies')
-        .select('id, slug, title, number_of_days, bible_version_code, output_language, summary, central_message, published_at, '
+        .select('id, slug, title, number_of_days, bible_version_code, output_language, summary, central_message, published_at, art_key, '
             'sermons!studies_sermon_id_fkey(youtube_video_id, title, preacher, channel, thumbnail_url, sermon_date), devotional_days(*), study_translations(*)')
         .eq('church_id', churchId)
         .eq('status', 'published')

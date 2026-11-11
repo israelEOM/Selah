@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:selah/src/app/design/art.dart';
 import 'package:selah/src/app/theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -158,6 +159,14 @@ void main() {
     expect(find.text('Reflexión 2'), findsOneWidget);
   });
 
+  testWidgets('the reader shows a 120-tall illustration for the day under its header', (tester) async {
+    await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/2');
+    final art = find.byType(SelahArt);
+    expect(art, findsOneWidget);
+    expect(tester.getSize(art).height, 120);
+    expect(find.byType(ArtPlaceholder), findsOneWidget);
+  });
+
   testWidgets('the reader shows the day on iOS', (tester) async {
     // Portrait: the iOS sliver bar only builds its large title there.
     tester.view.physicalSize = const Size(1800, 2700);
@@ -224,7 +233,11 @@ void main() {
     expect(inChip('prayer', 'Oración'), findsNothing);
     // The reflection's heading passes 45% of the screen while the page still has more below.
     final heading = tester.getTopLeft(find.text('REFLEXIÓN')).dy;
-    await tester.drag(find.byType(Scrollable).first, Offset(0, -(heading - 844 * 0.3)));
+    // In two drags, as a finger scrolls: the section positions the bar reads lag the scroll by a frame.
+    final distance = heading - 844 * 0.3;
+    await tester.drag(find.byType(Scrollable).first, Offset(0, -distance / 2));
+    await tester.pumpAndSettle();
+    await tester.drag(find.byType(Scrollable).first, Offset(0, -distance / 2));
     await tester.pumpAndSettle();
     expect(inChip('reflection', 'Reflexión'), findsOneWidget);
     expect(inChip('reading', 'Lectura'), findsNothing);

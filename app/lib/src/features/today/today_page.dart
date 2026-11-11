@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../../app/design/art.dart';
 import '../../app/theme.dart';
 import '../../core/format.dart';
 import '../../core/models.dart';
@@ -300,6 +301,7 @@ class _Today extends ConsumerWidget {
             quote: day.mainIdea,
             glow: done,
             animateGlow: moment,
+            art: SelahArt(artKey: day.artKey, seed: '${study.id}-${day.number}', shape: ArtShape.circle),
           ),
         ),
       ),

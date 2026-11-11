@@ -85,6 +85,10 @@ flutter:
           weight: 700
   generate: true
 
+  assets:
+    - assets/art/
+    - assets/art/parts/
+
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

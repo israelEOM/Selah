@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:selah/l10n/app_localizations.dart';
+import 'package:selah/src/app/design/art.dart';
 import 'package:selah/src/app/theme.dart';
 import 'package:selah/src/core/models.dart';
 import 'package:selah/src/data/current_church.dart';
@@ -135,6 +136,16 @@ void main() {
     expect(find.text('MARTES, 27 DE OCTUBRE'), findsOneWidget);
     expect(_weekChecks(), findsNothing);
     expect(find.byType(FinishLine), findsNothing);
+  });
+
+  testWidgets("Today's hero card shows the day's art", (tester) async {
+    final json = _json();
+    (json['devotional_days'] as List<Map<String, dynamic>>)[0]['art_key'] = 'vine-grapes';
+    await _pump(tester, study: json);
+    final art = find.descendant(of: find.byType(HeroCard), matching: find.byType(SelahArt));
+    expect(art, findsOneWidget);
+    expect(tester.widget<SelahArt>(art).artKey, 'vine-grapes');
+    expect(tester.widget<SelahArt>(art).shape, ArtShape.circle);
   });
 
   testWidgets('a day without prayer has no prayer row', (tester) async {
