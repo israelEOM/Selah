@@ -49,7 +49,7 @@ class PartRow extends StatelessWidget {
             ],
           ),
         ),
-        PartTick(part: part, label: title, ticked: ticked, onTap: onTick),
+        PartTick(key: ValueKey('tick-${part.name}'), part: part, label: title, ticked: ticked, onTap: onTick),
       ],
     );
     return Pressable(

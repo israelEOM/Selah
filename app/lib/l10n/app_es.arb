@@ -361,5 +361,11 @@
       }
     }
   },
-  "weekStateNone": "sin partes aún"
+  "weekStateNone": "sin partes aún",
+  "todayYesterday": "Ayer",
+  "finishTodayTitle": "Listo por hoy.",
+  "finishTodayLine": "Ve en paz.",
+  "finishPastTitle": "Día completo.",
+  "finishPastLine": "Nada perdido.",
+  "pastDayNotTooLate": "No es tarde. Aún puedes terminar este día."
 }

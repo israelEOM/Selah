@@ -44,3 +44,11 @@ TodayState todayFor({required PublicStudy? study, required StudyProgress progres
   final dayOfYear = DateTime.utc(now.year, now.month, now.day).difference(DateTime.utc(now.year)).inDays + 1; // utc: DST-proof
   return AllDone(passage, takeaways.isEmpty ? null : takeaways[dayOfYear % takeaways.length]);
 }
+
+/// The newest study's day last worked on [date], or null when that date's last tick belongs elsewhere (or none was
+/// made). The caller then shows the day [todayFor] would.
+DevotionalDay? dayOnDate({required PublicStudy study, required Map<String, DateTicks> ticks, required String date}) {
+  final last = ticks[date]?.lastDay;
+  if (last == null || last.studyId != study.id) return null;
+  return study.days.where((d) => d.number == last.day).firstOrNull;
+}

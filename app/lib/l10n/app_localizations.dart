@@ -1461,6 +1461,42 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'sin partes aún'**
   String get weekStateNone;
+
+  /// No description provided for @todayYesterday.
+  ///
+  /// In es, this message translates to:
+  /// **'Ayer'**
+  String get todayYesterday;
+
+  /// No description provided for @finishTodayTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Listo por hoy.'**
+  String get finishTodayTitle;
+
+  /// No description provided for @finishTodayLine.
+  ///
+  /// In es, this message translates to:
+  /// **'Ve en paz.'**
+  String get finishTodayLine;
+
+  /// No description provided for @finishPastTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Día completo.'**
+  String get finishPastTitle;
+
+  /// No description provided for @finishPastLine.
+  ///
+  /// In es, this message translates to:
+  /// **'Nada perdido.'**
+  String get finishPastLine;
+
+  /// No description provided for @pastDayNotTooLate.
+  ///
+  /// In es, this message translates to:
+  /// **'No es tarde. Aún puedes terminar este día.'**
+  String get pastDayNotTooLate;
 }
 
 class _AppLocalizationsDelegate

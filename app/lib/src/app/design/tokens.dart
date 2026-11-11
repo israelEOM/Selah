@@ -56,6 +56,15 @@ abstract final class Motion {
   static const hop = Duration(milliseconds: 600);
   static const ripple = Duration(milliseconds: 600);
   static const staggerStep = Duration(milliseconds: 40);
+
+  /// Moment A: the light rising in the hero card, and the finish line's wait and rise.
+  static const glow = Duration(milliseconds: 1800);
+  static const finishDelay = Duration(milliseconds: 700);
+  static const finishRise = Duration(milliseconds: 1000);
+
+  /// Today's content sliding between days of the week, and how far it travels.
+  static const daySwitch = Duration(milliseconds: 250);
+  static const daySwitchShift = 24.0;
   static const tapDebounce = Duration(milliseconds: 400);
   static const pressScale = 0.97;
   static const press = SpringDescription(mass: 1, stiffness: 500, damping: 28);

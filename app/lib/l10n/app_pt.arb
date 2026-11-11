@@ -308,5 +308,11 @@
   "weekStateToday": "hoje",
   "weekStateDone": "completo",
   "weekStateParts": "{n} de 3 partes",
-  "weekStateNone": "nada ainda"
+  "weekStateNone": "nada ainda",
+  "todayYesterday": "Ontem",
+  "finishTodayTitle": "Pronto por hoje.",
+  "finishTodayLine": "Vá em paz.",
+  "finishPastTitle": "Dia completo.",
+  "finishPastLine": "Nada perdido.",
+  "pastDayNotTooLate": "Não é tarde. Você ainda pode terminar este dia."
 }

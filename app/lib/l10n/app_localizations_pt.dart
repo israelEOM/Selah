@@ -767,4 +767,23 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get weekStateNone => 'nada ainda';
+
+  @override
+  String get todayYesterday => 'Ontem';
+
+  @override
+  String get finishTodayTitle => 'Pronto por hoje.';
+
+  @override
+  String get finishTodayLine => 'Vá em paz.';
+
+  @override
+  String get finishPastTitle => 'Dia completo.';
+
+  @override
+  String get finishPastLine => 'Nada perdido.';
+
+  @override
+  String get pastDayNotTooLate =>
+      'Não é tarde. Você ainda pode terminar este dia.';
 }

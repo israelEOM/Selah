@@ -84,4 +84,24 @@ void main() {
     expect(m.passage, 'Juan 3:16');
     expect(m.takeaway, 'solo esta');
   });
+
+  group('dayOnDate', () {
+    DateTicks on(String studyId, int day) => DateTicks(parts: const {DayPart.reading}, complete: false, lastDay: (studyId: studyId, day: day));
+
+    test('returns the day last worked on that date', () {
+      expect(dayOnDate(study: s, ticks: {'2026-10-26': on('s1', 3)}, date: '2026-10-26')?.number, 3);
+    });
+
+    test('is null when nothing was ticked that date', () {
+      expect(dayOnDate(study: s, ticks: {'2026-10-26': on('s1', 3)}, date: '2026-10-25'), isNull);
+    });
+
+    test('is null when the date belongs to another study', () {
+      expect(dayOnDate(study: s, ticks: {'2026-10-26': on('other', 3)}, date: '2026-10-26'), isNull);
+    });
+
+    test('is null when the study has no such day', () {
+      expect(dayOnDate(study: s, ticks: {'2026-10-26': on('s1', 9)}, date: '2026-10-26'), isNull);
+    });
+  });
 }
