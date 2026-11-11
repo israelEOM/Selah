@@ -367,5 +367,7 @@
   "finishTodayLine": "Ve en paz.",
   "finishPastTitle": "Día completo.",
   "finishPastLine": "Nada perdido.",
-  "pastDayNotTooLate": "No es tarde. Aún puedes terminar este día."
+  "pastDayNotTooLate": "No es tarde. Aún puedes terminar este día.",
+  "tapToTick": "Toca para marcar",
+  "dayCompleteBackToToday": "Día completo · volver a Hoy"
 }

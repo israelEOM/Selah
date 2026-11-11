@@ -1497,6 +1497,18 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'No es tarde. Aún puedes terminar este día.'**
   String get pastDayNotTooLate;
+
+  /// No description provided for @tapToTick.
+  ///
+  /// In es, this message translates to:
+  /// **'Toca para marcar'**
+  String get tapToTick;
+
+  /// No description provided for @dayCompleteBackToToday.
+  ///
+  /// In es, this message translates to:
+  /// **'Día completo · volver a Hoy'**
+  String get dayCompleteBackToToday;
 }
 
 class _AppLocalizationsDelegate

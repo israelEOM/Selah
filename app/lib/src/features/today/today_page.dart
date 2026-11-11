@@ -23,8 +23,9 @@ import 'today_selection.dart';
 import 'today_state.dart';
 import 'week_rings.dart';
 
-/// Ticks [part], dated [on] (`yyyy-MM-dd`) or today. When that finishes the day it marks the day just finished (so
-/// Today plays moment A), plays the success haptic and returns true. Today and the reader both tick through this.
+/// Ticks [part], dated [on] (`yyyy-MM-dd`) or today. When that finishes the day it plays the success haptic, returns
+/// true and, if [announce], marks the day just finished so Today plays moment A. Today and the reader both tick
+/// through this; the phone reader announces only when its "back to Today" pill is tapped.
 Future<bool> tickWithFeedback(
   WidgetRef ref,
   String progressId,
@@ -32,12 +33,13 @@ Future<bool> tickWithFeedback(
   DayPart part,
   DateTime now, {
   String? on,
+  bool announce = true,
 }) async {
   final progress = await togglePart(progressId, day, part, now, on: on);
   // A toggle can only finish the day by adding its last part, so done now means it just became done.
   final done = progress.isDone(day);
   // Marked before the reload, so the first build that shows the finished day already knows to play moment A.
-  if (done) ref.read(justFinishedProvider.notifier).set((studyId: progressId, day: day.number));
+  if (done && announce) ref.read(justFinishedProvider.notifier).set((studyId: progressId, day: day.number));
   ref.invalidate(studyProgressProvider(progressId));
   ref.invalidate(ticksByDateProvider);
   if (done) await SelahHaptics.success();

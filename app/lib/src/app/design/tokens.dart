@@ -65,6 +65,10 @@ abstract final class Motion {
   /// Today's content sliding between days of the week, and how far it travels.
   static const daySwitch = Duration(milliseconds: 250);
   static const daySwitchShift = 24.0;
+
+  /// The reader's tick bar giving way to the "Day complete" pill.
+  static const dockSwap = Duration(milliseconds: 600);
+
   static const tapDebounce = Duration(milliseconds: 400);
   static const pressScale = 0.97;
   static const press = SpringDescription(mass: 1, stiffness: 500, damping: 28);

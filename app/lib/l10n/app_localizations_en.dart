@@ -789,4 +789,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get pastDayNotTooLate =>
       'Not too late. You can still finish this day.';
+
+  @override
+  String get tapToTick => 'Tap to tick';
+
+  @override
+  String get dayCompleteBackToToday => 'Day complete · back to Today';
 }

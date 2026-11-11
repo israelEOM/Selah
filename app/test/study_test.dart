@@ -12,6 +12,9 @@ import 'package:selah/src/core/models.dart';
 import 'package:selah/src/data/providers.dart';
 import 'package:selah/src/features/study/reader_page.dart';
 import 'package:selah/src/features/study/study_page.dart';
+import 'package:selah/src/features/study/tick_dock.dart';
+import 'package:selah/src/features/today/part_tick.dart';
+import 'package:selah/src/features/today/today_selection.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Map<String, dynamic> _day(int n) => {
@@ -26,6 +29,8 @@ Map<String, dynamic> _day(int n) => {
       'start_seconds': 100.0 * n,
       'end_seconds': 100.0 * n + 50,
     };
+
+const _phone = Size(390, 844);
 
 const _church = Church(id: 'A', slug: 'vida-nueva', name: 'Iglesia Vida Nueva');
 
@@ -64,6 +69,8 @@ Future<GoRouter> _pump(
   double textScale = 1,
   Size? size,
   TargetPlatform? platform,
+  Map<String, dynamic>? json,
+  bool reduceMotion = false,
 }) async {
   if (size != null) {
     tester.view.physicalSize = size;
@@ -73,6 +80,7 @@ Future<GoRouter> _pump(
   SharedPreferences.setMockInitialValues(prefs);
   final router = GoRouter(initialLocation: location, routes: [
     GoRoute(path: '/', builder: (_, _) => const Text('HOME')),
+    GoRoute(path: '/today', builder: (_, _) => const Text('TODAY')),
     GoRoute(path: '/c/vida-nueva', builder: (_, _) => const Text('CHURCH')),
     GoRoute(path: '/c/vida-nueva/studies/:slug', builder: (_, s) => StudyPage(church: _church, slug: s.pathParameters['slug']!)),
     GoRoute(
@@ -87,7 +95,7 @@ Future<GoRouter> _pump(
   await tester.pumpWidget(ProviderScope(
     overrides: [
       studyProvider.overrideWith((ref, key) async =>
-          key == (churchId: 'A', slug: 'retiro-espiritual') ? PublicStudy.fromJson(_json) : null),
+          key == (churchId: 'A', slug: 'retiro-espiritual') ? PublicStudy.fromJson(json ?? _json) : null),
     ],
     child: MaterialApp.router(
       theme: selahLightTheme().copyWith(platform: platform),
@@ -96,7 +104,7 @@ Future<GoRouter> _pump(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       builder: (context, child) => MediaQuery(
-        data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(textScale)),
+        data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(textScale), disableAnimations: reduceMotion),
         child: child!,
       ),
     ),
@@ -182,12 +190,11 @@ void main() {
     expect(find.text('Día siguiente'), findsNothing);
   });
 
-  testWidgets('ticking the three parts in the reader marks the day done on the study page', (tester) async {
-    final router = await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/1');
+  testWidgets('ticking from the bar marks the part on the study page', (tester) async {
+    final router = await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/1', size: _phone);
     expect(find.text('Marcar como leído'), findsNothing);
     for (final part in ['reading', 'reflection', 'prayer']) {
-      await tester.ensureVisible(find.byKey(ValueKey('tick-$part')));
-      await tester.tap(find.byKey(ValueKey('tick-$part')));
+      await tester.tap(find.byKey(ValueKey('dock-$part')));
       await tester.pumpAndSettle();
     }
     final prefs = await SharedPreferences.getInstance();
@@ -197,6 +204,139 @@ void main() {
     await tester.scrollUntilVisible(find.text('Título día 2'), 300);
     expect(find.byIcon(Icons.check_circle), findsOneWidget);
     expect(find.text('Título día 1'), findsOneWidget);
+  });
+
+  testWidgets('the tick bar stays on screen while scrolling to the prayer', (tester) async {
+    await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/1', size: _phone);
+    expect(find.byType(PartTick), findsNothing);
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, -2000));
+    await tester.pumpAndSettle();
+    expect(find.byType(TickDock).hitTestable(), findsOneWidget);
+    expect(find.text('Toca para marcar'), findsOneWidget);
+  });
+
+  testWidgets('the current part follows the section in view', (tester) async {
+    await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/1', size: _phone);
+    Finder inChip(String part, String text) =>
+        find.descendant(of: find.byKey(ValueKey('dock-$part')), matching: find.text(text));
+    expect(inChip('reading', 'Lectura'), findsOneWidget);
+    expect(inChip('prayer', 'Oración'), findsNothing);
+    // The reflection's heading passes 45% of the screen while the page still has more below.
+    final heading = tester.getTopLeft(find.text('REFLEXIÓN')).dy;
+    await tester.drag(find.byType(Scrollable).first, Offset(0, -(heading - 844 * 0.3)));
+    await tester.pumpAndSettle();
+    expect(inChip('reflection', 'Reflexión'), findsOneWidget);
+    expect(inChip('reading', 'Lectura'), findsNothing);
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, -2000));
+    await tester.pumpAndSettle();
+    expect(inChip('prayer', 'Oración'), findsOneWidget);
+    expect(inChip('reading', 'Lectura'), findsNothing);
+  });
+
+  testWidgets('a day without prayer shows only two chips and completes after two ticks', (tester) async {
+    final json = {
+      ..._json,
+      'devotional_days': [
+        {..._day(1), 'prayer': null},
+        _day(2),
+        _day(3),
+      ],
+    };
+    await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/1', size: _phone, json: json);
+    expect(find.byKey(const ValueKey('dock-prayer')), findsNothing);
+    expect(find.byKey(const ValueKey('dock-reading')), findsOneWidget);
+    expect(find.byKey(const ValueKey('dock-reflection')), findsOneWidget);
+    for (final part in ['reading', 'reflection']) {
+      await tester.tap(find.byKey(ValueKey('dock-$part')));
+      await tester.pumpAndSettle();
+    }
+    expect(find.text('Día completo · volver a Hoy'), findsOneWidget);
+  });
+
+  testWidgets('completing the day shows the back to Today pill and does not navigate on its own', (tester) async {
+    final router = await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/1', size: _phone);
+    final container = ProviderScope.containerOf(tester.element(find.byType(ReaderPage)));
+    for (final part in ['reading', 'reflection', 'prayer']) {
+      await tester.tap(find.byKey(ValueKey('dock-$part')));
+      await tester.pumpAndSettle();
+    }
+    expect(find.text('Día completo · volver a Hoy'), findsOneWidget);
+    expect(find.text('Toca para marcar'), findsNothing);
+    expect(router.state.uri.path, '/c/vida-nueva/studies/retiro-espiritual/day/1');
+    // Moment A waits for the pill, so it plays on Today rather than behind the reader.
+    expect(container.read(justFinishedProvider), isNull);
+    await tester.tap(find.text('Día completo · volver a Hoy'));
+    await tester.pumpAndSettle();
+    expect(router.state.uri.path, '/today');
+    expect(container.read(justFinishedProvider), (studyId: 'study-1', day: 1));
+  });
+
+  testWidgets('a tick from the bar lands on the date picked on Today', (tester) async {
+    await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/1', size: _phone);
+    final container = ProviderScope.containerOf(tester.element(find.byType(ReaderPage)));
+    container.read(selectedDateProvider.notifier).select('2020-01-02');
+    await tester.tap(find.byKey(const ValueKey('dock-reading')));
+    await tester.pumpAndSettle();
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString('progress:study-1'), contains('2020-01-02'));
+  });
+
+  testWidgets('each chip in the bar is a checkable button named for its part', (tester) async {
+    final handle = tester.ensureSemantics();
+    await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/1', size: _phone);
+    await tester.tap(find.byKey(const ValueKey('dock-reflection')));
+    await tester.pumpAndSettle();
+    expect(
+      tester.getSemantics(find.byKey(const ValueKey('dock-reflection'))),
+      matchesSemantics(label: 'Reflexión', isButton: true, hasCheckedState: true, isChecked: true, hasTapAction: true, hasFocusAction: true, isFocusable: true),
+    );
+    expect(
+      tester.getSemantics(find.byKey(const ValueKey('dock-prayer'))),
+      matchesSemantics(label: 'Oración', isButton: true, hasCheckedState: true, isChecked: false, hasTapAction: true, hasFocusAction: true, isFocusable: true),
+    );
+    handle.dispose();
+  });
+
+  testWidgets('the day complete pill slides in, or only fades with Reduce Motion', (tester) async {
+    for (final reduce in [false, true]) {
+      await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/1', size: _phone, reduceMotion: reduce);
+      for (final part in ['reading', 'reflection', 'prayer']) {
+        await tester.tap(find.byKey(ValueKey('dock-$part')));
+        await tester.pumpAndSettle();
+      }
+      expect(find.text('Día completo · volver a Hoy'), findsOneWidget);
+      final slides = find.descendant(of: find.byType(TickDock), matching: find.byType(SlideTransition));
+      expect(slides, reduce ? findsNothing : findsOneWidget, reason: 'reduce motion: $reduce');
+      await tester.pumpWidget(const SizedBox());
+    }
+  });
+
+  testWidgets('the tick bar fits at 200% text', (tester) async {
+    await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/1', size: _phone, textScale: 2);
+    expect(find.byType(TickDock), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, -2000));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    for (final part in ['reading', 'reflection', 'prayer']) {
+      await tester.tap(find.byKey(ValueKey('dock-$part')));
+      await tester.pumpAndSettle();
+    }
+    expect(find.text('Día completo · volver a Hoy'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('the desktop reader keeps inline ticks and no dock', (tester) async {
+    await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/1', size: const Size(1280, 900), platform: TargetPlatform.android);
+    expect(find.byType(TickDock), findsNothing);
+    expect(find.byType(PartTick), findsNWidgets(3));
+    for (final part in ['reading', 'reflection', 'prayer']) {
+      await tester.ensureVisible(find.byKey(ValueKey('tick-$part')));
+      await tester.tap(find.byKey(ValueKey('tick-$part')));
+      await tester.pumpAndSettle();
+    }
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString('progress:study-1'), contains('"doneOn"'));
   });
 
   testWidgets('old read marks still show as done', (tester) async {

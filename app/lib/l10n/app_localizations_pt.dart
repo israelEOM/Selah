@@ -786,4 +786,10 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get pastDayNotTooLate =>
       'Não é tarde. Você ainda pode terminar este dia.';
+
+  @override
+  String get tapToTick => 'Toque para marcar';
+
+  @override
+  String get dayCompleteBackToToday => 'Dia completo · voltar para Hoje';
 }

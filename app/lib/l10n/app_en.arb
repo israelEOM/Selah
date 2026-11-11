@@ -314,5 +314,7 @@
   "finishTodayLine": "Go in peace.",
   "finishPastTitle": "Day complete.",
   "finishPastLine": "Nothing lost.",
-  "pastDayNotTooLate": "Not too late. You can still finish this day."
+  "pastDayNotTooLate": "Not too late. You can still finish this day.",
+  "tapToTick": "Tap to tick",
+  "dayCompleteBackToToday": "Day complete · back to Today"
 }

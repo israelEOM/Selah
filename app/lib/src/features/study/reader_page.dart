@@ -12,7 +12,10 @@ import '../home/language_menu.dart';
 import '../../l10n/locale.dart';
 import '../today/part_tick.dart';
 import '../today/today_page.dart' show tickWithFeedback;
+import '../today/today_selection.dart';
+import '../today/week_rings.dart' show PartRing;
 import 'study_widgets.dart';
+import 'tick_dock.dart';
 import 'translation_banner.dart';
 
 /// One devotional day, laid out for reading on a phone.
@@ -73,7 +76,7 @@ class ReaderPage extends ConsumerWidget {
 void _goToDay(BuildContext context, String path, PublicStudy original) =>
     Router.neglect(context, () => context.pushReplacement(path, extra: original));
 
-class _Day extends ConsumerWidget {
+class _Day extends ConsumerStatefulWidget {
   const _Day({
     required this.church,
     required this.study,
@@ -89,44 +92,105 @@ class _Day extends ConsumerWidget {
   final DevotionalDay day;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_Day> createState() => _DayState();
+}
+
+class _DayState extends ConsumerState<_Day> {
+  /// The top of each part's first section, to tell which one is being read.
+  final _sections = {for (final part in DayPart.values) part: GlobalKey(debugLabel: 'section-${part.name}')};
+
+  /// The part being read: its chip is the wide one in the tick bar.
+  late DayPart _current = partsFor(widget.day).first;
+
+  @override
+  void didUpdateWidget(_Day old) {
+    super.didUpdateWidget(old);
+    if (widget.day.number != old.day.number) _current = partsFor(widget.day).first;
+  }
+
+  /// The last part whose section starts above 45% of the screen, or the last part once the page is scrolled to its
+  /// end (the final section can be too short to reach that line).
+  bool _onScroll(ScrollNotification n) {
+    if (n.depth != 0 || n.metrics.axis != Axis.vertical) return false;
+    final parts = partsFor(widget.day);
+    var current = parts.first;
+    if (n.metrics.maxScrollExtent > 0 && n.metrics.extentAfter < 1) {
+      current = parts.last;
+    } else {
+      final line = MediaQuery.sizeOf(context).height * 0.45;
+      for (final part in parts) {
+        final box = _sections[part]!.currentContext?.findRenderObject() as RenderBox?;
+        if (box != null && box.attached && box.localToGlobal(Offset.zero).dy <= line) current = part;
+      }
+    }
+    if (current != _current) setState(() => _current = current);
+    return false;
+  }
+
+  Future<bool> _tick(DayPart part, {bool announce = true}) => tickWithFeedback(
+        ref,
+        widget.original.id,
+        widget.day,
+        part,
+        ref.read(clockProvider)(),
+        on: ref.read(selectedDateProvider),
+        announce: announce,
+      );
+
+  /// Back to Today, which plays moment A for this day.
+  void _backToToday() {
+    ref.read(justFinishedProvider.notifier).set((studyId: widget.original.id, day: widget.day.number));
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/today');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final church = widget.church;
+    final study = widget.study;
+    final original = widget.original;
+    final language = widget.language;
+    final day = widget.day;
     final l = AppLocalizations.of(context)!;
     final text = Theme.of(context).textTheme;
     final progress = ref.watch(studyProgressProvider(original.id)).value;
     final ticked = progress?.days[day.number]?.parts ?? const <DayPart>{};
+    // Phones tick from the floating bar; the website layout keeps a tick beside each part.
+    final inline = siteLayout(context);
     Widget tick(DayPart part, String label) => PartTick(
           part: part,
           key: ValueKey('tick-${part.name}'),
           label: label,
           ticked: ticked.contains(part),
-          onTap: () => tickWithFeedback(ref, original.id, day, part, ref.read(clockProvider)()),
+          onTap: () => _tick(part),
         );
-    // The reflection tick sits on the first of reflection, application and questions that the day has.
+    // The reflection part starts at the first of reflection, application and questions that the day has.
     final reflectionHolder = day.reflection != null ? 0 : day.application != null ? 1 : day.questions.isNotEmpty ? 2 : -1;
-    Widget? reflectionTick(int i) => i == reflectionHolder ? tick(DayPart.reflection, l.reflection) : null;
+    Key? reflectionKey(int i) => i == reflectionHolder ? _sections[DayPart.reflection] : null;
+    Widget? reflectionTick(int i) => inline && i == reflectionHolder ? tick(DayPart.reflection, l.reflection) : null;
     final total = study.days.length;
     final reading = serifReading(context);
     String dayPath(int n) => '/c/${church.slug}/studies/${study.slug}/day/$n';
-    final scheme = Theme.of(context).colorScheme;
-    // The same on-hero colour HeroCard draws its text in.
-    final onHero = Theme.of(context).brightness == Brightness.light ? scheme.onPrimary : scheme.onSurface;
+    final onHero = heroForeground(context);
     final content = <Widget>[
       TranslationBanner(shown: study, original: original, language: language),
       DayHero(
         tag: dayHeroTag(original.id, day.number),
         child: HeroCard(
-          eyebrow: l.dayOfTotal(day.number, total),
+          // The eyebrow with the day's ring beside it.
           eyebrowAccessory: Row(
             children: [
-              for (final d in study.days)
-                Padding(
-                  padding: const EdgeInsets.only(right: 6),
-                  child: Icon(
-                    d.number <= day.number || (progress?.isDone(d) ?? false) ? Icons.circle : Icons.circle_outlined,
-                    size: 10,
-                    color: onHero.withValues(alpha: d.number == day.number ? 1 : 0.6),
-                  ),
+              Flexible(
+                child: Text(
+                  l.dayOfTotal(day.number, total).toUpperCase(),
+                  style: text.labelSmall?.copyWith(color: onHero.withValues(alpha: 0.8)),
                 ),
+              ),
+              const SizedBox(width: Space.s),
+              PartRing(parts: ticked, complete: progress?.isDone(day) ?? false, size: 22),
             ],
           ),
           title: day.title,
@@ -135,34 +199,46 @@ class _Day extends ConsumerWidget {
       ),
       if (day.bibleReading != null) ...[
         const SizedBox(height: Space.l),
-        Row(children: [
-          Expanded(
-            child: ExternalLink(
-              icon: Icons.menu_book_outlined,
-              label: l.readReference(day.bibleReading!, study.bibleVersionCode),
-              uri: bibleReaderUrl(day.bibleReading!, study.bibleVersionCode),
-            ),
-          ),
-          tick(DayPart.reading, l.bibleReading),
-        ]),
-        Text(l.externalReaderNote, style: text.bodySmall),
+        Column(
+          key: _sections[DayPart.reading],
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(children: [
+              Expanded(
+                child: ExternalLink(
+                  icon: Icons.menu_book_outlined,
+                  label: l.readReference(day.bibleReading!, study.bibleVersionCode),
+                  uri: bibleReaderUrl(day.bibleReading!, study.bibleVersionCode),
+                ),
+              ),
+              if (inline) tick(DayPart.reading, l.bibleReading),
+            ]),
+            Text(l.externalReaderNote, style: text.bodySmall),
+          ],
+        ),
       ],
       if (day.reflection != null)
         ReadingSection(
+          key: reflectionKey(0),
           label: l.reflection,
-          tick: reflectionTick(0),
+          part: DayPart.reflection,
+          trailing: reflectionTick(0),
           child: Text(day.reflection!, style: reading),
         ),
       if (day.application != null)
         ReadingSection(
+          key: reflectionKey(1),
           label: l.application,
-          tick: reflectionTick(1),
+          part: DayPart.reflection,
+          trailing: reflectionTick(1),
           child: Text(day.application!, style: reading),
         ),
       if (day.questions.isNotEmpty)
         ReadingSection(
+          key: reflectionKey(2),
           label: l.questions,
-          tick: reflectionTick(2),
+          part: DayPart.reflection,
+          trailing: reflectionTick(2),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -176,8 +252,10 @@ class _Day extends ConsumerWidget {
         ),
       if (day.prayer != null)
         ReadingSection(
+          key: _sections[DayPart.prayer],
           label: l.prayer,
-          tick: tick(DayPart.prayer, l.prayer),
+          part: DayPart.prayer,
+          trailing: inline ? tick(DayPart.prayer, l.prayer) : null,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -212,7 +290,7 @@ class _Day extends ConsumerWidget {
         ],
       ),
     ];
-    if (siteLayout(context)) {
+    if (inline) {
       // The website layout: the text at reading width, the study's days beside it.
       return SelahPage(
         backTo: '/c/${church.slug}/studies/${study.slug}',
@@ -231,11 +309,31 @@ class _Day extends ConsumerWidget {
         ],
       );
     }
-    return SelahPage(
+    final page = SelahPage(
       backTo: '/c/${church.slug}/studies/${study.slug}',
       actions: const [LanguageMenu(pageAction: true), SizedBox(width: 8)],
       maxWidth: 680,
-      children: content,
+      children: [...content, const SizedBox(height: TickDock.clearance)],
+    );
+    return NotificationListener<ScrollNotification>(
+      onNotification: _onScroll,
+      child: Stack(
+        children: [
+          page,
+          Positioned(
+            left: TickDock.sideInset,
+            right: TickDock.sideInset,
+            bottom: TickDock.bottomInset + MediaQuery.paddingOf(context).bottom,
+            child: TickDock(
+              parts: partsFor(day),
+              ticked: ticked,
+              current: _current,
+              onTick: (part) => _tick(part, announce: false),
+              onComplete: _backToToday,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
