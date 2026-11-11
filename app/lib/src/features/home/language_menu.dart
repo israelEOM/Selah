@@ -6,7 +6,7 @@ import '../../app/theme.dart';
 import '../../l10n/locale.dart';
 
 /// Each language is named in itself, whatever the current interface language.
-const _languageNames = {'es': 'Español', 'en': 'English', 'pt': 'Português'};
+const languageNames = {'es': 'Español', 'en': 'English', 'pt': 'Português'};
 
 class LanguageMenu extends ConsumerWidget {
   const LanguageMenu({super.key, this.pageAction = false});
@@ -28,7 +28,7 @@ class LanguageMenu extends ConsumerWidget {
         for (final language in supportedLanguages)
           PopupMenuItem(
             value: language,
-            child: Text(_languageNames[language]!),
+            child: Text(languageNames[language]!),
           ),
       ],
     );

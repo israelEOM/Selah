@@ -1527,6 +1527,18 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Día completo · volver a Hoy'**
   String get dayCompleteBackToToday;
+
+  /// No description provided for @dayNumber.
+  ///
+  /// In es, this message translates to:
+  /// **'Día {number}'**
+  String dayNumber(int number);
+
+  /// No description provided for @continueStudy.
+  ///
+  /// In es, this message translates to:
+  /// **'Continuar'**
+  String get continueStudy;
 }
 
 class _AppLocalizationsDelegate

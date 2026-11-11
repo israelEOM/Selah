@@ -187,6 +187,8 @@ class SelahApp extends ConsumerWidget {
         theme: selahLightTheme(),
         darkTheme: selahDarkTheme(),
         themeMode: ref.watch(themeModeProvider),
+        // Switching theme crossfades the colours.
+        themeAnimationDuration: Motion.medium,
         routerConfig: _router,
         locale: ref.watch(appLocaleProvider),
         localizationsDelegates: AppLocalizations.localizationsDelegates,

@@ -75,6 +75,7 @@ class SelahArt extends ConsumerWidget {
     this.height,
     this.heroTag,
     this.fixed = false,
+    this.radius = Radii.card,
   });
 
   final String? artKey;
@@ -89,6 +90,9 @@ class SelahArt extends ConsumerWidget {
   /// A fixed scene (welcome, empty states): [artKey] is used as given instead of being checked against the pickable
   /// library, so these scenes are never swapped for a study picture.
   final bool fixed;
+
+  /// The corner radius of a [ArtShape.rounded] picture.
+  final double radius;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -111,7 +115,7 @@ class SelahArt extends ConsumerWidget {
           );
     art = switch (shape) {
       ArtShape.circle => ClipOval(child: art),
-      ArtShape.rounded => ClipRRect(borderRadius: BorderRadius.circular(Radii.card), child: art),
+      ArtShape.rounded => ClipRRect(borderRadius: BorderRadius.circular(radius), child: art),
     };
     art = SizedBox(width: width, height: height, child: art);
     final label = entry?.alt[language] ?? entry?.alt['en'];

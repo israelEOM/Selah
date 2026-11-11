@@ -1,15 +1,16 @@
-import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../../app/design/art.dart';
 import '../../app/theme.dart';
 import '../../core/format.dart';
 import '../../core/models.dart';
 import '../../data/progress.dart';
 import '../../data/providers.dart';
 import '../home/language_menu.dart';
+import '../today/week_rings.dart';
 import '../../l10n/locale.dart';
 import 'study_widgets.dart';
 import 'translation_banner.dart';
@@ -68,20 +69,12 @@ class _StudyBody extends ConsumerWidget {
               child: Entrance(
                 index: i,
                 child: SelahRow(
-                  label: day.title,
+                  leading: PartRing(
+                    parts: progress?.days[day.number]?.parts ?? const {},
+                    complete: progress?.isDone(day) ?? false,
+                  ),
+                  label: '${l.dayNumber(day.number)} · ${day.title}',
                   detail: day.bibleReading,
-                  trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-                    if (progress?.isDone(day) ?? false)
-                      Icon(Icons.check_circle, color: context.tones.done)
-                    else
-                      Text('${day.number}', style: text.titleMedium?.copyWith(color: Theme.of(context).colorScheme.primary)),
-                    const SizedBox(width: Space.s),
-                    Icon(
-                      uiPlatformOf(context) == UiPlatform.ios ? CupertinoIcons.chevron_forward : Icons.chevron_right,
-                      color: context.tones.muted,
-                      size: uiPlatformOf(context) == UiPlatform.ios ? 18 : 24,
-                    ),
-                  ]),
                   onOpen: () => context.push('/c/${church.slug}/studies/${study.slug}/day/${day.number}', extra: original),
                 ),
               ),
@@ -89,9 +82,11 @@ class _StudyBody extends ConsumerWidget {
         ],
       ),
     );
+    final site = siteLayout(context);
     final beforePath = <Widget>[
       TranslationBanner(shown: study, original: original, language: language),
-      if (study.sermon.thumbnailUrl != null)
+      // The app layout shows the study's art in the collapsing header instead.
+      if (site && study.sermon.thumbnailUrl != null)
         ClipRRect(
           borderRadius: BorderRadius.circular(Radii.row),
           child: AspectRatio(
@@ -173,7 +168,7 @@ class _StudyBody extends ConsumerWidget {
       const SizedBox(height: 32),
       Text(l.aiNotice, style: text.bodySmall),
     ];
-    if (siteLayout(context)) {
+    if (site) {
       // The website layout: the summary at reading width on the left, the days beside it.
       return SelahPage(
         backTo: '/c/${church.slug}',
@@ -197,6 +192,12 @@ class _StudyBody extends ConsumerWidget {
     return SelahPage(
       backTo: '/c/${church.slug}',
       actions: const [LanguageMenu(pageAction: true), SizedBox(width: 8)],
+      header: SelahArt(
+        artKey: original.artKey,
+        seed: original.id,
+        width: double.infinity,
+        heroTag: studyArtTag(original.id),
+      ),
       children: [...beforePath, path, ...afterPath],
     );
   }

@@ -100,7 +100,7 @@ void main() {
     expect(find.text(_youth.title), findsOneWidget);
     expect(find.text('14'), findsOneWidget);
     expect(find.text('21'), findsOneWidget);
-    expect(find.text('sáb'), findsNWidgets(2));
+    expect(find.text('nov'), findsNWidgets(2));
     expect(find.text('18:00 – 20:00'), findsOneWidget);
   });
 
@@ -122,24 +122,30 @@ void main() {
     expect(find.text(es.eventsNone), findsOneWidget);
   });
 
-  testWidgets('tapping opens the event page on the church site', (tester) async {
+  testWidgets("the next event and a row's sheet open the event page on the church site", (tester) async {
     final (_, opened) = await _pump(tester, [_women, _men, _youth]);
     await tester.tap(find.text(es.eventsDetails));
     await tester.pumpAndSettle();
     await tester.tap(find.text(_youth.title));
     await tester.pumpAndSettle();
+    await tester.tap(find.descendant(of: find.byType(BottomSheet), matching: find.text(es.eventsDetails)));
+    await tester.pumpAndSettle();
     expect(opened, [_women.url, _youth.url]);
   });
 
-  testWidgets('event without url is not tappable', (tester) async {
+  testWidgets('an event without url has no link to open', (tester) async {
     final (_, opened) = await _pump(tester, [
       _event('Culto', DateTime(2026, 11, 15, 12), DateTime(2026, 11, 15, 13)),
       _event('Cena', DateTime(2026, 11, 22, 20), DateTime(2026, 11, 22, 22)),
     ]);
     expect(find.text(es.eventsDetails), findsNothing);
     await tester.tap(find.text('Culto'));
+    await tester.pumpAndSettle();
+    expect(find.byType(BottomSheet), findsNothing);
     await tester.tap(find.text('Cena'));
     await tester.pumpAndSettle();
+    expect(find.byType(BottomSheet), findsOneWidget);
+    expect(find.text(es.eventsDetails), findsNothing);
     expect(opened, isEmpty);
   });
 
@@ -194,5 +200,63 @@ void main() {
     final card = tester.getSize(find.byType(HeroCard)).width;
     final row = tester.getSize(find.byType(EventRow).first).width;
     expect(card, row);
+  });
+
+  testWidgets('events stick their group heading while scrolling', (tester) async {
+    final later = [
+      for (var d = 1; d <= 10; d++) _event('Evento $d', DateTime(2026, 11, 20 + d, 19), DateTime(2026, 11, 20 + d, 21)),
+    ];
+    await _pump(tester, [_women, ...later], size: const Size(390, 844), platform: TargetPlatform.android);
+    final heading = find.text(es.eventsLater.toUpperCase());
+    final startTop = tester.getTopLeft(heading).dy;
+    await tester.drag(find.byType(Scrollable).first, Offset(0, -(startTop + 300)));
+    await tester.pumpAndSettle();
+    expect(heading.hitTestable(), findsOneWidget);
+    expect(tester.getTopLeft(heading).dy, lessThan(160));
+  });
+
+  testWidgets('each row has a date tile with the month and the day number', (tester) async {
+    await _pump(tester, [_women, _men, _youth], size: const Size(390, 844), platform: TargetPlatform.android);
+    expect(find.text('nov'), findsNWidgets(2));
+    final month = tester.widget<Text>(find.text('nov').first);
+    expect(month.style?.color, selahLightTheme().extension<SelahTones>()!.accent);
+    expect(tester.getSize(find.byKey(const ValueKey('event-date-tile')).first), const Size(44, 48));
+  });
+
+  testWidgets('the day number counts in on first view', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(ProviderScope(
+      overrides: [repositoryProvider.overrideWithValue(_FakeRepository([_women, _youth]))],
+      child: MaterialApp(
+        theme: selahLightTheme().copyWith(platform: TargetPlatform.android),
+        locale: const Locale('es'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: EventsPage(church: _church, now: DateTime(2026, 11, 12, 10)),
+      ),
+    ));
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('21'), findsNothing);
+    await tester.pumpAndSettle();
+    expect(find.text('21'), findsOneWidget);
+  });
+
+  testWidgets('tapping an event opens a sheet', (tester) async {
+    final (_, opened) = await _pump(tester, [_women, _men, _youth], size: const Size(390, 844),
+        platform: TargetPlatform.android);
+    await tester.tap(find.text(_youth.title));
+    await tester.pumpAndSettle();
+    expect(opened, isEmpty);
+    final sheet = find.byType(BottomSheet);
+    expect(sheet, findsOneWidget);
+    expect(find.descendant(of: sheet, matching: find.text(_youth.title)), findsOneWidget);
+    expect(find.descendant(of: sheet, matching: find.text('ICP Alcorcón')), findsOneWidget);
+    expect(find.descendant(of: sheet, matching: find.textContaining('18:00 – 20:00')), findsOneWidget);
+    await tester.tap(find.descendant(of: sheet, matching: find.text(es.eventsDetails)));
+    await tester.pumpAndSettle();
+    expect(opened, [_youth.url]);
   });
 }

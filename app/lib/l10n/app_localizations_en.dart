@@ -804,4 +804,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dayCompleteBackToToday => 'Day complete · back to Today';
+
+  @override
+  String dayNumber(int number) {
+    return 'Day $number';
+  }
+
+  @override
+  String get continueStudy => 'Continue';
 }

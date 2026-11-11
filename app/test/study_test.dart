@@ -17,6 +17,7 @@ import 'package:selah/src/features/study/study_page.dart';
 import 'package:selah/src/features/study/tick_dock.dart';
 import 'package:selah/src/features/today/part_tick.dart';
 import 'package:selah/src/features/today/today_selection.dart';
+import 'package:selah/src/features/today/week_rings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Map<String, dynamic> _day(int n) => {
@@ -141,8 +142,8 @@ void main() {
   testWidgets('study page lists the days and opens one', (tester) async {
     final router = await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual');
     expect(find.text('La necesidad del retiro espiritual'), findsOneWidget);
-    await tester.scrollUntilVisible(find.text('Título día 2'), 300);
-    await tester.tap(find.text('Título día 2'));
+    await tester.scrollUntilVisible(find.text('Día 2 · Título día 2'), 300);
+    await tester.tap(find.text('Día 2 · Título día 2'));
     await tester.pumpAndSettle();
     expect(router.state.uri.path, '/c/vida-nueva/studies/retiro-espiritual/day/2');
   });
@@ -211,9 +212,9 @@ void main() {
     expect(prefs.getString('progress:study-1'), contains('"doneOn"'));
     router.go('/c/vida-nueva/studies/retiro-espiritual');
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.text('Título día 2'), 300);
-    expect(find.byIcon(Icons.check_circle), findsOneWidget);
-    expect(find.text('Título día 1'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Día 2 · Título día 2'), 300);
+    expect(tester.widgetList<PartRing>(find.byType(PartRing)).where((r) => r.complete), hasLength(1));
+    expect(find.text('Día 1 · Título día 1'), findsOneWidget);
   });
 
   testWidgets('the tick bar stays on screen while scrolling to the prayer', (tester) async {
@@ -443,8 +444,9 @@ void main() {
 
   testWidgets('old read marks still show as done', (tester) async {
     await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual', prefs: {'read:study-1': ['2']});
-    await tester.scrollUntilVisible(find.text('Título día 2'), 300);
-    expect(find.byIcon(Icons.check_circle), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Día 2 · Título día 2'), 300);
+    final done = tester.widgetList<PartRing>(find.byType(PartRing)).where((r) => r.complete).toList();
+    expect(done, hasLength(1));
   });
 
   testWidgets('the reader header carries the same hero tag as Hoy', (tester) async {
@@ -540,8 +542,8 @@ void main() {
       ),
     ));
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.text('Título día 2'), 300);
-    await tester.tap(find.text('Título día 2'));
+    await tester.scrollUntilVisible(find.text('Día 2 · Título día 2'), 300);
+    await tester.tap(find.text('Día 2 · Título día 2'));
     await tester.pumpAndSettle();
     expect(extra, isA<PublicStudy>());
   });
@@ -558,7 +560,7 @@ void main() {
 
   testWidgets('the study page puts the days beside the summary on desktop', (tester) async {
     await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual', size: desktop, platform: TargetPlatform.android);
-    expect(tester.getTopLeft(find.text('Título día 1')).dx, greaterThan(tester.getTopRight(find.text('La necesidad del retiro espiritual')).dx));
+    expect(tester.getTopLeft(find.text('Día 1 · Título día 1')).dx, greaterThan(tester.getTopRight(find.text('La necesidad del retiro espiritual')).dx));
   });
 
   testWidgets("the reader lists the study's days beside the text on desktop", (tester) async {
@@ -580,5 +582,34 @@ void main() {
     await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/2', size: const Size(390, 844), platform: TargetPlatform.android);
     expect(find.textContaining('Título día 1'), findsNothing);
     expect(find.textContaining('Título día 3'), findsNothing);
+  });
+
+  testWidgets('the study page header art carries the study hero tag', (tester) async {
+    await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual', size: _phone, platform: TargetPlatform.android);
+    final art = find.byWidgetPredicate((w) => w is SelahArt && w.heroTag == studyArtTag('study-1'));
+    expect(art, findsOneWidget);
+    expect(tester.getSize(art).height, 150);
+  });
+
+  testWidgets('the study header art collapses as the page scrolls', (tester) async {
+    await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual', size: _phone, platform: TargetPlatform.android);
+    final art = find.byWidgetPredicate((w) => w is SelahArt && w.heroTag == studyArtTag('study-1'));
+    // The bar's own height scrolls first, then the art shrinks under it.
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, -160));
+    await tester.pumpAndSettle();
+    expect(tester.getSize(art).height, lessThan(150));
+  });
+
+  testWidgets('the devotional path shows a ring per day', (tester) async {
+    await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual',
+        size: _phone,
+        platform: TargetPlatform.android,
+        prefs: {'progress:study-1': '{"2":{"parts":["reading"],"doneOn":null}}'});
+    await tester.scrollUntilVisible(find.text('Día 3 · Título día 3'), 300);
+    final rings = tester.widgetList<PartRing>(find.byType(PartRing)).toList();
+    expect(rings, hasLength(3));
+    expect(rings[1].parts, {DayPart.reading});
+    expect(rings[0].parts, isEmpty);
+    expect(find.text('Día 2 · Título día 2'), findsOneWidget);
   });
 }

@@ -11,6 +11,8 @@ import 'package:selah/src/core/models.dart';
 import 'package:selah/src/data/providers.dart';
 import 'package:selah/src/data/repository.dart';
 import 'package:selah/src/features/church/church_page.dart';
+import 'package:selah/src/app/design/art.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 const _church = Church(id: 'A', slug: 'vida-nueva', name: 'Iglesia Vida Nueva');
 
@@ -36,7 +38,9 @@ Future<_FakeRepository> _pump(WidgetTester tester,
     bool studiesLoading = false,
     List<StudyCard>? studies,
     Size? size,
-    TargetPlatform? platform}) async {
+    TargetPlatform? platform,
+    Map<String, Object> prefs = const {}}) async {
+  SharedPreferences.setMockInitialValues(prefs);
   if (size != null) {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
@@ -179,5 +183,34 @@ void main() {
     final caps = tester.widgetList<ConstrainedBox>(find.byType(ConstrainedBox))
         .where((b) => b.constraints.maxWidth == Layout.readingMeasure);
     expect(caps, isEmpty);
+  });
+
+  testWidgets('the featured study shows its art and day progress', (tester) async {
+    await _pump(
+      tester,
+      studies: fourStudies,
+      size: const Size(390, 844),
+      platform: TargetPlatform.android,
+      prefs: {'progress:1': '{"1":{"parts":["reading","reflection","prayer"],"doneOn":"2026-11-10"}}'},
+    );
+    final art = tester.widget<SelahArt>(find.byWidgetPredicate((w) => w is SelahArt && w.heroTag == studyArtTag('1')));
+    expect(art.height, 130);
+    expect(find.text('DEVOCIONAL DE LA SEMANA'), findsOneWidget);
+    expect(find.text('Devocional de 3 días · Día 2 de 3'), findsOneWidget);
+    final bar = tester.widget<LinearProgressIndicator>(find.byType(LinearProgressIndicator));
+    expect(bar.value, closeTo(1 / 3, 0.001));
+    await tester.tap(find.text('Continuar'));
+    await tester.pumpAndSettle();
+    expect(find.text('STUDY s1'), findsOneWidget);
+  });
+
+  testWidgets('study rows share the art hero tag with the study page', (tester) async {
+    await _pump(tester, studies: fourStudies, size: const Size(390, 844), platform: TargetPlatform.android);
+    for (final id in ['2', '3']) {
+      final art = find.byWidgetPredicate((w) => w is SelahArt && w.heroTag == studyArtTag(id));
+      await tester.scrollUntilVisible(art, 200, scrollable: find.byType(Scrollable).first);
+      expect(art, findsOneWidget);
+      expect(tester.getSize(art), const Size(52, 52));
+    }
   });
 }

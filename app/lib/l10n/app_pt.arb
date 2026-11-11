@@ -319,5 +319,7 @@
   "finishPastLine": "Nada perdido.",
   "pastDayNotTooLate": "Não é tarde. Você ainda pode terminar este dia.",
   "tapToTick": "Toque para marcar",
-  "dayCompleteBackToToday": "Dia completo · voltar para Hoje"
+  "dayCompleteBackToToday": "Dia completo · voltar para Hoje",
+  "dayNumber": "Dia {number}",
+  "continueStudy": "Continuar"
 }

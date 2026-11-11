@@ -17,6 +17,20 @@ final userIdProvider = StreamProvider<String?>((ref) {
   }).distinct();
 });
 
+/// The signed-in person's name from their sign-in provider, or their email; null when signed out or unknown.
+final userNameProvider = Provider<String?>((ref) {
+  if (ref.watch(userIdProvider).value == null) return null;
+  try {
+    final user = Supabase.instance.client.auth.currentUser;
+    final metadata = user?.userMetadata ?? const {};
+    final name = (metadata['full_name'] ?? metadata['name']) as String?;
+    return (name != null && name.trim().isNotEmpty) ? name.trim() : user?.email;
+  } catch (_) {
+    // Supabase not set up (tests, previews).
+    return null;
+  }
+});
+
 final churchProvider =
     FutureProvider.family<Church?, String>((ref, slug) => ref.watch(repositoryProvider).churchBySlug(slug));
 

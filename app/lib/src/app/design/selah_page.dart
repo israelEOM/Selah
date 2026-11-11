@@ -24,6 +24,9 @@ class SelahPage extends StatelessWidget {
     this.maxWidth = 760,
     this.lazy = false,
     this.wide = false,
+    this.header,
+    this.headerHeight = 150,
+    this.slivers = const [],
   });
 
   /// Null means no large title, only the slim bar (the reader).
@@ -47,6 +50,15 @@ class SelahPage extends StatelessWidget {
   /// In the website layout, use the full content width ([Layout.maxContent]) for a multi-column page, ignoring
   /// [maxWidth]. Narrower screens still use [maxWidth].
   final bool wide;
+
+  /// A picture under the bar, [headerHeight] tall, that shrinks and fades into the bar as the page scrolls. App
+  /// layout only: the website layout leaves it out.
+  final Widget? header;
+  final double headerHeight;
+
+  /// Slivers after [children] in the same centred column, for parts that need their own scrolling behaviour (pinned
+  /// group headings).
+  final List<Widget> slivers;
 
   @override
   Widget build(BuildContext context) {
@@ -119,13 +131,14 @@ class SelahPage extends StatelessWidget {
       sliver: SliverLayoutBuilder(
         builder: (context, constraints) {
           final side = Space.xl - 4 + max(0.0, (constraints.crossAxisExtent - maxWidth) / 2);
+          final Widget content = lazy
+              ? SliverList.list(children: children)
+              : SliverToBoxAdapter(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children),
+                );
           return SliverPadding(
             padding: EdgeInsets.fromLTRB(side, Space.l, side, bottom),
-            sliver: lazy
-                ? SliverList.list(children: children)
-                : SliverToBoxAdapter(
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children),
-                  ),
+            sliver: slivers.isEmpty ? content : SliverMainAxisGroup(slivers: [content, ...slivers]),
           );
         },
       ),
@@ -139,6 +152,19 @@ class SelahPage extends StatelessWidget {
       slivers: [
         header,
         if (ios && onRefresh != null) CupertinoSliverRefreshControl(onRefresh: onRefresh),
+        if (this.header case final art?)
+          SliverLayoutBuilder(
+            builder: (context, constraints) => SliverPadding(
+              padding: const EdgeInsets.only(top: Space.l),
+              sliver: SliverPersistentHeader(
+                delegate: _CollapsingHeaderDelegate(
+                  extent: headerHeight,
+                  side: Space.xl - 4 + max(0.0, (constraints.crossAxisExtent - maxWidth) / 2),
+                  child: art,
+                ),
+              ),
+            ),
+          ),
         body,
       ],
     );
@@ -184,6 +210,11 @@ class SelahPage extends StatelessWidget {
           SliverLayoutBuilder(
             builder: (context, constraints) {
               final side = max(Space.xl, (constraints.crossAxisExtent - width) / 2);
+              final Widget content = lazy
+                  ? SliverList.list(children: [...header, ...children])
+                  : SliverToBoxAdapter(
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [...header, ...children]),
+                    );
               return SliverPadding(
                 padding: EdgeInsets.fromLTRB(
                   side,
@@ -191,11 +222,7 @@ class SelahPage extends StatelessWidget {
                   side,
                   Layout.bottomGap + MediaQuery.paddingOf(context).bottom,
                 ),
-                sliver: lazy
-                    ? SliverList.list(children: [...header, ...children])
-                    : SliverToBoxAdapter(
-                        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [...header, ...children]),
-                      ),
+                sliver: slivers.isEmpty ? content : SliverMainAxisGroup(slivers: [content, ...slivers]),
               );
             },
           ),
@@ -221,4 +248,30 @@ class _SlimBarDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   bool shouldRebuild(_SlimBarDelegate old) => extent != old.extent || bar != old.bar;
+}
+
+/// [SelahPage.header]: full height at the top, then shrinking and fading under the bar as the page scrolls.
+class _CollapsingHeaderDelegate extends SliverPersistentHeaderDelegate {
+  _CollapsingHeaderDelegate({required this.extent, required this.side, required this.child});
+
+  final double extent;
+  final double side;
+  final Widget child;
+
+  @override
+  double get minExtent => 0;
+  @override
+  double get maxExtent => extent;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    final shown = (1 - shrinkOffset / extent).clamp(0.0, 1.0);
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: side),
+      child: Opacity(opacity: shown, child: child),
+    );
+  }
+
+  @override
+  bool shouldRebuild(_CollapsingHeaderDelegate old) => extent != old.extent || side != old.side || child != old.child;
 }
