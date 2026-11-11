@@ -99,13 +99,20 @@ class _DayState extends ConsumerState<_Day> {
   /// The top of each part's first section, to tell which one is being read.
   final _sections = {for (final part in DayPart.values) part: GlobalKey(debugLabel: 'section-${part.name}')};
 
+  /// Whether a tick from the bar finished the day during this visit. Only then does "back to Today" play moment A;
+  /// re-opening a day finished earlier shows the pill but doesn't replay it.
+  bool _finishedHere = false;
+
   /// The part being read: its chip is the wide one in the tick bar.
   late DayPart _current = partsFor(widget.day).first;
 
   @override
   void didUpdateWidget(_Day old) {
     super.didUpdateWidget(old);
-    if (widget.day.number != old.day.number) _current = partsFor(widget.day).first;
+    if (widget.day.number != old.day.number) {
+      _current = partsFor(widget.day).first;
+      _finishedHere = false;
+    }
   }
 
   /// The last part whose section starts above 45% of the screen, or the last part once the page is scrolled to its
@@ -137,9 +144,11 @@ class _DayState extends ConsumerState<_Day> {
         announce: announce,
       );
 
-  /// Back to Today, which plays moment A for this day.
+  /// Back to Today, which plays moment A for this day if it was finished here.
   void _backToToday() {
-    ref.read(justFinishedProvider.notifier).set((studyId: widget.original.id, day: widget.day.number));
+    if (_finishedHere) {
+      ref.read(justFinishedProvider.notifier).set((studyId: widget.original.id, day: widget.day.number));
+    }
     if (context.canPop()) {
       context.pop();
     } else {
@@ -328,7 +337,12 @@ class _DayState extends ConsumerState<_Day> {
               parts: partsFor(day),
               ticked: ticked,
               current: _current,
-              onTick: (part) => _tick(part, announce: false),
+              onTick: (part) {
+                // Decided before the tick, not from its result: that only arrives after the success haptic.
+                final finishes = !ticked.contains(part) && partsFor(day).every((p) => p == part || ticked.contains(p));
+                if (finishes) _finishedHere = true;
+                _tick(part, announce: false);
+              },
               onComplete: _backToToday,
             ),
           ),

@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'package:selah/l10n/app_localizations.dart';
 import 'package:selah/src/core/format.dart';
 import 'package:selah/src/core/models.dart';
+import 'package:selah/src/data/progress.dart';
 import 'package:selah/src/data/providers.dart';
 import 'package:selah/src/features/study/reader_page.dart';
 import 'package:selah/src/features/study/study_page.dart';
@@ -271,6 +272,35 @@ void main() {
     expect(container.read(justFinishedProvider), (studyId: 'study-1', day: 1));
   });
 
+  testWidgets('re-opening a finished day shows the pill but does not replay moment A', (tester) async {
+    final router = await _pump(
+      tester,
+      '/c/vida-nueva/studies/retiro-espiritual/day/1',
+      size: _phone,
+      prefs: {'progress:study-1': '{"1":{"parts":["reading","reflection","prayer"],"doneOn":"2026-10-27"}}'},
+    );
+    final container = ProviderScope.containerOf(tester.element(find.byType(ReaderPage)));
+    expect(find.text('Día completo · volver a Hoy'), findsOneWidget);
+    expect(
+      tester.getSemantics(find.descendant(of: find.byKey(const ValueKey('dock-complete')), matching: find.byType(Pressable))),
+      isSemantics(label: 'Día completo · volver a Hoy', isButton: true),
+    );
+    await tester.tap(find.text('Día completo · volver a Hoy'));
+    await tester.pumpAndSettle();
+    expect(router.state.uri.path, '/today');
+    expect(container.read(justFinishedProvider), isNull);
+  });
+
+  testWidgets('a quick second tap on a chip is ignored', (tester) async {
+    await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/1', size: _phone);
+    await tester.tap(find.byKey(const ValueKey('dock-reading')));
+    await tester.pump(const Duration(milliseconds: 50));
+    await tester.tap(find.byKey(const ValueKey('dock-reading')));
+    await tester.pumpAndSettle();
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString('progress:study-1'), contains('reading'));
+  });
+
   testWidgets('a tick from the bar lands on the date picked on Today', (tester) async {
     await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/1', size: _phone);
     final container = ProviderScope.containerOf(tester.element(find.byType(ReaderPage)));
@@ -288,11 +318,34 @@ void main() {
     await tester.pumpAndSettle();
     expect(
       tester.getSemantics(find.byKey(const ValueKey('dock-reflection'))),
-      matchesSemantics(label: 'Reflexión', isButton: true, hasCheckedState: true, isChecked: true, hasTapAction: true, hasFocusAction: true, isFocusable: true),
+      matchesSemantics(
+        label: 'Reflexión',
+        isButton: true,
+        hasCheckedState: true,
+        isChecked: true,
+        hasEnabledState: true,
+        isEnabled: true,
+        hasTapAction: true,
+        hasFocusAction: true,
+        isFocusable: true,
+      ),
     );
+    // The wide chip says what a tap does.
+    expect(tester.getSemantics(find.byKey(const ValueKey('dock-reading'))).hint, 'Toca para marcar');
+    expect(tester.getSemantics(find.byKey(const ValueKey('dock-prayer'))).hint, isEmpty);
     expect(
       tester.getSemantics(find.byKey(const ValueKey('dock-prayer'))),
-      matchesSemantics(label: 'Oración', isButton: true, hasCheckedState: true, isChecked: false, hasTapAction: true, hasFocusAction: true, isFocusable: true),
+      matchesSemantics(
+        label: 'Oración',
+        isButton: true,
+        hasCheckedState: true,
+        isChecked: false,
+        hasEnabledState: true,
+        isEnabled: true,
+        hasTapAction: true,
+        hasFocusAction: true,
+        isFocusable: true,
+      ),
     );
     handle.dispose();
   });
@@ -309,6 +362,42 @@ void main() {
       expect(slides, reduce ? findsNothing : findsOneWidget, reason: 'reduce motion: $reduce');
       await tester.pumpWidget(const SizedBox());
     }
+  });
+
+  testWidgets('a rebuild with the same current part does not restart the widening', (tester) async {
+    var current = DayPart.reading;
+    late StateSetter rebuild;
+    await tester.pumpWidget(MaterialApp(
+      theme: selahLightTheme(),
+      locale: const Locale('es'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: Scaffold(
+        body: Center(
+          child: SizedBox(
+            width: 366,
+            child: StatefulBuilder(builder: (context, setState) {
+              rebuild = setState;
+              return TickDock(
+                parts: DayPart.values,
+                ticked: const {},
+                current: current,
+                onTick: (_) {},
+                onComplete: () {},
+              );
+            }),
+          ),
+        ),
+      ),
+    ));
+    rebuild(() => current = DayPart.prayer);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+    rebuild(() {});
+    await tester.pump();
+    // Past the 280 ms the widening takes from the first change: a restart would still be animating.
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(tester.binding.hasScheduledFrame, isFalse);
   });
 
   testWidgets('the tick bar fits at 200% text', (tester) async {

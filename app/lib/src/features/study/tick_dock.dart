@@ -1,5 +1,6 @@
 import 'dart:ui' show ImageFilter, lerpDouble;
 
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 
 import '../../../l10n/app_localizations.dart';
@@ -78,8 +79,8 @@ class TickDock extends StatelessWidget {
             color: theme.scaffoldBackgroundColor.withValues(alpha: 0.72),
             child: Padding(
               padding: const EdgeInsets.all(6),
-              child: TweenAnimationBuilder<List<double>>(
-                tween: _FlexTween(end: [for (final p in parts) p == current ? _currentFlex : 1.0]),
+              child: TweenAnimationBuilder<_Flexes>(
+                tween: _FlexTween(end: _Flexes([for (final p in parts) p == current ? _currentFlex : 1.0])),
                 duration: reduce ? Duration.zero : Motion.medium,
                 curve: Curves.easeOutBack,
                 builder: (context, flex, _) => Row(
@@ -87,7 +88,7 @@ class TickDock extends StatelessWidget {
                     for (final (i, part) in parts.indexed)
                       Expanded(
                         // Expanded only takes whole numbers, so the animated flex is kept in hundredths.
-                        flex: (flex[i] * 100).round().clamp(1, 1000),
+                        flex: (flex.values[i] * 100).round().clamp(1, 1000),
                         child: _Chip(
                           key: ValueKey('dock-${part.name}'),
                           part: part,
@@ -107,15 +108,29 @@ class TickDock extends StatelessWidget {
   }
 }
 
-/// Lerps each chip's flex; a list of another length (a different day) jumps straight to the end.
-class _FlexTween extends Tween<List<double>> {
-  _FlexTween({required List<double> super.end});
+/// The chips' flex values, equal by value so a rebuild with the same current part doesn't restart the animation.
+@immutable
+class _Flexes {
+  const _Flexes(this.values);
+
+  final List<double> values;
 
   @override
-  List<double> lerp(double t) {
-    final from = begin, to = end!;
-    if (from == null || from.length != to.length) return to;
-    return [for (var i = 0; i < to.length; i++) lerpDouble(from[i], to[i], t)!];
+  bool operator ==(Object other) => other is _Flexes && listEquals(other.values, values);
+
+  @override
+  int get hashCode => Object.hashAll(values);
+}
+
+/// Lerps each chip's flex; a list of another length (a different day) jumps straight to the end.
+class _FlexTween extends Tween<_Flexes> {
+  _FlexTween({required _Flexes super.end});
+
+  @override
+  _Flexes lerp(double t) {
+    final from = begin?.values, to = end!.values;
+    if (from == null || from.length != to.length) return end!;
+    return _Flexes([for (var i = 0; i < to.length; i++) lerpDouble(from[i], to[i], t)!]);
   }
 }
 
@@ -137,7 +152,10 @@ class _Chip extends StatelessWidget {
     final icon = Stack(
       clipBehavior: Clip.none,
       children: [
-        PartHop(active: ticked, child: PartIcon(part: part, size: 36)),
+        PartHop(
+          active: ticked,
+          child: PartIcon(part: part, size: 36),
+        ),
         Positioned(
           top: -4,
           right: -4,
@@ -162,21 +180,23 @@ class _Chip extends StatelessWidget {
       ],
     );
     return Semantics(
-      button: true,
       checked: ticked,
       label: partLabel(l, part),
-      child: InkWell(
+      hint: current ? l.tapToTick : null,
+      // Pressable makes it a button, taps the haptic and ignores a second tap within Motion.tapDebounce.
+      child: Pressable(
         borderRadius: radius,
-        onTap: () {
-          SelahHaptics.tick();
-          onTap();
-        },
+        haptic: true,
+        onPressed: onTap,
         child: ExcludeSemantics(
           child: AnimatedContainer(
             duration: reduce ? Duration.zero : Motion.medium,
             height: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 8),
-            decoration: BoxDecoration(color: current ? tone.tint : tone.tint.withValues(alpha: 0), borderRadius: radius),
+            decoration: BoxDecoration(
+              color: current ? tone.tint : tone.tint.withValues(alpha: 0),
+              borderRadius: radius,
+            ),
             child: Row(
               mainAxisAlignment: current ? MainAxisAlignment.start : MainAxisAlignment.center,
               children: [
@@ -226,20 +246,27 @@ class _CompletePill extends StatelessWidget {
         color: scheme.primary,
         borderRadius: shape,
         clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Center(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(l.dayCompleteBackToToday, style: theme.textTheme.titleSmall?.copyWith(color: scheme.onPrimary)),
-                    const SizedBox(width: 4),
-                    Icon(Icons.chevron_right, size: 20, color: scheme.onPrimary),
-                  ],
+        child: Pressable(
+          borderRadius: shape,
+          semanticLabel: l.dayCompleteBackToToday,
+          onPressed: onTap,
+          child: ExcludeSemantics(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Center(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        l.dayCompleteBackToToday,
+                        style: theme.textTheme.titleSmall?.copyWith(color: scheme.onPrimary),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(Icons.chevron_right, size: 20, color: scheme.onPrimary),
+                    ],
+                  ),
                 ),
               ),
             ),

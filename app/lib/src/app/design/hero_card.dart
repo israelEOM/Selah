@@ -59,7 +59,7 @@ class HeroCard extends StatelessWidget {
 
   final String? eyebrow;
 
-  /// Sits under the eyebrow (the reader's progress dots).
+  /// Sits under the eyebrow, or stands in for it (the reader's "Day N of M" with the day's ring).
   final Widget? eyebrowAccessory;
   final String? title;
   final String? quote;
