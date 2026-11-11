@@ -23,8 +23,8 @@ final userNameProvider = Provider<String?>((ref) {
   try {
     final user = Supabase.instance.client.auth.currentUser;
     final metadata = user?.userMetadata ?? const {};
-    final name = (metadata['full_name'] ?? metadata['name']) as String?;
-    return (name != null && name.trim().isNotEmpty) ? name.trim() : user?.email;
+    final name = [metadata['full_name'], metadata['name']].whereType<String>().map((n) => n.trim()).where((n) => n.isNotEmpty);
+    return name.firstOrNull ?? user?.email;
   } catch (_) {
     // Supabase not set up (tests, previews).
     return null;
