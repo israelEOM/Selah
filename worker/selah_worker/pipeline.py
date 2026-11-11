@@ -166,8 +166,9 @@ def summary(job: dict) -> dict:
 
     db = client()
     title = content.pop("title")
+    art_key = art.valid_key(content.pop("art_key", None))
     fields = {
-        "output_language": language, "central_message": content.pop("central_message"), "summary": content,
+        "output_language": language, "central_message": content.pop("central_message"), "summary": content, "art_key": art_key,
         "bible_version_code": payload.get("bible_version_code", "RVR1960"), "status": "generating",
     }
     existing = db.table("studies").select("id").eq("sermon_id", sermon["id"]).execute().data
@@ -200,6 +201,7 @@ def devotional(job: dict) -> dict:
         "bible_reading": _label(d.bible_reading, study["output_language"]), "main_idea": d.main_idea,
         "reflection": d.reflection, "application": d.application, "questions": d.questions, "prayer": d.prayer,
         "start_seconds": window_start(windows, d.start_window), "end_seconds": window_end(windows, d.end_window),
+        "art_key": art.valid_key(d.art_key),
     } for d in output.days]
     db = client()
     db.table("devotional_days").delete().eq("study_id", study["id"]).execute()

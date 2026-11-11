@@ -6,6 +6,7 @@ from typing import TypeVar
 
 from pydantic import BaseModel
 
+from selah_worker import art
 from selah_worker.config import settings
 from selah_worker.schemas import AnalysisOut, DevotionalOut, SummaryOut, TranslationOut
 
@@ -124,12 +125,12 @@ def analyze(transcript: str, language: str, title: str | None, channel: str | No
 
 def summarize(analysis: dict, language: str) -> tuple[SummaryOut, dict]:
     source = "ANALYSIS\n" + json.dumps(analysis, ensure_ascii=False)
-    return generate(SUMMARY.format(language=LANGUAGES.get(language, language)), source, SummaryOut)
+    return generate(SUMMARY.format(language=LANGUAGES.get(language, language)) + "\n\n" + art.menu(), source, SummaryOut)
 
 
 def devotional(analysis: dict, transcript: str, days: int, language: str) -> tuple[DevotionalOut, dict]:
     source = "ANALYSIS\n" + json.dumps(analysis, ensure_ascii=False) + "\n\nTRANSCRIPT\n" + transcript
-    return generate(DEVOTIONAL.format(days=days, language=LANGUAGES.get(language, language)), source, DevotionalOut)
+    return generate(DEVOTIONAL.format(days=days, language=LANGUAGES.get(language, language)) + "\n\n" + art.menu(), source, DevotionalOut)
 
 
 def translate(source: dict, language: str) -> tuple[TranslationOut, dict]:

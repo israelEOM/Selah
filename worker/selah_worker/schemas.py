@@ -60,6 +60,7 @@ class SummaryOut(BaseModel):
     points: list[SummaryPointOut]
     conclusion: Optional[str] = None
     key_takeaways: list[str]
+    art_key: Optional[str] = Field(default=None, description="One key from the art menu in the instructions that best fits the sermon's theme; null if none fits")
 
 
 class DayOut(BaseModel):
@@ -73,6 +74,7 @@ class DayOut(BaseModel):
     prayer: str
     start_window: int
     end_window: int
+    art_key: Optional[str] = Field(default=None, description="One key from the art menu in the instructions that best fits this day's theme; null if none fits")
 
 
 class DevotionalOut(BaseModel):
