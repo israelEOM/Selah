@@ -235,6 +235,7 @@ class _Today extends ConsumerWidget {
               label: label(parts[i]),
               detail: parts[i] == DayPart.reading ? day.bibleReading : null,
               trailing: PartTick(
+                part: parts[i],
                 key: ValueKey('tick-${parts[i].name}'),
                 label: label(parts[i]),
                 ticked: ticked.contains(parts[i]),

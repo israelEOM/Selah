@@ -95,6 +95,7 @@ class _Day extends ConsumerWidget {
     final progress = ref.watch(studyProgressProvider(original.id)).value;
     final ticked = progress?.days[day.number]?.parts ?? const <DayPart>{};
     Widget tick(DayPart part, String label) => PartTick(
+          part: part,
           key: ValueKey('tick-${part.name}'),
           label: label,
           ticked: ticked.contains(part),

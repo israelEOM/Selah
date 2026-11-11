@@ -53,6 +53,8 @@ abstract final class Motion {
   static const short = Duration(milliseconds: 150);
   static const medium = Duration(milliseconds: 280);
   static const long = Duration(milliseconds: 420);
+  static const hop = Duration(milliseconds: 600);
+  static const ripple = Duration(milliseconds: 600);
   static const staggerStep = Duration(milliseconds: 40);
   static const tapDebounce = Duration(milliseconds: 400);
   static const pressScale = 0.97;
