@@ -21,12 +21,23 @@
     ${alternates}
     <link rel="preload" href="/site/fonts/InterVariable-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="/site/styles.css">
+    <!-- The header's frosted state, and sections rising into place the first time they reach the screen. -->
+    <script>${motion_script}</script>
   </head>
   <body>
+    <!-- Fixed header, after Mercury: see-through over the photo, frosted dark glass once the page scrolls. -->
     <header class="top">
       <div class="wrap top-inner">
         <a class="wordmark" href="${home}">Selah</a>
-        <a class="pill pill-ghost pill-small" href="/today">${open_app}</a>
+        <nav class="top-nav" aria-label="${nav_label}">
+          <a href="#how">${how_heading}</a>
+          <a href="#today">${nav_app}</a>
+          <a href="#audiences">${nav_churches}</a>
+        </nav>
+        <div class="top-actions">
+          <a class="top-login" href="/login">${nav_login}</a>
+          <a class="pill pill-solid pill-small" href="/today">${open_app}</a>
+        </div>
       </div>
     </header>
 
@@ -49,39 +60,130 @@
         </div>
       </section>
 
-      <!-- How it works follows the week: three steps on graphite cards, numbered, no icons. -->
-      <section class="section how" aria-labelledby="how-heading">
+      <!-- How it works follows the week: three steps on light cards, each with a painting from the app's library. -->
+      <section class="section how" id="how" aria-labelledby="how-heading">
         <div class="wrap">
-          <h2 id="how-heading">${how_heading}</h2>
+          <h2 id="how-heading" data-reveal>${how_heading}</h2>
           <ol class="steps">
-            <li class="card"><span class="step-number" aria-hidden="true">01</span><h3>${step1_when}</h3><p>${step1_text}</p></li>
-            <li class="card"><span class="step-number" aria-hidden="true">02</span><h3>${step2_when}</h3><p>${step2_text}</p></li>
-            <li class="card"><span class="step-number" aria-hidden="true">03</span><h3>${step3_when}</h3><p>${step3_text}</p></li>
+            <li class="card" data-reveal><img class="step-art" src="/site/img/art/scene-churches.webp" width="640" height="480" alt="" loading="lazy" decoding="async"><span class="step-number" aria-hidden="true">01</span><h3>${step1_when}</h3><p>${step1_text}</p></li>
+            <li class="card" data-reveal style="--delay: 100ms"><img class="step-art" src="/site/img/art/scroll-table.webp" width="640" height="480" alt="" loading="lazy" decoding="async"><span class="step-number" aria-hidden="true">02</span><h3>${step2_when}</h3><p>${step2_text}</p></li>
+            <li class="card" data-reveal style="--delay: 200ms"><img class="step-art" src="/site/img/art/oil-lamp.webp" width="640" height="480" alt="" loading="lazy" decoding="async"><span class="step-number" aria-hidden="true">03</span><h3>${step3_when}</h3><p>${step3_text}</p></li>
           </ol>
         </div>
       </section>
 
-      <section class="section glimpse" aria-labelledby="glimpse-heading">
-        <div class="wrap glimpse-inner">
-          <div class="glimpse-copy">
-            <h2 id="glimpse-heading">${glimpse_heading}</h2>
-            <p>${glimpse_text}</p>
+      <!-- The app's Today page, rebuilt in HTML so its motion can be tried: ticks hop and ripple, the ring fills,
+           and the last tick lets the light settle on the card (moment A). It plays itself once when it comes into view. -->
+      <section class="section today-show" id="today" aria-labelledby="today-heading">
+        <div class="wrap today-inner">
+          <div class="today-copy" data-reveal>
+            <h2 id="today-heading">${today_heading}</h2>
+            <p class="section-lede">${today_text}</p>
+            <ul class="features">
+              <li class="feature f-reading"><h3>${feat1_title}</h3><p>${feat1_text}</p></li>
+              <li class="feature f-reflection"><h3>${feat2_title}</h3><p>${feat2_text}</p></li>
+              <li class="feature f-prayer"><h3>${feat3_title}</h3><p>${feat3_text}</p></li>
+            </ul>
           </div>
-          <figure class="card devices">
-            <img class="laptop" src="/site/img/laptop-today-light.webp" width="1600" height="1000" alt="${alt_laptop}" loading="lazy" decoding="async">
-            <img class="phone" src="/site/img/phone-today-dark.webp" width="438" height="950" alt="${alt_phone}" loading="lazy" decoding="async">
+          <figure class="card stage" data-reveal style="--delay: 120ms">
+            <div class="device demo" data-demo="today" role="group" aria-label="${demo_label}">
+              <div class="app-screen">
+                <p class="app-title">${demo_today}</p>
+                <ol class="week" aria-hidden="true">${week_rings}</ol>
+                <div class="app-hero">
+                  <img class="app-hero-art" src="/site/img/art/sheep-field.webp" width="640" height="480" alt="" loading="lazy" decoding="async">
+                  <span class="app-hero-glow" aria-hidden="true"></span>
+                  <p class="app-eyebrow">${demo_eyebrow}</p>
+                  <p class="app-hero-title">${demo_day_title}</p>
+                </div>
+                <ul class="parts">
+                  <li class="part part-reading"><span class="part-icon"><img src="/site/img/art/part-reading.webp" width="128" height="128" alt=""></span><span class="part-text"><b>${part_reading}</b><small>${demo_passage}</small></span><button class="tick" type="button" data-part="reading" aria-pressed="false" aria-label="${part_reading}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12.5l4 4 8-9"/></svg></button></li>
+                  <li class="part part-reflection"><span class="part-icon"><img src="/site/img/art/part-reflection.webp" width="128" height="128" alt=""></span><span class="part-text"><b>${part_reflection}</b><small>${demo_reflection_sub}</small></span><button class="tick" type="button" data-part="reflection" aria-pressed="false" aria-label="${part_reflection}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12.5l4 4 8-9"/></svg></button></li>
+                  <li class="part part-prayer"><span class="part-icon"><img src="/site/img/art/part-prayer.webp" width="128" height="128" alt=""></span><span class="part-text"><b>${part_prayer}</b><small>${demo_prayer_sub}</small></span><button class="tick" type="button" data-part="prayer" aria-pressed="false" aria-label="${part_prayer}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12.5l4 4 8-9"/></svg></button></li>
+                </ul>
+                <p class="finish" aria-live="polite"><span class="finish-title">${finish_title}</span><span class="finish-line">${finish_line}</span></p>
+              </div>
+            </div>
+            <figcaption><button class="pill pill-ghost pill-small replay" type="button">${demo_replay}</button></figcaption>
           </figure>
         </div>
       </section>
 
-      <section class="section audiences">
+      <!-- The reader's floating tick bar, driven by the page's scroll: the part in view widens, passed parts tick,
+           and the finished day swaps the bar for the green way back to Today. Static without motion. -->
+      <section class="section reader-show" id="reader" data-active="reading" aria-labelledby="reader-heading">
+        <div class="wrap reader-inner">
+          <div class="reader-copy" data-reveal>
+            <h2 id="reader-heading">${reader_heading}</h2>
+            <p class="section-lede">${reader_text}</p>
+            <ol class="reader-legend" aria-hidden="true">
+              <li class="lg-reading">${reader_reading}</li>
+              <li class="lg-reflection">${part_reflection}</li>
+              <li class="lg-prayer">${part_prayer}</li>
+            </ol>
+          </div>
+          <div class="reader-track">
+            <div class="reader-sticky">
+              <div class="device phone-device" role="img" aria-label="${alt_reader}">
+                <div class="app-screen reader-screen" aria-hidden="true">
+                  <div class="reader-content">
+                    <div class="app-hero reader-hero">
+                      <img class="app-hero-art" src="/site/img/art/hillside-dawn.webp" width="640" height="480" alt="" loading="lazy" decoding="async">
+                      <p class="app-eyebrow">${reader_day}</p>
+                      <p class="app-hero-title">${demo_day_title}</p>
+                      <p class="app-hero-quote">${reader_quote}</p>
+                    </div>
+                    <section class="rd rd-reading" data-part="reading"><p class="rd-eyebrow">${reader_reading}</p><p class="rd-link">${reader_link}</p><p class="rd-note">${reader_note}</p></section>
+                    <section class="rd rd-reflection" data-part="reflection"><p class="rd-eyebrow">${part_reflection}</p><p>${reader_reflection_text}</p></section>
+                    <section class="rd rd-reflection"><p class="rd-eyebrow">${reader_apply_label}</p><p>${reader_apply_text}</p></section>
+                    <section class="rd rd-reflection"><p class="rd-eyebrow">${reader_questions_label}</p><p>${reader_question1}</p><p>${reader_question2}</p></section>
+                    <section class="rd rd-prayer" data-part="prayer"><p class="rd-eyebrow">${part_prayer}</p><p>${reader_prayer_text}</p></section>
+                  </div>
+                  <div class="dock" data-active="reading">
+                    <div class="dock-bar">
+                      <span class="chip chip-reading"><span class="chip-icon"><img src="/site/img/art/part-reading.webp" width="128" height="128" alt=""></span><span class="chip-text"><b>${reader_reading}</b><small>${tap_to_tick}</small></span></span>
+                      <span class="chip chip-reflection"><span class="chip-icon"><img src="/site/img/art/part-reflection.webp" width="128" height="128" alt=""></span><span class="chip-text"><b>${part_reflection}</b><small>${tap_to_tick}</small></span></span>
+                      <span class="chip chip-prayer"><span class="chip-icon"><img src="/site/img/art/part-prayer.webp" width="128" height="128" alt=""></span><span class="chip-text"><b>${part_prayer}</b><small>${tap_to_tick}</small></span></span>
+                    </div>
+                    <p class="dock-done">${day_complete} ›</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- The illustration library, drifting past in two rows (still, and scrollable, with reduced motion). -->
+      <section class="section art" id="art" aria-labelledby="art-heading">
+        <div class="wrap" data-reveal>
+          <h2 id="art-heading">${art_heading}</h2>
+          <p class="section-lede">${art_text}</p>
+        </div>
+        <div class="art-rows" data-reveal style="--delay: 100ms">${art_gallery}</div>
+      </section>
+
+      <section class="section glimpse" id="glimpse" aria-labelledby="glimpse-heading">
+        <div class="wrap glimpse-inner">
+          <div class="glimpse-copy" data-reveal>
+            <h2 id="glimpse-heading">${glimpse_heading}</h2>
+            <p>${glimpse_text}</p>
+          </div>
+          <figure class="card devices" data-reveal>
+            <img class="laptop" src="/site/img/laptop-today.webp" width="1600" height="1000" alt="${alt_laptop}" loading="lazy" decoding="async">
+            <img class="phone" src="/site/img/phone-today-done.webp" width="520" height="1126" alt="${alt_phone}" loading="lazy" decoding="async">
+          </figure>
+        </div>
+      </section>
+
+      <section class="section audiences" id="audiences">
         <div class="wrap audiences-inner">
-          <div class="card audience">
+          <div class="card audience" data-reveal>
             <h2>${members_heading}</h2>
             <p>${members_text}</p>
             <p><a class="pill pill-ghost" href="/churches">${members_cta}</a></p>
           </div>
-          <div class="card audience">
+          <div class="card audience" data-reveal style="--delay: 100ms">
             <h2>${leaders_heading}</h2>
             <p>${leaders_text}</p>
             <p><a class="pill pill-ghost" href="/login?next=%2Fwelcome%3Fstep%3Dleader">${leaders_cta}</a></p>

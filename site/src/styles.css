@@ -1,21 +1,24 @@
-/* Selah landing page: blue hour. A dark canvas, graphite cards, pill controls and Selah's green as the one accent.
+/* Selah landing page: a soft blue-gray page under a dark blue-hour photo. Lighter cards, pill controls and Selah's green as the one accent.
    See DESIGN.md § Landing page. The app's own tokens live in app/lib/src/app/theme.dart. */
 @font-face { font-family: "Inter"; src: url("/site/fonts/InterVariable-latin.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: swap; }
 @font-face { font-family: "Source Serif 4"; src: url("/site/fonts/SourceSerif4-It.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
 
 :root {
-  color-scheme: dark;
-  --canvas: #171A1D;
-  --card: #1F2326;
-  --control: #282D30;
-  --text: #EDEDE8;
-  --text-muted: #C3C5C0;
-  --text-faint: #8E928D;
-  --line: rgba(237, 237, 232, 0.14);
-  --line-strong: rgba(237, 237, 232, 0.72);
-  --accent: #3E7A61;
-  --accent-hover: #458769;
+  color-scheme: light;
+  --canvas: #DDE2E8;
+  --card: #EDF0F3;
+  --text: #171A1D;
+  --text-muted: #474E56;
+  --text-faint: #6B737B;
+  --line: rgba(23, 26, 29, 0.12);
+  --line-strong: rgba(23, 26, 29, 0.55);
+  --hover: rgba(23, 26, 29, 0.06);
+  --accent: #2F5D4A;
+  --accent-hover: #285140;
   --on-accent: #FFFFFF;
+  --rule: var(--accent);
+  /* The hero photo and the top bar over it stay dark. */
+  --night: #171A1D;
 
   --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --serif: "Source Serif 4", Georgia, serif;
@@ -56,12 +59,46 @@ h3 { font-size: 1.3125rem; line-height: 1.35; letter-spacing: 0.005em; }
 .pill-primary { background: var(--accent); color: var(--on-accent); }
 .pill-primary:hover { background: var(--accent-hover); }
 .pill-ghost { color: var(--text); box-shadow: inset 0 0 0 1px var(--line-strong); }
-.pill-ghost:hover { background: rgba(237, 237, 232, 0.08); }
+.pill-ghost:hover { background: var(--hover); }
 .pill-small { min-height: 40px; padding: 0 var(--space-20); font-size: 15px; }
 
-/* Top bar: transparent, floating over the photo. */
-.top { position: absolute; inset: 0 0 auto 0; z-index: 2; }
-.top-inner { display: flex; align-items: center; justify-content: space-between; min-height: 72px; }
+/* The hero and the top bar over it are light-on-dark, whatever the page around them. */
+.top, .hero {
+  --text: #EDEDE8; --text-muted: #C9CBC6; --line-strong: rgba(237, 237, 232, 0.72);
+  --hover: rgba(237, 237, 232, 0.08); --rule: #8CC2A6; color: var(--text);
+}
+
+/* Header, after Mercury: fixed, see-through over the photo, frosted dark glass once the page scrolls.
+   Frosted is the default; motion.js sets .at-top while the top of the page is on screen. */
+.top {
+  position: fixed; inset: 0 0 auto 0; z-index: 10;
+  background: rgba(23, 26, 29, 0.72); -webkit-backdrop-filter: saturate(160%) blur(20px); backdrop-filter: saturate(160%) blur(20px);
+  box-shadow: inset 0 -1px 0 rgba(237, 237, 232, 0.08);
+  transition: background-color 240ms ease, box-shadow 240ms ease, backdrop-filter 240ms ease;
+}
+.at-top .top { background: transparent; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.top-inner { display: flex; align-items: center; gap: var(--space-24); min-height: 64px; }
+.top .wordmark { margin-right: auto; }
+.top-nav { display: none; gap: var(--space-4); }
+.top-nav a, .top-login {
+  display: inline-flex; align-items: center; min-height: 40px; padding: 0 var(--space-16); border-radius: var(--radius-pill);
+  color: var(--text); text-decoration: none; font: 400 15px/1 var(--sans); transition: background-color 160ms ease;
+}
+.top-nav a:hover, .top-login:hover { background: var(--hover); }
+.top-actions { display: flex; align-items: center; gap: var(--space-4); }
+.top-login { display: none; }
+/* The header's button is solid ivory, not green, so the hero's "start reading" stays the one accent. */
+.pill-solid { background: var(--text); color: #171A1D; }
+.pill-solid:hover { background: #FFFFFF; }
+@media (min-width: 600px) { .top-login { display: inline-flex; } }
+@media (min-width: 960px) {
+  .top .wordmark { margin-right: 0; flex: 1; }
+  .top-nav { display: flex; }
+  .top-actions { flex: 1; justify-content: flex-end; }
+}
+html { scroll-padding-top: 80px; }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+@media (prefers-reduced-motion: reduce) { .top { transition: none; } }
 .wordmark { font: 530 1.3125rem/1 var(--sans); letter-spacing: 0.01em; color: var(--text); text-decoration: none; }
 
 /* Hero: full-bleed photo, shaded toward the text and toward the page below. */
@@ -70,27 +107,27 @@ h3 { font-size: 1.3125rem; line-height: 1.35; letter-spacing: 0.005em; }
   min-height: 100svh; padding-block: var(--space-112) var(--space-72);
   /* Shown until the photo loads, and if it's missing: the same blue hour in gradient form. */
   background: radial-gradient(60% 50% at 30% 72%, rgba(232, 168, 92, 0.16), transparent 70%),
-              linear-gradient(180deg, #24384A 0%, #1C2733 55%, var(--canvas) 100%);
+              linear-gradient(180deg, #24384A 0%, #1C2733 55%, var(--night) 100%);
 }
 .hero-media, .hero-media img { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -2; }
 .hero-media img { object-fit: cover; object-position: 74% 50%; }
 @media (min-width: 960px) { .hero-media img { object-position: 60% 50%; } }
 .hero-shade {
   position: absolute; inset: 0; z-index: -1;
-  background: linear-gradient(180deg, rgba(23, 26, 29, 0.45) 0%, rgba(23, 26, 29, 0.2) 25%, rgba(23, 26, 29, 0.72) 55%, rgba(23, 26, 29, 0.9) 80%, var(--canvas) 100%);
+  background: linear-gradient(180deg, rgba(23, 26, 29, 0.45) 0%, rgba(23, 26, 29, 0.2) 25%, rgba(23, 26, 29, 0.72) 55%, rgba(23, 26, 29, 0.85) 100%);
 }
 @media (min-width: 960px) {
   .hero { align-items: center; }
   .hero-shade {
     background: linear-gradient(90deg, rgba(23, 26, 29, 0.88) 0%, rgba(23, 26, 29, 0.62) 38%, rgba(23, 26, 29, 0) 66%),
-                linear-gradient(180deg, rgba(23, 26, 29, 0.35) 0%, transparent 25%, transparent 72%, var(--canvas) 100%);
+                linear-gradient(180deg, rgba(23, 26, 29, 0.35) 0%, transparent 25%);
   }
 }
 .hero-inner > * { max-width: 640px; }
 .hero h1 { color: #FFFFFF; max-width: 13ch; }
 .verse { margin: var(--space-32) 0 0; padding-top: var(--space-20); position: relative; }
 .verse::before {
-  content: ""; position: absolute; top: 0; left: 0; width: 56px; height: 2px; background: var(--accent);
+  content: ""; position: absolute; top: 0; left: 0; width: 56px; height: 2px; background: var(--rule);
   transform-origin: left; animation: rule 700ms cubic-bezier(.16, 1, .3, 1) both 200ms;
 }
 .verse p { font: italic 400 clamp(1.25rem, 2.2vw, 1.5rem)/1.4 var(--serif); color: var(--text); }
@@ -108,16 +145,21 @@ h3 { font-size: 1.3125rem; line-height: 1.35; letter-spacing: 0.005em; }
 .steps .card { display: flex; flex-direction: column; gap: var(--space-12); }
 .step-number { font: 400 13px/1 var(--sans); letter-spacing: 0.08em; color: var(--text-faint); margin-bottom: var(--space-32); font-variant-numeric: tabular-nums; }
 .steps p { color: var(--text-muted); }
-@media (min-width: 760px) { .steps { grid-template-columns: repeat(3, minmax(0, 1fr)); } .step-number { margin-bottom: var(--space-56); } }
+.step-art { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 8px; margin-bottom: var(--space-12); }
+.steps .step-number { margin-bottom: 0; }
+@media (min-width: 760px) { .steps { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
-/* Glimpse: copy on the left, the app on a graphite card on the right. */
+/* A lede under a section heading. */
+.section-lede { margin-top: var(--space-16); color: var(--text-muted); font-size: 1.125rem; max-width: 34rem; }
+
+/* Glimpse: copy on the left, the app on a gray card on the right. */
 .glimpse-inner { display: grid; gap: var(--space-40); align-items: center; }
 .glimpse-copy p { margin-top: var(--space-16); color: var(--text-muted); font-size: 1.125rem; max-width: 34rem; }
 .devices { position: relative; margin: 0; padding: var(--space-32) var(--space-32) var(--space-56); overflow: hidden; }
 .devices .laptop { width: 88%; border-radius: 8px; border: 1px solid var(--line); }
 .devices .phone {
   position: absolute; right: var(--space-32); bottom: var(--space-24); width: 24%;
-  border-radius: 18px; border: 5px solid #33383B;
+  border-radius: 18px; border: 5px solid #262A2D;
 }
 @media (min-width: 960px) { .glimpse-inner { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--space-72); } }
 
@@ -141,3 +183,213 @@ h3 { font-size: 1.3125rem; line-height: 1.35; letter-spacing: 0.005em; }
 html[lang="es"] .languages a[hreflang="es"],
 html[lang="pt"] .languages a[hreflang="pt"],
 html[lang="en"] .languages a[hreflang="en"] { color: var(--text); font-weight: 480; }
+
+/* ---------------------------------------------------------------------------------------------------------------
+   The app, rebuilt in HTML for the two live demos. These are the app's own tokens (DESIGN.md, theme.dart), used only
+   inside .app-screen: paper, ink, the green hero card and the three part colours. */
+.app-screen {
+  --paper: #FAF7F2; --raised: #F1EBE1; --ink: #262320; --ink-muted: #6F655A; --green: #2F5D4A; --green-deep: #244A3B;
+  --terracotta: #A65033; --track: #E4DDD1;
+  --app-serif: Georgia, "Source Serif 4", serif; --app-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--paper); color: var(--ink); font-family: var(--app-sans); text-align: left;
+}
+.part-reading, .a-reading, .chip-reading, .rd-reading, .lg-reading { --part: #2F5D4A; --part-text: #2F5D4A; --part-tint: #E6EEE8; --part-soft: #D3E2D8; }
+.part-reflection, .a-reflection, .chip-reflection, .rd-reflection, .lg-reflection { --part: #B8732E; --part-text: #8F561F; --part-tint: #F5EBDD; --part-soft: #EEDCC2; }
+.part-prayer, .a-prayer, .chip-prayer, .rd-prayer, .lg-prayer { --part: #5E6A9C; --part-text: #545F90; --part-tint: #E8E9F2; --part-soft: #D7DAEA; }
+
+/* A phone: a dark rim around the app's paper. */
+.device { width: min(100%, 360px); border-radius: 40px; border: 8px solid #1B1E21; overflow: hidden; background: #FAF7F2; }
+.stage {
+  margin: 0; display: grid; justify-items: center; gap: var(--space-20); padding: var(--space-40) var(--space-16);
+  background: radial-gradient(80% 60% at 50% 100%, rgba(47, 93, 74, 0.10), transparent 70%), var(--card);
+}
+.stage figcaption { min-height: 40px; }
+.replay { cursor: pointer; background: none; border: 0; font: inherit; }
+
+/* Today */
+.today-inner, .reader-inner { display: grid; gap: var(--space-40); }
+@media (min-width: 960px) {
+  .today-inner { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: var(--space-72); align-items: center; }
+}
+.features { list-style: none; margin: var(--space-32) 0 0; padding: 0; display: grid; }
+.feature { padding: var(--space-20) 0; border-top: 1px solid var(--line); }
+.feature h3 { font-size: 1.0625rem; }
+.feature p { margin-top: var(--space-4); color: var(--text-muted); }
+
+.demo .app-screen { padding: var(--space-24) var(--space-16) var(--space-20); }
+.app-title { font: 600 30px/1.1 var(--app-serif); }
+.week { list-style: none; margin: var(--space-16) 0 var(--space-16); padding: 0; display: grid; grid-template-columns: repeat(7, 1fr); }
+.wk { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 0; border-radius: 14px; }
+.wk-today { background: var(--raised); }
+.wk-future { opacity: 0.45; }
+.wk-day { font: 600 11px/1 var(--app-sans); color: var(--ink-muted); }
+.wk-ring { position: relative; width: 32px; height: 32px; }
+.wk-ring svg { width: 100%; height: 100%; overflow: visible; }
+.wk-track { fill: none; stroke: var(--track); stroke-width: 3; }
+.wk-arc { fill: none; stroke: var(--part); stroke-width: 3; stroke-dasharray: 0 100; transition: stroke-dasharray 280ms cubic-bezier(.2, .8, .2, 1); }
+.a-reading { stroke-dashoffset: -1.5; }
+.a-reflection { stroke-dashoffset: -34.8; }
+.a-prayer { stroke-dashoffset: -68.2; }
+.on-reading .a-reading, .on-reflection .a-reflection, .on-prayer .a-prayer { stroke-dasharray: 30.3 69.7; }
+.wk-disc { fill: var(--green); transform: scale(0); transform-box: fill-box; transform-origin: center; transition: transform 160ms ease-in; }
+.wk-check { fill: none; stroke: var(--paper); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 120ms; }
+.wk.is-done .wk-disc { transform: scale(1); transition: transform 520ms cubic-bezier(.34, 1.56, .64, 1); }
+.wk.is-done .wk-check { stroke-dashoffset: 0; transition: stroke-dashoffset 320ms ease 260ms; }
+.wk-num { position: absolute; inset: 0; display: grid; place-items: center; font: 500 11px/1 var(--app-sans); color: var(--ink-muted); transition: opacity 200ms; }
+.wk-today .wk-num { color: var(--terracotta); font-weight: 650; }
+.wk.is-done .wk-num { opacity: 0; }
+
+/* The green hero card: art on the right fading into the green, and moment A's light rising from the bottom. */
+.app-hero {
+  position: relative; isolation: isolate; overflow: hidden; border-radius: 22px; padding: 18px;
+  background: linear-gradient(135deg, var(--green) 0%, var(--green-deep) 100%); color: var(--paper);
+}
+.app-hero-art {
+  position: absolute; top: 0; right: 0; bottom: 0; width: 62%; height: 100%; object-fit: cover; z-index: -2;
+  -webkit-mask-image: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.5)); mask-image: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.5));
+}
+.app-hero-glow {
+  position: absolute; inset: 0; z-index: -1; opacity: 0; transition: opacity 300ms ease;
+  background: radial-gradient(75% 95% at 50% 118%, rgba(250, 247, 242, 0.5), rgba(250, 247, 242, 0.12) 55%, transparent 75%);
+}
+.demo.is-done .app-hero-glow { opacity: 1; transition: opacity 1800ms ease-out; }
+.app-eyebrow { font: 600 10px/1.3 var(--app-sans); letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.85; }
+.app-hero-title { margin-top: 6px; font: 600 22px/1.2 var(--app-serif); }
+.app-hero-quote { margin-top: 10px; font: italic 400 17px/1.4 var(--app-serif); }
+
+/* The three part rows: tint background, a painted icon on its soft tile, the round tick in the part colour. */
+.parts { list-style: none; margin: var(--space-12) 0 0; padding: 0; display: grid; gap: 8px; }
+.part { display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 16px; background: var(--part-tint); }
+.part-icon { width: 40px; height: 40px; border-radius: 12px; background: var(--part-soft); display: grid; place-items: center; }
+.part-icon img, .chip-icon img { width: 30px; height: 30px; }
+.part-text { display: flex; flex-direction: column; min-width: 0; }
+.part-text b { font: 600 15px/1.25 var(--app-sans); }
+.part-text small { font-size: 13px; color: var(--ink-muted); }
+.tick {
+  position: relative; width: 32px; height: 32px; padding: 0; border-radius: 50%; cursor: pointer;
+  border: 1.5px solid var(--ink-muted); background: transparent; display: grid; place-items: center;
+  transition: background-color 200ms, border-color 200ms;
+}
+.tick:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+.tick svg { width: 20px; height: 20px; fill: none; stroke: var(--paper); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; transform: scale(0); transition: transform 150ms; }
+.tick::after { content: ""; position: absolute; inset: -2px; border-radius: 50%; border: 2px solid var(--part); opacity: 0; pointer-events: none; }
+.part.is-ticked .tick { background: var(--part); border-color: var(--part); }
+.part.is-ticked .tick svg { transform: scale(1); transition: transform 420ms cubic-bezier(.34, 1.56, .64, 1); }
+.part.is-ticked .tick::after { animation: ripple 600ms ease-out; }
+.part.is-ticked .part-icon img, .chip.is-ticked .chip-icon img { animation: hop 600ms cubic-bezier(.3, 1.3, .5, 1); }
+@keyframes ripple { from { transform: scale(1); opacity: 0.6; } to { transform: scale(2.2); opacity: 0; } }
+@keyframes hop { 0% { transform: none; } 35% { transform: scale(1.25) rotate(-8deg); } 70% { transform: scale(0.96) rotate(2deg); } 100% { transform: none; } }
+
+/* Moment A's line: it rises 8px and fades in, 700ms after the last tick. */
+.finish { margin-top: var(--space-16); min-height: 58px; font: italic 400 21px/1.3 var(--app-serif); opacity: 0; transform: translateY(8px); transition: opacity 200ms, transform 200ms; }
+.finish span { display: block; }
+.finish-line { color: var(--ink-muted); }
+.demo.is-done .finish { opacity: 1; transform: none; transition: opacity 1000ms ease 700ms, transform 1000ms cubic-bezier(.16, 1, .3, 1) 700ms; }
+
+/* The reader: a phone that stays in place while the page scrolls through its day. */
+@media (min-width: 960px) {
+  .reader-inner { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: var(--space-72); }
+  .reader-copy { position: sticky; top: 140px; align-self: start; }
+}
+.reader-legend { list-style: none; margin: var(--space-32) 0 0; padding: 0; display: grid; }
+.reader-legend li {
+  position: relative; padding: var(--space-12) 0 var(--space-12) var(--space-20); border-top: 1px solid var(--line);
+  color: var(--text-faint); font-weight: 480; transition: color 280ms;
+}
+.reader-legend li::before { content: ""; position: absolute; left: 0; top: 50%; width: 8px; height: 8px; margin-top: -4px; border-radius: 50%; background: var(--line); transition: background-color 280ms, transform 280ms; }
+.reader-show[data-active="reading"] .lg-reading, .reader-show[data-active="reflection"] .lg-reflection, .reader-show[data-active="prayer"] .lg-prayer { color: var(--text); }
+.reader-show[data-active="reading"] .lg-reading::before, .reader-show[data-active="reflection"] .lg-reflection::before, .reader-show[data-active="prayer"] .lg-prayer::before { background: var(--part); transform: scale(1.3); }
+.js-motion .reader-track { height: 240vh; }
+.reader-sticky { position: sticky; top: max(84px, calc(50svh - 300px)); display: grid; justify-items: center; }
+.phone-device { width: min(100%, 320px); height: min(600px, calc(100svh - 110px)); }
+.reader-screen { position: relative; height: 100%; overflow: hidden; }
+.reader-content { padding: 44px 14px 140px; will-change: transform; }
+.rd { margin-top: 22px; padding-left: 14px; border-left: 3px solid var(--part); }
+.rd p { font: 400 16px/1.6 var(--app-serif); }
+.rd .rd-eyebrow { font: 600 10px/1.3 var(--app-sans); letter-spacing: 0.12em; text-transform: uppercase; color: var(--part-text); margin-bottom: 6px; }
+.rd .rd-link { font: 600 15px/1.4 var(--app-sans); color: var(--green); }
+.rd .rd-note { margin-top: 6px; font: 400 12px/1.45 var(--app-sans); color: var(--ink-muted); }
+.rd p + p:not(.rd-note) { margin-top: 10px; }
+.rd-prayer { margin-bottom: 120px; }
+
+/* The floating tick bar: the part in view widens to its name; a ticked part hops and gets a check badge;
+   a finished day swaps the bar for the green way back to Today. */
+.dock { position: absolute; left: 10px; right: 10px; bottom: 12px; height: 58px; }
+.dock-bar {
+  display: flex; gap: 4px; height: 100%; padding: 5px; border-radius: 999px;
+  background: rgba(250, 247, 242, 0.8); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+  box-shadow: 0 6px 24px rgba(38, 35, 32, 0.10), inset 0 0 0 1px rgba(38, 35, 32, 0.06);
+  transition: transform 600ms cubic-bezier(.16, 1, .3, 1), opacity 400ms;
+}
+.chip {
+  flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 3px; border-radius: 999px;
+  transition: flex-grow 280ms cubic-bezier(.34, 1.3, .64, 1), background-color 280ms;
+}
+.chip-icon { position: relative; flex: none; width: 40px; height: 40px; border-radius: 13px; background: var(--part-soft); display: grid; place-items: center; }
+.chip-icon::after {
+  content: ""; position: absolute; top: -3px; right: -3px; width: 15px; height: 15px; border-radius: 50%; transform: scale(0);
+  background: var(--part) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 12.5l4 4 8-9' fill='none' stroke='%23FAF7F2' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 11px no-repeat;
+  transition: transform 160ms;
+}
+.chip.is-ticked .chip-icon::after { transform: scale(1); transition: transform 420ms cubic-bezier(.34, 1.56, .64, 1); }
+.chip-text { display: none; flex-direction: column; min-width: 0; white-space: nowrap; }
+.chip-text b { font: 600 13px/1.2 var(--app-sans); color: var(--part-text); overflow: hidden; text-overflow: ellipsis; }
+.chip-text small { font-size: 11px; color: var(--ink-muted); }
+.dock[data-active="reading"] .chip-reading, .dock[data-active="reflection"] .chip-reflection, .dock[data-active="prayer"] .chip-prayer { flex-grow: 2.8; justify-content: flex-start; background: var(--part-tint); }
+.dock[data-active="reading"] .chip-reading .chip-text, .dock[data-active="reflection"] .chip-reflection .chip-text, .dock[data-active="prayer"] .chip-prayer .chip-text { display: flex; animation: fade-in 280ms ease both; }
+@keyframes fade-in { from { opacity: 0; } }
+.dock-done {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; border-radius: 999px;
+  background: var(--green); color: var(--paper); font: 600 14px/1.2 var(--app-sans);
+  opacity: 0; transform: translateY(80px); transition: transform 600ms cubic-bezier(.16, 1, .3, 1), opacity 300ms;
+}
+.dock.is-done .dock-bar { transform: translateY(80px); opacity: 0; }
+.dock.is-done .dock-done { opacity: 1; transform: none; }
+
+/* The illustration library, drifting in two rows. Each row holds its strip twice, so moving it by half loops. */
+.art-rows { display: grid; gap: var(--space-12); margin-top: var(--space-40); overflow: hidden; }
+.art-row { display: flex; width: max-content; }
+.art-strip { display: flex; gap: var(--space-12); margin: 0; padding: 0 var(--space-12) 0 0; list-style: none; }
+.art-strip img { width: clamp(200px, 22vw, 300px); aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--radius-card); }
+.js-motion .art-rows { -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); }
+.js-motion .art-row { animation: drift 80s linear infinite; }
+.js-motion .art-row + .art-row { animation-duration: 95s; animation-direction: reverse; }
+.art-rows:hover .art-row { animation-play-state: paused; }
+@keyframes drift { to { transform: translateX(-50%); } }
+/* Still (no script, or reduced motion): one copy per row, scrolled by hand. */
+html:not(.js-motion) .art-rows { overflow-x: auto; padding-inline: 16px; }
+html:not(.js-motion) .art-strip[aria-hidden] { display: none; }
+
+/* The hero settles on load: the photo eases out of a slight zoom and the words rise in turn. */
+.js-motion .hero-media img { animation: settle 2400ms cubic-bezier(.16, 1, .3, 1) both; }
+.js-motion .hero-inner > * { animation: rise 900ms cubic-bezier(.16, 1, .3, 1) both; }
+.js-motion .hero-inner > :nth-child(2) { animation-delay: 120ms; }
+.js-motion .hero-inner > :nth-child(3) { animation-delay: 240ms; }
+.js-motion .hero-inner > :nth-child(4) { animation-delay: 360ms; }
+@keyframes settle { from { transform: scale(1.06); } }
+@keyframes rise { from { opacity: 0; transform: translateY(24px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .wk-arc, .wk-disc, .wk-check, .wk-num, .tick, .tick svg, .app-hero-glow, .finish, .chip, .dock-bar, .dock-done, .reader-legend li, .reader-legend li::before, .chip-icon::after { transition: none !important; }
+  .part.is-ticked .tick::after, .part.is-ticked .part-icon img, .chip.is-ticked .chip-icon img, .chip-text { animation: none !important; }
+}
+
+/* Motion, after Mercury: things rise and fade into place once, the first time they reach the screen (src/motion.js).
+   Hidden only under .js-motion, which the script sets, so the page never depends on it. */
+.js-motion [data-reveal] {
+  opacity: 0; transform: translateY(24px);
+  transition: opacity 670ms cubic-bezier(.59, .41, .68, .49) var(--delay, 0ms),
+              transform 670ms cubic-bezier(.28, 1.1, .74, 1) var(--delay, 0ms);
+}
+.js-motion [data-reveal].is-in { opacity: 1; transform: none; }
+/* The app screens slide in from the right instead: the laptop first, then the phone settling in front of it. */
+.js-motion .devices[data-reveal] { opacity: 1; transform: none; }
+.js-motion .devices .laptop, .js-motion .devices .phone {
+  opacity: 0; transition: opacity 600ms ease-out, transform 900ms cubic-bezier(.16, 1, .3, 1);
+}
+.js-motion .devices .laptop { transform: translateX(64px); }
+.js-motion .devices .phone { transform: translateX(120px); transition-delay: 180ms; }
+.js-motion .devices.is-in .laptop, .js-motion .devices.is-in .phone { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .js-motion [data-reveal], .js-motion .devices .laptop, .js-motion .devices .phone { opacity: 1; transform: none; transition: none; }
+}

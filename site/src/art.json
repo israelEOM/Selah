@@ -1,0 +1,114 @@
+[
+ {
+  "key": "quiet-lake",
+  "alt": {
+   "en": "A still lake at dusk",
+   "es": "Un lago en calma al atardecer",
+   "pt": "Um lago calmo ao entardecer"
+  }
+ },
+ {
+  "key": "vine-grapes",
+  "alt": {
+   "en": "A vine heavy with grapes",
+   "es": "Una vid cargada de uvas",
+   "pt": "Uma videira carregada de uvas"
+  }
+ },
+ {
+  "key": "olive-grove",
+  "alt": {
+   "en": "Olive trees on a hillside",
+   "es": "Olivos en una ladera",
+   "pt": "Oliveiras em uma encosta"
+  }
+ },
+ {
+  "key": "wheat-field",
+  "alt": {
+   "en": "A field of ripe wheat",
+   "es": "Un campo de trigo maduro",
+   "pt": "Um campo de trigo maduro"
+  }
+ },
+ {
+  "key": "seashore",
+  "alt": {
+   "en": "A quiet shore at morning",
+   "es": "Una orilla tranquila por la mañana",
+   "pt": "Uma praia tranquila pela manhã"
+  }
+ },
+ {
+  "key": "mountain-mist",
+  "alt": {
+   "en": "Mountains wrapped in mist",
+   "es": "Montañas envueltas en neblina",
+   "pt": "Montanhas envoltas em neblina"
+  }
+ },
+ {
+  "key": "garden-gate",
+  "alt": {
+   "en": "An open garden gate",
+   "es": "Una puerta de jardín abierta",
+   "pt": "Um portão de jardim aberto"
+  }
+ },
+ {
+  "key": "river-bend",
+  "alt": {
+   "en": "A river bending through green banks",
+   "es": "Un río que serpentea entre orillas verdes",
+   "pt": "Um rio que serpenteia entre margens verdes"
+  }
+ },
+ {
+  "key": "dove",
+  "alt": {
+   "en": "A white dove in flight",
+   "es": "Una paloma blanca en vuelo",
+   "pt": "Uma pomba branca em voo"
+  }
+ },
+ {
+  "key": "hillside-dawn",
+  "alt": {
+   "en": "Green hills at first light",
+   "es": "Colinas verdes al amanecer",
+   "pt": "Colinas verdes ao amanhecer"
+  }
+ },
+ {
+  "key": "sheep-field",
+  "alt": {
+   "en": "Sheep resting in a green field",
+   "es": "Ovejas descansando en un campo verde",
+   "pt": "Ovelhas descansando em um campo verde"
+  }
+ },
+ {
+  "key": "oil-lamp",
+  "alt": {
+   "en": "A small oil lamp glowing",
+   "es": "Una pequeña lámpara de aceite encendida",
+   "pt": "Uma pequena lamparina de óleo acesa"
+  }
+ },
+ {
+  "key": "scroll-table",
+  "alt": {
+   "en": "An open scroll on a table",
+   "es": "Un rollo abierto sobre una mesa",
+   "pt": "Um rolo aberto sobre uma mesa"
+  }
+ },
+ {
+  "key": "scene-churches",
+  "alt": {
+   "en": "A small church among trees",
+   "es": "Una pequeña iglesia entre árboles",
+   "pt": "Uma pequena igreja entre árvores"
+  }
+ }
+]

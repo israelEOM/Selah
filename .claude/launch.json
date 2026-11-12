@@ -19,6 +19,16 @@
         "app/build/demo"
       ],
       "port": 3200
+    },
+    {
+      "name": "selah-landing",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "app/tool/serve.py",
+        "3110",
+        "app/build/web"
+      ],
+      "port": 3110
     }
   ]
 }

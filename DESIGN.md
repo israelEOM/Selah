@@ -220,18 +220,30 @@ Tablets (600–1023) keep the app layout and one column for now.
 ### Landing page
 
 The public front door at `/` (Spanish), `/pt/` and `/en/`. It's a static site in `site/`, not a Flutter screen: one template rendered per language by `site/build.py`, styled in `site/src/styles.css`.
-- **Its own look: blue hour.** Unlike the app's warm paper, the landing is dark only. Its pieces:
-  - **Surfaces:** a near-black canvas (`#171A1D`) with graphite cards one step lighter (`#1F2326`, 12 radius, 32 padding). There are no borders and no shadows.
+- **Its own look: soft blue-gray, with a blue-hour hero.** The landing page is always this mid-light tone and doesn't follow the device's dark mode. Its pieces:
+  - **Surfaces:** a soft blue-gray canvas (`#DDE2E8`, a daytime echo of the hero's blue hour) with lighter cards (`#EDF0F3`, 12 radius, 32 padding). There are no borders and no shadows.
+  - **Hero:** the hero photo and the top bar over it stay dark, with light text.
   - **Type:** Inter for UI and headings, at intermediate weights (480 for headings, 530 for the H1). Source Serif italic is used only for the verse.
-  - **Color:** Selah's green (`#3E7A61`) is the one accent, and it fills exactly one control, the hero's "start reading" pill. Every other control is a ghost pill with an ivory hairline.
+  - **Color:** Selah's green (`#2F5D4A`) is the one accent, and it fills exactly one control, the hero's "start reading" pill. Every other control is a ghost pill with a hairline outline.
 - **Returning members** (a church picked, or signed in) skip it and go straight to `/today`. Sign-in email links are forwarded to the app with their hash and query intact, and `/?home` always shows the page. The logic is `site/src/redirect.js`, inlined first in `<head>`.
 - **Sections, in order:**
-  1. The full-bleed hero: a photo of someone reading the Bible at dawn, with the conviction, the verse under a short green rule, the lede and the two pills. The top bar floats over it. `site/hero.py <photo>` writes `hero-{720,1280,1920}.webp` and `og.png`. Without those files the hero falls back to a blue-hour gradient.
-  2. How it works: three numbered graphite cards through the week (Sunday, during the week, each day).
-  3. The app on a laptop and a phone, on a graphite card, from the made-up demo church in `app/tool/demo_main.dart`.
-  4. Members and leaders: two graphite cards side by side.
-  5. The footer, with the language switcher.
-- **No eyebrow labels and no icons on the cards.** The only script is the redirect check. Each page stays within 250 KB of HTML, CSS and fonts before images.
+  0. The header, after Mercury. It stays fixed at the top:
+     - see-through over the photo while the page is at the top, then frosted dark glass (a 72% dark fill with a 20px blur) once it scrolls;
+     - the wordmark on the left and the three section links in the middle (How it works, The app → the Today demo, For churches; shown from 960px wide);
+     - "Sign in" (shown from 600px wide) and a solid ivory "Open the app" pill on the right.
+
+     The pill is ivory rather than green so the hero's button stays the only accent. Without the script the header is just always frosted.
+  1. The full-bleed hero: a photo of someone reading the Bible at dawn, with the conviction, the verse under a short green rule, the lede and the two pills. The top bar floats over it. `site/hero.py <photo>` writes `hero-{720,1280,1920}.webp` and `og.png`. Without those files the hero falls back to a blue-hour gradient. On load the photo eases out of a slight zoom and the words rise in turn.
+  2. How it works: three numbered light cards through the week (Sunday, during the week, each day), each topped with a painting from the app's library.
+  3. **Today, live** (`#today`): the app's Today page rebuilt in HTML inside a phone, beside three short points (the parts, the week rings, the quiet finish). It shows the app's motion as the app does it, with the app's own tokens and part colours, scoped to `.app-screen`: each tick hops its icon, ripples and fills its arc of today's ring; the last one springs the ring into a green disc with a check, lets the light rise in the hero card and fades up "That's today. / Go in peace." It plays itself once when it comes into view, the ticks are real buttons, and "Play again" replays it. The week's letters come from `week_days`; the rings are written by `build.py`.
+  4. **The reader, scroll-driven** (`#reader`): a phone stays in place while the page scrolls through a day (reading, reflection with practice and questions, prayer). The part in view widens in the floating tick bar, each part ticks once it's been read past, and at the end the bar slides away for the green "Day complete · back to Today" pill. A legend beside it marks the part in view. Without motion it's a still phone at the top of the day.
+  5. **The illustration library** (`#art`): two rows of the app's paintings drifting in opposite directions (80s and 95s a loop, paused on hover). Without motion, one still row each, scrollable by hand. The paintings and their alt text in three languages are listed in `site/src/art.json` (from `app/assets/art/manifest.json`); the files are 640-wide copies in `site/src/img/art/`, with the part icons at 128.
+  6. The app on a laptop (Today) and a phone (a finished day), on a light card, captured from the made-up demo church in `app/tool/demo_main.dart` with headless Chrome.
+  7. Members and leaders: two light cards side by side.
+  8. The footer, with the language switcher.
+- **Motion, after Mercury.** Section headings, cards and the app copy rise about 24px and fade in over 670ms, once, the first time they reach the screen. Cards in a row are staggered by 100ms. The laptop and phone slide in from the right instead, the phone following 180ms behind. Content is hidden only after `site/src/motion.js` has run. With reduced motion nothing moves: the demos don't play themselves, the reader and the gallery stand still, and a tick simply shows checked.
+- **Part colours** appear only inside the two app demos, where they mark the three parts as they do in the app. The page's own controls keep the one-accent rule.
+- **No eyebrow labels and no icons on the cards** (the paintings are illustrations, not icons). Two scripts only: the redirect check and `motion.js`, which drives the header, the section motion and both demos. Each page stays within 250 KB of HTML, CSS and fonts before images.
 - **Routing:** the app answers its own addresses from `app.html`. The list lives once in `app/tool/routes.py`, which writes Cloudflare's `_redirects`.
 
 ## Elevation & Depth
