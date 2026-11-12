@@ -13,7 +13,7 @@ class SelahRepository {
   Future<List<StudyCard>> publishedStudies(String churchId) async {
     final rows = await _client
         .from('studies')
-        .select('id, slug, title, number_of_days, central_message, published_at, '
+        .select('id, slug, title, number_of_days, central_message, published_at, art_key, '
             'sermons!studies_sermon_id_fkey(thumbnail_url, preacher, channel, sermon_date), '
             'study_translations(language, title, central_message)')
         .eq('church_id', churchId)
@@ -26,7 +26,7 @@ class SelahRepository {
   Future<PublicStudy?> studyBySlug(String churchId, String slug) async {
     final row = await _client
         .from('studies')
-        .select('id, slug, title, number_of_days, bible_version_code, output_language, summary, central_message, published_at, '
+        .select('id, slug, title, number_of_days, bible_version_code, output_language, summary, central_message, published_at, art_key, '
             'sermons!studies_sermon_id_fkey(youtube_video_id, title, preacher, channel, thumbnail_url, sermon_date), devotional_days(*), study_translations(*)')
         .eq('church_id', churchId)
         .eq('slug', slug)
@@ -39,7 +39,7 @@ class SelahRepository {
   Future<PublicStudy?> newestStudy(String churchId) async {
     final row = await _client
         .from('studies')
-        .select('id, slug, title, number_of_days, bible_version_code, output_language, summary, central_message, published_at, '
+        .select('id, slug, title, number_of_days, bible_version_code, output_language, summary, central_message, published_at, art_key, '
             'sermons!studies_sermon_id_fkey(youtube_video_id, title, preacher, channel, thumbnail_url, sermon_date), devotional_days(*), study_translations(*)')
         .eq('church_id', churchId)
         .eq('status', 'published')
@@ -70,7 +70,7 @@ class SelahRepository {
   Future<List<SermonRow>> sermons(String churchId) async {
     final rows = await _client
         .from('sermons')
-        .select('id, title, youtube_url, thumbnail_url, studies!studies_sermon_id_fkey(status)')
+        .select('id, title, youtube_url, thumbnail_url, studies!studies_sermon_id_fkey(id, status, art_key)')
         .eq('church_id', churchId)
         .order('created_at', ascending: false);
     return rows.map(SermonRow.fromJson).toList();
@@ -167,6 +167,11 @@ class SelahRepository {
         'status': published ? 'published' : 'review',
         'published_at': published ? DateTime.now().toUtc().toIso8601String() : null,
       }).eq('id', studyId);
+
+  Future<void> setStudyArt(String studyId, String? key) => _client.from('studies').update({'art_key': key}).eq('id', studyId);
+
+  Future<void> setDayArt(String studyId, int dayNumber, String? key) =>
+      _client.from('devotional_days').update({'art_key': key}).eq('study_id', studyId).eq('day_number', dayNumber);
 
   /// Admin view of a study's translations, hidden ones included.
   Future<List<Map<String, dynamic>>> translations(String studyId) =>

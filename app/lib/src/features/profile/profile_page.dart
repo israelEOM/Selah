@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../../app/design/art.dart';
 import '../../app/theme.dart';
 import '../../app/theme_mode.dart';
 import '../../core/models.dart';
 import '../../data/current_church.dart';
 import '../../data/providers.dart';
+import '../../l10n/locale.dart';
 import '../home/language_menu.dart';
 
 /// The Perfil tab: the person's church, how the app looks, and their account.
@@ -26,11 +28,21 @@ class ProfilePage extends ConsumerWidget {
     // An approved request needs no line: the church shows up as theirs.
     final shown = signedIn ? ref.watch(myChurchRequestProvider).value : null;
     final request = shown?.status == ChurchRequestStatus.approved ? null : shown;
+    final userId = ref.watch(userIdProvider).value;
+    final name = ref.watch(userNameProvider);
     return SelahPage(
         title: l.tabProfile,
         // Settings read best narrow on a desktop.
         maxWidth: siteLayout(context) ? 640 : 760,
         children: [
+          if (userId != null) ...[
+            Row(children: [
+              _Avatar(userId: userId, name: name),
+              const SizedBox(width: Space.l),
+              if (name != null) Expanded(child: Text(name, style: text.titleLarge)),
+            ]),
+            const SizedBox(height: Space.xxl),
+          ],
           Eyebrow(l.yourChurch),
           const SizedBox(height: 12),
           Card(
@@ -39,7 +51,13 @@ class ProfilePage extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(church?.name ?? l.pickChurch, style: text.titleLarge),
+                  Row(children: [
+                    if (church != null) ...[
+                      SelahArt(seed: church.id, shape: ArtShape.circle, width: 44, height: 44),
+                      const SizedBox(width: Space.m),
+                    ],
+                    Expanded(child: Text(church?.name ?? l.pickChurch, style: text.titleLarge)),
+                  ]),
                   const SizedBox(height: 12),
                   Wrap(spacing: 8, runSpacing: 8, children: [
                     OutlinedButton(
@@ -106,10 +124,13 @@ class ProfilePage extends ConsumerWidget {
             onChanged: (mode) => ref.read(themeModeProvider.notifier).set(mode),
           ),
           const SizedBox(height: 32),
-          Row(children: [
-            Expanded(child: Text(l.language, style: text.bodyLarge)),
-            const LanguageMenu(),
-          ]),
+          Eyebrow(l.language),
+          const SizedBox(height: 12),
+          AdaptiveSegmented<String>(
+            segments: {for (final code in supportedLanguages) code: languageNames[code]!},
+            selected: ref.watch(appLocaleProvider).languageCode,
+            onChanged: (code) => ref.read(appLocaleProvider.notifier).set(code),
+          ),
           const SizedBox(height: 32),
           if (platformAdmin) ...[
             Align(
@@ -141,6 +162,46 @@ class ProfilePage extends ConsumerWidget {
                   ),
           ),
         ],
+    );
+  }
+}
+
+/// The light theme's ink. The art stays pale in both themes, so the initial over it is always dark.
+const _initialInk = Color(0xFF262320);
+
+/// The person's initial over their own illustration, picked from their id.
+class _Avatar extends StatelessWidget {
+  const _Avatar({required this.userId, required this.name});
+
+  final String userId;
+  final String? name;
+
+  @override
+  Widget build(BuildContext context) {
+    final initial = name == null || name!.isEmpty ? null : name!.characters.first.toUpperCase();
+    return SizedBox.square(
+      dimension: 56,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          SelahArt(seed: userId, shape: ArtShape.circle, width: 56, height: 56),
+          if (initial != null)
+            ExcludeSemantics(
+              child: Text(
+                initial,
+                textScaler: TextScaler.noScaling,
+                style: serifReading(context).copyWith(
+                  fontSize: 24,
+                  height: 1,
+                  fontWeight: FontWeight.w600,
+                  color: _initialInk,
+                ),
+              ),
+            )
+          else
+            Icon(Icons.person_outline, color: _initialInk.withValues(alpha: 0.7)),
+        ],
+      ),
     );
   }
 }

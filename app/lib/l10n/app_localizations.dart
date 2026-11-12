@@ -598,6 +598,18 @@ abstract class AppLocalizations {
   /// **'Volver a analizar todo'**
   String get regenerateAll;
 
+  /// No description provided for @changeImage.
+  ///
+  /// In es, this message translates to:
+  /// **'Cambiar imagen'**
+  String get changeImage;
+
+  /// No description provided for @pickImage.
+  ///
+  /// In es, this message translates to:
+  /// **'Elige una imagen'**
+  String get pickImage;
+
   /// No description provided for @watchMoment.
   ///
   /// In es, this message translates to:
@@ -891,6 +903,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Seguir'**
   String get followChurch;
+
+  /// No description provided for @followingChurch.
+  ///
+  /// In es, this message translates to:
+  /// **'Siguiendo'**
+  String get followingChurch;
 
   /// No description provided for @roleOwner.
   ///
@@ -1431,6 +1449,96 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'No hay próximos eventos.'**
   String get eventsNone;
+
+  /// No description provided for @weekDaySemantics.
+  ///
+  /// In es, this message translates to:
+  /// **'{day}, {state}'**
+  String weekDaySemantics(String day, String state);
+
+  /// No description provided for @weekStateToday.
+  ///
+  /// In es, this message translates to:
+  /// **'hoy'**
+  String get weekStateToday;
+
+  /// No description provided for @weekStateDone.
+  ///
+  /// In es, this message translates to:
+  /// **'completo'**
+  String get weekStateDone;
+
+  /// No description provided for @weekStateParts.
+  ///
+  /// In es, this message translates to:
+  /// **'{n} de 3 partes'**
+  String weekStateParts(int n);
+
+  /// No description provided for @weekStateNone.
+  ///
+  /// In es, this message translates to:
+  /// **'sin partes aún'**
+  String get weekStateNone;
+
+  /// No description provided for @todayYesterday.
+  ///
+  /// In es, this message translates to:
+  /// **'Ayer'**
+  String get todayYesterday;
+
+  /// No description provided for @finishTodayTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Listo por hoy.'**
+  String get finishTodayTitle;
+
+  /// No description provided for @finishTodayLine.
+  ///
+  /// In es, this message translates to:
+  /// **'Ve en paz.'**
+  String get finishTodayLine;
+
+  /// No description provided for @finishPastTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Día completo.'**
+  String get finishPastTitle;
+
+  /// No description provided for @finishPastLine.
+  ///
+  /// In es, this message translates to:
+  /// **'Nada perdido.'**
+  String get finishPastLine;
+
+  /// No description provided for @pastDayNotTooLate.
+  ///
+  /// In es, this message translates to:
+  /// **'No es tarde. Aún puedes terminar este día.'**
+  String get pastDayNotTooLate;
+
+  /// No description provided for @tapToTick.
+  ///
+  /// In es, this message translates to:
+  /// **'Toca para marcar'**
+  String get tapToTick;
+
+  /// No description provided for @dayCompleteBackToToday.
+  ///
+  /// In es, this message translates to:
+  /// **'Día completo · volver a Hoy'**
+  String get dayCompleteBackToToday;
+
+  /// No description provided for @dayNumber.
+  ///
+  /// In es, this message translates to:
+  /// **'Día {number}'**
+  String dayNumber(int number);
+
+  /// No description provided for @continueStudy.
+  ///
+  /// In es, this message translates to:
+  /// **'Continuar'**
+  String get continueStudy;
 }
 
 class _AppLocalizationsDelegate

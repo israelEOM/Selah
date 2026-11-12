@@ -173,12 +173,11 @@ void main() {
     await _back(tester, 'Volver');
     expect(_path(router), '/today');
     expect(find.text('SEGUIR A JESÚS · DÍA 1 DE 5'), findsOneWidget);
-    expect(find.text('Idea principal 1'), findsOneWidget);
   });
 
   testWidgets('back from a reader opened on the study page returns to the study page', (tester) async {
     final router = await _pump(tester, '/c/vida-nueva/studies/seguir');
-    await _tap(tester, find.text('Día 2 del camino'));
+    await _tap(tester, find.text('Día 2 · Día 2 del camino'));
     expect(_path(router), '/c/vida-nueva/studies/seguir/day/2');
     await _back(tester, 'Volver');
     expect(_path(router), '/c/vida-nueva/studies/seguir');
@@ -277,14 +276,14 @@ void main() {
       expect(_path(router), _reader1);
       await _edgeSwipe(tester);
       expect(_path(router), '/today');
-      expect(find.text('Idea principal 1'), findsOneWidget);
+      expect(find.text('SEGUIR A JESÚS · DÍA 1 DE 5'), findsOneWidget);
     });
   });
 
   testWidgets('iOS edge swipe from a reader opened on the study page returns to the study page', (tester) async {
     await _onIos(() async {
       final router = await _pump(tester, '/c/vida-nueva/studies/seguir');
-      await _tap(tester, find.text('Día 2 del camino'));
+      await _tap(tester, find.text('Día 2 · Día 2 del camino'));
       expect(_path(router), '/c/vida-nueva/studies/seguir/day/2');
       await _edgeSwipe(tester);
       expect(_path(router), '/c/vida-nueva/studies/seguir');

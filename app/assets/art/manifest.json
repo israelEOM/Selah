@@ -1,0 +1,656 @@
+{
+  "style": "Soft painterly illustration in gouache and watercolour, with gentle brush texture and a calm, quiet mood. Warm paper tones that sit harmoniously with the app's paper colour #FAF7F2 and Selah green #2F5D4A: cream, sage, sand, soft ochre and a touch of terracotta. Low contrast, plenty of open space, no hard outlines. No text, letters or numbers anywhere in the image, and no faces of Jesus (no human faces at all where possible; figures are seen from behind or in silhouette).",
+  "images": [
+    {
+      "key": "hillside-dawn",
+      "tags": [
+        "dawn",
+        "hope",
+        "morning",
+        "new beginning",
+        "hill"
+      ],
+      "pickable": true,
+      "alt": {
+        "en": "Green hills at first light",
+        "es": "Colinas verdes al amanecer",
+        "pt": "Colinas verdes ao amanhecer"
+      }
+    },
+    {
+      "key": "quiet-lake",
+      "tags": [
+        "peace",
+        "rest",
+        "stillness",
+        "water",
+        "psalm 23"
+      ],
+      "pickable": true,
+      "alt": {
+        "en": "A still lake at dusk",
+        "es": "Un lago en calma al atardecer",
+        "pt": "Um lago calmo ao entardecer"
+      }
+    },
+    {
+      "key": "desert-path",
+      "tags": [
+        "wilderness",
+        "journey",
+        "trial",
+        "testing",
+        "exodus"
+      ],
+      "pickable": true,
+      "alt": {
+        "en": "A winding path through the desert",
+        "es": "Un camino sinuoso por el desierto",
+        "pt": "Um caminho sinuoso pelo deserto"
+      }
+    },
+    {
+      "key": "wheat-field",
+      "tags": [
+        "harvest",
+        "growth",
+        "sowing",
+        "patience",
+        "provision"
+      ],
+      "pickable": true,
+      "alt": {
+        "en": "A field of ripe wheat",
+        "es": "Un campo de trigo maduro",
+        "pt": "Um campo de trigo maduro"
+      }
+    },
+    {
+      "key": "olive-grove",
+      "tags": [
+        "gethsemane",
+        "prayer",
+        "trust",
+        "surrender",
+        "olive"
+      ],
+      "pickable": true,
+      "alt": {
+        "en": "Olive trees on a hillside",
+        "es": "Olivos en una ladera",
+        "pt": "Oliveiras em uma encosta"
+      }
+    },
+    {
+      "key": "mountain-mist",
+      "tags": [
+        "mountain",
+        "awe",
+        "presence",
+        "glory",
+        "psalm 121"
+      ],
+      "pickable": true,
+      "alt": {
+        "en": "Mountains wrapped in mist",
+        "es": "Montañas envueltas en neblina",
+        "pt": "Montanhas envoltas em neblina"
+      }
+    },
+    {
+      "key": "river-bend",
+      "tags": [
+        "river",
+        "flow",
+        "baptism",
+        "renewal",
+        "jordan"
+      ],
+      "pickable": true,
+      "alt": {
+        "en": "A river bending through green banks",
+        "es": "Un río que serpentea entre orillas verdes",
+        "pt": "Um rio que serpenteia entre margens verdes"
+      }
+    },
+    {
+      "key": "night-stars",
+      "tags": [
+        "promise",
+        "abraham",
+        "stars",
+        "night",
+        "creation"
+      ],
+      "pickable": true,
+      "alt": {
+        "en": "A night sky full of stars",
+        "es": "Un cielo nocturno lleno de estrellas",
+        "pt": "Um céu noturno cheio de estrelas"
+      }
+    },
+    {
+      "key": "garden-gate",
+      "tags": [
+        "garden",
+        "welcome",
+        "entrance",
+        "eden",
+        "grace"
+      ],
+      "pickable": true,
+      "alt": {
+        "en": "An open garden gate",
+        "es": "Una puerta de jardín abierta",
+        "pt": "Um portão de jardim aberto"
+      }
+    },
+    {
+      "key": "seashore",
+      "tags": [
+        "sea",
+        "shore",
+        "galilee",
+        "calm",
+        "waves"
+      ],
+      "pickable": true,
+      "alt": {
+        "en": "A quiet shore at morning",
+        "es": "Una orilla tranquila por la mañana",
+        "pt": "Uma praia tranquila pela manhã"
+      }
+    },
+    {
+      "key": "forest-light",
+      "tags": [
+        "forest",
+        "light",
+        "shelter",
+        "guidance",
+        "shade"
+      ],
+      "pickable": true,
+      "alt": {
+        "en": "Sunlight through tall trees",
+        "es": "Luz del sol entre árboles altos",
+        "pt": "Luz do sol entre árvores altas"
+      }
+    },
+    {
+      "key": "snowy-field",
+      "tags": [
+        "snow",
+        "purity",
+        "forgiveness",
+        "isaiah 1",
+        "winter"
+      ],
+      "pickable": true,
+      "alt": {
+        "en": "A snowy field in winter light",
+        "es": "Un campo nevado con luz de invierno",
+        "pt": "Um campo nevado com luz de inverno"
+      }
+    },
+    {
+      "key": "vine-grapes",
+      "tags": [
+        "vine",
+        "abide",
+        "fruit",
+        "john 15",
+        "grapes"
+      ],
+      "pickable": true,
+      "alt": {
+        "en": "A vine heavy with grapes",
+        "es": "Una vid cargada de uvas",
+        "pt": "Uma videira carregada de uvas"
+      }
+    },
+    {
+      "key": "bread-cup",
+      "tags": [
+        "communion",
+        "lord's supper",
+        "bread",
+        "cup",
+        "remembrance"
+      ],
+      "pickable": true,
+      "alt": {
+        "en": "Bread and a cup on a table",
+        "es": "Pan y una copa sobre una mesa",
+        "pt": "Pão e um cálice sobre uma mesa"
+      }
+    },
+    {
+      "key": "oil-lamp",
+      "tags": [
+        "lamp",
+        "light",
+        "word",
+        "psalm 119",
+        "wisdom"
+      ],
+      "pickable": true,
+      "alt": {
+        "en": "A small oil lamp glowing",
+        "es": "Una pequeña lámpara de aceite encendida",
+        "pt": "Uma pequena lamparina de óleo acesa"
+      }
+    },
+    {
+      "key": "sheep-field",
+      "tags": [
+        "sheep",
+        "shepherd",
+        "care",
+        "flock",
+        "psalm 23"
+      ],
+      "pickable": true,
+      "alt": {
+        "en": "Sheep resting in a green field",
+        "es": "Ovejas descansando en un campo verde",
+        "pt": "Ovelhas descansando em um campo verde"
+      }
+    },
+    {
+      "key": "fishing-boat",
+      "tags": [
+        "boat",
+        "fishing",
+        "calling",
+        "disciples",
+        "storm"
+      ],
+      "pickable": true,
+      "alt": {
+        "en": "A fishing boat on calm water",
+        "es": "Una barca de pesca en aguas tranquilas",
+        "pt": "Um barco de pesca em águas calmas"
+      }
+    },
+    {
+      "key": "open-door",
+      "tags": [
+        "door",
+        "invitation",
+        "knock",
+        "opportunity",
+        "revelation 3"
+      ],
+      "pickable": true,
+      "alt": {
+        "en": "An open wooden door with light",
+        "es": "Una puerta de madera abierta con luz",
+        "pt": "Uma porta de madeira aberta com luz"
+      }
+    },
+    {
+      "key": "well-water",
+      "tags": [
+        "well",
+        "water",
+        "thirst",
+        "samaritan",
+        "living water"
+      ],
+      "pickable": true,
+      "alt": {
+        "en": "A stone well with a water jar",
+        "es": "Un pozo de piedra con una vasija de agua",
+        "pt": "Um poço de pedra com um jarro de água"
+      }
+    },
+    {
+      "key": "fig-tree",
+      "tags": [
+        "fig",
+        "fruit",
+        "patience",
+        "season",
+        "parable"
+      ],
+      "pickable": true,
+      "alt": {
+        "en": "A fig tree in leaf",
+        "es": "Una higuera con hojas",
+        "pt": "Uma figueira com folhas"
+      }
+    },
+    {
+      "key": "mustard-seed",
+      "tags": [
+        "mustard seed",
+        "faith",
+        "small",
+        "growth",
+        "kingdom"
+      ],
+      "pickable": true,
+      "alt": {
+        "en": "A tiny seed and a young plant",
+        "es": "Una semilla diminuta y una planta joven",
+        "pt": "Uma semente minúscula e uma planta jovem"
+      }
+    },
+    {
+      "key": "lost-coin",
+      "tags": [
+        "lost",
+        "found",
+        "coin",
+        "joy",
+        "luke 15"
+      ],
+      "pickable": true,
+      "alt": {
+        "en": "A coin shining on the floor",
+        "es": "Una moneda brillando en el suelo",
+        "pt": "Uma moeda brilhando no chão"
+      }
+    },
+    {
+      "key": "shepherd-staff",
+      "tags": [
+        "shepherd",
+        "staff",
+        "guidance",
+        "protection",
+        "psalm 23"
+      ],
+      "pickable": true,
+      "alt": {
+        "en": "A shepherd's staff in the grass",
+        "es": "Un cayado de pastor en la hierba",
+        "pt": "Um cajado de pastor na grama"
+      }
+    },
+    {
+      "key": "cross-hill",
+      "tags": [
+        "cross",
+        "sacrifice",
+        "good friday",
+        "redemption",
+        "calvary"
+      ],
+      "pickable": true,
+      "alt": {
+        "en": "A plain cross on a quiet hill",
+        "es": "Una cruz sencilla en una colina tranquila",
+        "pt": "Uma cruz simples em uma colina tranquila"
+      }
+    },
+    {
+      "key": "empty-tomb",
+      "tags": [
+        "resurrection",
+        "easter",
+        "tomb",
+        "victory",
+        "new life"
+      ],
+      "pickable": true,
+      "alt": {
+        "en": "An empty tomb in morning light",
+        "es": "Una tumba vacía a la luz de la mañana",
+        "pt": "Um túmulo vazio à luz da manhã"
+      }
+    },
+    {
+      "key": "dove",
+      "tags": [
+        "spirit",
+        "peace",
+        "dove",
+        "baptism",
+        "holy spirit"
+      ],
+      "pickable": true,
+      "alt": {
+        "en": "A white dove in flight",
+        "es": "Una paloma blanca en vuelo",
+        "pt": "Uma pomba branca em voo"
+      }
+    },
+    {
+      "key": "ark-rainbow",
+      "tags": [
+        "noah",
+        "rainbow",
+        "covenant",
+        "promise",
+        "flood"
+      ],
+      "pickable": true,
+      "alt": {
+        "en": "A boat under a rainbow",
+        "es": "Un arca bajo un arcoíris",
+        "pt": "Uma arca sob um arco-íris"
+      }
+    },
+    {
+      "key": "tent-desert",
+      "tags": [
+        "tent",
+        "tabernacle",
+        "pilgrim",
+        "presence",
+        "abraham"
+      ],
+      "pickable": true,
+      "alt": {
+        "en": "A tent beneath desert stars",
+        "es": "Una tienda bajo las estrellas del desierto",
+        "pt": "Uma tenda sob as estrelas do deserto"
+      }
+    },
+    {
+      "key": "city-wall",
+      "tags": [
+        "wall",
+        "city",
+        "nehemiah",
+        "jerusalem",
+        "rebuild"
+      ],
+      "pickable": true,
+      "alt": {
+        "en": "An old city wall at sunset",
+        "es": "Una antigua muralla al atardecer",
+        "pt": "Uma antiga muralha ao pôr do sol"
+      }
+    },
+    {
+      "key": "harvest-baskets",
+      "tags": [
+        "harvest",
+        "gratitude",
+        "abundance",
+        "generosity",
+        "provision"
+      ],
+      "pickable": true,
+      "alt": {
+        "en": "Baskets full of harvest",
+        "es": "Canastas llenas de cosecha",
+        "pt": "Cestos cheios de colheita"
+      }
+    },
+    {
+      "key": "salt-light",
+      "tags": [
+        "salt",
+        "light",
+        "witness",
+        "matthew 5",
+        "influence"
+      ],
+      "pickable": true,
+      "alt": {
+        "en": "A salt dish beside a candle",
+        "es": "Un salero junto a una vela",
+        "pt": "Um saleiro ao lado de uma vela"
+      }
+    },
+    {
+      "key": "stone-jar",
+      "tags": [
+        "jar",
+        "clay",
+        "potter",
+        "vessel",
+        "wedding at cana"
+      ],
+      "pickable": true,
+      "alt": {
+        "en": "Stone water jars in a row",
+        "es": "Tinajas de piedra en fila",
+        "pt": "Talhas de pedra em fila"
+      }
+    },
+    {
+      "key": "loaves-fish",
+      "tags": [
+        "loaves",
+        "fish",
+        "multiplication",
+        "provision",
+        "feeding"
+      ],
+      "pickable": true,
+      "alt": {
+        "en": "Loaves and fish in a basket",
+        "es": "Panes y peces en una canasta",
+        "pt": "Pães e peixes em uma cesta"
+      }
+    },
+    {
+      "key": "pruning-shears",
+      "tags": [
+        "pruning",
+        "vine",
+        "discipline",
+        "growth",
+        "john 15"
+      ],
+      "pickable": true,
+      "alt": {
+        "en": "Pruning shears on a vine branch",
+        "es": "Tijeras de podar sobre una rama de vid",
+        "pt": "Tesoura de poda sobre um ramo de videira"
+      }
+    },
+    {
+      "key": "scroll-table",
+      "tags": [
+        "scroll",
+        "scripture",
+        "word",
+        "study",
+        "law"
+      ],
+      "pickable": true,
+      "alt": {
+        "en": "An open scroll on a table",
+        "es": "Un rollo abierto sobre una mesa",
+        "pt": "Um rolo aberto sobre uma mesa"
+      }
+    },
+    {
+      "key": "table-feast",
+      "tags": [
+        "feast",
+        "table",
+        "fellowship",
+        "banquet",
+        "hospitality"
+      ],
+      "pickable": true,
+      "alt": {
+        "en": "A long table set for a meal",
+        "es": "Una mesa larga preparada para comer",
+        "pt": "Uma mesa longa posta para uma refeição"
+      }
+    },
+    {
+      "key": "scene-welcome",
+      "tags": [
+        "welcome"
+      ],
+      "pickable": false,
+      "alt": {
+        "en": "A sunrise over a quiet path",
+        "es": "Un amanecer sobre un camino tranquilo",
+        "pt": "Um nascer do sol sobre um caminho tranquilo"
+      }
+    },
+    {
+      "key": "scene-signin",
+      "tags": [
+        "sign in"
+      ],
+      "pickable": false,
+      "alt": {
+        "en": "A glowing window in the evening",
+        "es": "Una ventana iluminada al anochecer",
+        "pt": "Uma janela iluminada ao anoitecer"
+      }
+    },
+    {
+      "key": "scene-invite",
+      "tags": [
+        "invitation"
+      ],
+      "pickable": false,
+      "alt": {
+        "en": "An open door in a garden wall",
+        "es": "Una puerta abierta en un muro de jardín",
+        "pt": "Uma porta aberta em um muro de jardim"
+      }
+    },
+    {
+      "key": "scene-churches",
+      "tags": [
+        "church",
+        "community"
+      ],
+      "pickable": false,
+      "alt": {
+        "en": "A small church among trees",
+        "es": "Una pequeña iglesia entre árboles",
+        "pt": "Uma pequena igreja entre árvores"
+      }
+    },
+    {
+      "key": "scene-empty-studies",
+      "tags": [
+        "empty",
+        "studies"
+      ],
+      "pickable": false,
+      "alt": {
+        "en": "An empty bookshelf with a lamp",
+        "es": "Un estante vacío con una lámpara",
+        "pt": "Uma estante vazia com uma lamparina"
+      }
+    },
+    {
+      "key": "scene-empty-events",
+      "tags": [
+        "empty",
+        "events"
+      ],
+      "pickable": false,
+      "alt": {
+        "en": "A calm calendar-free meadow",
+        "es": "Un prado tranquilo sin eventos",
+        "pt": "Um prado tranquilo sem eventos"
+      }
+    }
+  ]
+}

@@ -104,6 +104,8 @@
   "published": "Estudio publicado. Ya está disponible para la iglesia.",
   "regenerateDevotional": "Regenerar devocional",
   "regenerateAll": "Volver a analizar todo",
+  "changeImage": "Cambiar imagen",
+  "pickImage": "Elige una imagen",
   "watchMoment": "Watch this moment ({time})",
   "@watchMoment": {
     "placeholders": {
@@ -194,6 +196,7 @@
   "allChurches": "Churches on Selah",
   "createChurch": "Create a church",
   "followChurch": "Follow",
+  "followingChurch": "Following",
   "roleOwner": "Owner",
   "roleEditor": "Editor",
   "roleMember": "Member",
@@ -303,5 +306,20 @@
   "eventsDetails": "See details",
   "eventsLater": "Later",
   "eventsAllDay": "All day",
-  "eventsNone": "No upcoming events."
+  "eventsNone": "No upcoming events.",
+  "weekDaySemantics": "{day}, {state}",
+  "weekStateToday": "today",
+  "weekStateDone": "done",
+  "weekStateParts": "{n} of 3 parts",
+  "weekStateNone": "nothing yet",
+  "todayYesterday": "Yesterday",
+  "finishTodayTitle": "That's today.",
+  "finishTodayLine": "Go in peace.",
+  "finishPastTitle": "Day complete.",
+  "finishPastLine": "Nothing lost.",
+  "pastDayNotTooLate": "Not too late. You can still finish this day.",
+  "tapToTick": "Tap to tick",
+  "dayCompleteBackToToday": "Day complete · back to Today",
+  "dayNumber": "Day {number}",
+  "continueStudy": "Continue"
 }

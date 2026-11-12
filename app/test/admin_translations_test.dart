@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:selah/src/app/theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -72,6 +75,9 @@ Map<String, dynamic> _row(String id, {required bool hidden}) => {
 
 Future<_FakeRepository> _pump(
   WidgetTester tester, {
+  Map<String, Job> jobs = const {},
+  bool reduce = false,
+  bool settle = true,
   required String status,
   List<Map<String, dynamic>> rows = const [],
   bool failJob = false,
@@ -92,10 +98,11 @@ Future<_FakeRepository> _pump(
         reads++;
         return _detail(failJob && reads > 1 ? 'published' : status, churchId: sermonChurchId);
       }),
-      sermonJobsProvider('s1').overrideWith((ref) => Stream.value(const <String, Job>{})),
+      sermonJobsProvider('s1').overrideWith((ref) => Stream.value(jobs)),
       adminTranslationsProvider('st1').overrideWith((ref) async => rows),
     ],
     child: MaterialApp(
+      builder: (context, child) => MediaQuery(data: MediaQuery.of(context).copyWith(disableAnimations: reduce), child: child!),
       theme: selahLightTheme(),
       locale: const Locale('es'),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -103,7 +110,12 @@ Future<_FakeRepository> _pump(
       home: Builder(builder: (context) => inSpanish(context, const SermonPage(church: _church, sermonId: 's1'))),
     ),
   ));
-  await tester.pumpAndSettle();
+  if (settle) {
+    await tester.pumpAndSettle();
+  } else {
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+  }
   return fake;
 }
 
@@ -155,5 +167,83 @@ void main() {
     expect(find.textContaining('no se pudo iniciar la traducción'), findsOneWidget);
     expect(find.text('Retirar publicación'), findsOneWidget);
     expect(find.text('Traducciones'), findsOneWidget);
+  });
+
+  testWidgets('publishing plays the success haptic', (tester) async {
+    final calls = <Object?>[];
+    final messenger = tester.binding.defaultBinaryMessenger;
+    messenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+      if (call.method == 'HapticFeedback.vibrate') calls.add(call.arguments);
+      return null;
+    });
+    addTearDown(() => messenger.setMockMethodCallHandler(SystemChannels.platform, null));
+    await _pump(tester, status: 'review');
+    await tester.tap(find.text('Publicar'));
+    await tester.pumpAndSettle();
+    expect(calls, ['HapticFeedbackType.mediumImpact']);
+  });
+
+  Job job(String step, String status) =>
+      Job(id: step, step: step, status: status, payload: const {}, createdAt: DateTime.now());
+
+  testWidgets('the running step breathes amber, done steps are green checks, and Reduce Motion holds still', (tester) async {
+    final jobs = {'transcript': job('transcript', 'succeeded'), 'analysis': job('analysis', 'running')};
+    await _pump(tester, status: 'generating', jobs: jobs, settle: false);
+    final breathe = find.byKey(const ValueKey('breathe'));
+    expect(breathe, findsOneWidget);
+    final ctx = tester.element(breathe);
+    expect(tester.widget<DecoratedBox>(find.descendant(of: breathe, matching: find.byType(DecoratedBox))).decoration,
+        BoxDecoration(color: ctx.partPalette.reflection.color, shape: BoxShape.circle));
+    expect(find.byKey(const ValueKey('step-done')), findsOneWidget);
+    await tester.pump(const Duration(seconds: 3));
+    expect(tester.hasRunningAnimations, isTrue);
+
+    await tester.pumpWidget(const SizedBox());
+    await _pump(tester, status: 'generating', jobs: jobs, reduce: true);
+    expect(find.byKey(const ValueKey('breathe')), findsOneWidget);
+    expect(tester.hasRunningAnimations, isFalse);
+  });
+
+  testWidgets('a step finishing springs its dot, and a page opened already done does not', (tester) async {
+    final done = {'transcript': job('transcript', 'succeeded')};
+    await _pump(tester, status: 'generating', jobs: done);
+    double scale() => tester
+        .widget<ScaleTransition>(find.ancestor(of: find.byKey(const ValueKey('step-done')), matching: find.byType(ScaleTransition)).first)
+        .scale
+        .value;
+    expect(scale(), 1);
+
+    final live = StreamController<Map<String, Job>>();
+    addTearDown(live.close);
+    await tester.pumpWidget(const SizedBox());
+    tester.view.physicalSize = const Size(1000, 4000);
+    tester.view.devicePixelRatio = 1;
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        repositoryProvider.overrideWithValue(_FakeRepository()),
+        userIdProvider.overrideWith((ref) => Stream.value('admin')),
+        churchRoleProvider('A').overrideWith((ref) async => ChurchRole.editor),
+        sermonDetailProvider('s1').overrideWith((ref) async => _detail('generating')),
+        sermonJobsProvider('s1').overrideWith((ref) => live.stream),
+        adminTranslationsProvider('st1').overrideWith((ref) async => []),
+      ],
+      child: MaterialApp(
+        theme: selahLightTheme(),
+        locale: const Locale('es'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Builder(builder: (context) => inSpanish(context, const SermonPage(church: _church, sermonId: 's1'))),
+      ),
+    ));
+    live.add({'transcript': job('transcript', 'running')});
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.byKey(const ValueKey('step-done')), findsNothing);
+    live.add({'transcript': job('transcript', 'succeeded')});
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 60));
+    expect(scale(), lessThan(1));
+    await tester.pump(const Duration(seconds: 1));
+    expect(scale(), 1);
   });
 }

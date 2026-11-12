@@ -6,20 +6,24 @@ import 'design/transitions.dart';
 
 export 'design/adaptive_controls.dart';
 export 'design/breakpoints.dart';
+export 'design/content_switcher.dart';
 export 'design/haptics.dart';
 export 'design/hero_card.dart';
 export 'design/navigation.dart';
 export 'design/platform.dart';
 export 'design/pressable.dart';
 export 'design/responsive.dart';
+export 'design/scene.dart';
 export 'design/selah_row.dart';
 export 'design/site_header.dart';
 export 'design/selah_page.dart';
 export 'design/skeleton.dart';
 export 'design/tokens.dart';
 
-const _serif = 'Source Serif 4';
-const _serifFallback = ['Georgia', 'serif'];
+/// Georgia, as the app has always used, on Apple devices. The web and Android have no Georgia, so they fall back to the
+/// bundled Source Serif 4 rather than a sans serif.
+const _serif = 'Georgia';
+const _serifFallback = ['Source Serif 4', 'serif'];
 
 /// Colors beyond [ColorScheme] that the Today page and rows need.
 @immutable
@@ -80,6 +84,58 @@ extension SelahThemeX on BuildContext {
   SelahTones get tones => Theme.of(this).extension<SelahTones>()!;
 }
 
+/// One part's colour: [color] for marks and fills, [text] for small labels in the part's colour, [tint] for a quiet
+/// background, [soft] for an unfilled track.
+@immutable
+class PartTone {
+  const PartTone({required this.color, required this.text, required this.tint, required this.soft});
+
+  final Color color;
+
+  /// [color], darkened where needed so small text reaches 4.5:1 on the page and on [tint].
+  final Color text;
+  final Color tint;
+  final Color soft;
+
+  static PartTone lerp(PartTone a, PartTone b, double t) => PartTone(
+    color: Color.lerp(a.color, b.color, t)!,
+    text: Color.lerp(a.text, b.text, t)!,
+    tint: Color.lerp(a.tint, b.tint, t)!,
+    soft: Color.lerp(a.soft, b.soft, t)!,
+  );
+}
+
+/// The colours of the three parts of a day. They mark those parts and nothing else.
+@immutable
+class PartPalette extends ThemeExtension<PartPalette> {
+  const PartPalette({required this.reading, required this.reflection, required this.prayer});
+
+  final PartTone reading;
+  final PartTone reflection;
+  final PartTone prayer;
+
+  @override
+  PartPalette copyWith({PartTone? reading, PartTone? reflection, PartTone? prayer}) => PartPalette(
+    reading: reading ?? this.reading,
+    reflection: reflection ?? this.reflection,
+    prayer: prayer ?? this.prayer,
+  );
+
+  @override
+  PartPalette lerp(ThemeExtension<PartPalette>? other, double t) {
+    if (other is! PartPalette) return this;
+    return PartPalette(
+      reading: PartTone.lerp(reading, other.reading, t),
+      reflection: PartTone.lerp(reflection, other.reflection, t),
+      prayer: PartTone.lerp(prayer, other.prayer, t),
+    );
+  }
+}
+
+extension PartPaletteX on BuildContext {
+  PartPalette get partPalette => Theme.of(this).extension<PartPalette>()!;
+}
+
 /// The serif, in italic, for the hero quote.
 TextStyle serifQuote(BuildContext context) => TextStyle(
   fontFamily: _serif,
@@ -107,6 +163,7 @@ class _Palette {
     required this.primary,
     required this.onPrimary,
     required this.tones,
+    required this.parts,
   });
 
   final Brightness brightness;
@@ -115,6 +172,7 @@ class _Palette {
   final Color primary;
   final Color onPrimary;
   final SelahTones tones;
+  final PartPalette parts;
 }
 
 const _light = _Palette(
@@ -132,6 +190,11 @@ const _light = _Palette(
     heroStart: Color(0xFF2F5D4A),
     heroEnd: Color(0xFF244A3B),
   ),
+  parts: PartPalette(
+    reading: PartTone(color: Color(0xFF2F5D4A), text: Color(0xFF2F5D4A), tint: Color(0xFFE6EEE8), soft: Color(0xFFD3E2D8)),
+    reflection: PartTone(color: Color(0xFFB8732E), text: Color(0xFF8F561F), tint: Color(0xFFF5EBDD), soft: Color(0xFFEEDCC2)),
+    prayer: PartTone(color: Color(0xFF5E6A9C), text: Color(0xFF545F90), tint: Color(0xFFE8E9F2), soft: Color(0xFFD7DAEA)),
+  ),
 );
 
 const _dark = _Palette(
@@ -142,12 +205,17 @@ const _dark = _Palette(
   onPrimary: Color(0xFF1E1C1A),
   tones: SelahTones(
     surface: Color(0xFF272421),
-    muted: Color(0xFF9C948A),
+    muted: Color(0xFFA39B91),
     accent: Color(0xFFE0906E),
     done: Color(0xFFA9CDB8),
     today: Color(0xFFE0906E),
     heroStart: Color(0xFF26332C),
     heroEnd: Color(0xFF1F2A24),
+  ),
+  parts: PartPalette(
+    reading: PartTone(color: Color(0xFFA9CDB8), text: Color(0xFFA9CDB8), tint: Color(0xFF27332C), soft: Color(0xFF33443A)),
+    reflection: PartTone(color: Color(0xFFE2B27A), text: Color(0xFFE2B27A), tint: Color(0xFF392F23), soft: Color(0xFF4A3C2A)),
+    prayer: PartTone(color: Color(0xFFB4BDEB), text: Color(0xFFB4BDEB), tint: Color(0xFF2B2F42), soft: Color(0xFF393E58)),
   ),
 );
 
@@ -189,7 +257,7 @@ ThemeData _build(_Palette p) {
     brightness: p.brightness,
     colorScheme: scheme,
     scaffoldBackgroundColor: p.background,
-    extensions: [p.tones],
+    extensions: [p.tones, p.parts],
     pageTransitionsTheme: selahPageTransitions(),
     textTheme: TextTheme(
       displaySmall: _heading(40, p.text, height: 1.1),

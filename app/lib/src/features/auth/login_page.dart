@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../../app/design/art.dart';
 import '../../app/theme.dart';
 import '../../core/auth_redirect.dart';
 import '../../core/user_agent.dart';
@@ -28,6 +29,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final _password = TextEditingController();
   bool _creating = false;
   bool _busy = false;
+  int _shakes = 0;
   String? _message;
   String? get _next => (widget.landing ?? Uri.base).queryParameters['next'];
   late final bool _embedded = isEmbeddedBrowser(widget.userAgent ?? currentUserAgent());
@@ -102,7 +104,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       }
       // Navigation happens in the userIdProvider listener in build.
     } on AuthException catch (e) {
-      setState(() => _message = e.code == 'invalid_credentials' ? l.invalidCredentials : e.message);
+      SelahHaptics.warning();
+      setState(() {
+        _message = e.code == 'invalid_credentials' ? l.invalidCredentials : e.message;
+        _shakes++;
+      });
     } catch (_) {
       setState(() => _message = l.genericError);
     } finally {
@@ -142,6 +148,27 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         backTo: '/profile',
         maxWidth: 440,
         children: [
+          // The scene is taller than its frame so the drift never shows an edge.
+          ClipRRect(
+            borderRadius: BorderRadius.circular(Radii.card),
+            child: SizedBox(
+              height: 200,
+              child: OverflowBox(
+                minHeight: 200 + Motion.driftDistance * 2,
+                maxHeight: 200 + Motion.driftDistance * 2,
+                child: const Drift(
+                  child: SelahArt(
+                    artKey: 'scene-signin',
+                    fixed: true,
+                    seed: 'signin',
+                    width: double.infinity,
+                    height: 200 + Motion.driftDistance * 2,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
           Eyebrow('Selah'),
           const SizedBox(height: 8),
           Text(_creating ? l.createAccount : l.signIn, style: text.headlineMedium),
@@ -167,7 +194,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             ],
           ),
           const SizedBox(height: 20),
-          Form(
+          Shake(
+            trigger: _shakes,
+            child: Form(
             key: _form,
             child: AutofillGroup(
               child: Column(
@@ -191,6 +220,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 ],
               ),
             ),
+          ),
           ),
           if (_message != null) ...[const SizedBox(height: 14), Text(_message!, style: text.bodyMedium)],
           const SizedBox(height: 22),

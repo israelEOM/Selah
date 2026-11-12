@@ -15,6 +15,12 @@ abstract final class SelahHaptics {
     await HapticFeedback.lightImpact();
   }
 
+  /// Something went wrong, gently: never harder than [success].
+  static Future<void> warning() async {
+    if (kIsWeb) return;
+    await HapticFeedback.mediumImpact();
+  }
+
   /// A completed action.
   static Future<void> success() async {
     if (kIsWeb) return;

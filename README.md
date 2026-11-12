@@ -126,6 +126,20 @@ The migrations and the new app must go out together: the old app does not unders
 
 Migration `202610300001_church_requests.sql` (a table and functions only) must be pushed (`npx supabase db push --linked`) before deploying this app version, because the new app calls the request functions at sign-up and from Perfil → Solicitudes de iglesias. The old app keeps working against the new schema.
 
+## Releasing illustrations
+
+The app now reads an `art_key` on studies and days, and the worker writes one, so migration `202611110001_art_keys.sql` must be applied before either runs. Until it is, Today, Studies, the study page, the reader, the admin list and the summary and devotional jobs all fail. In order:
+
+1. Stop the worker (Ctrl+C), so no job writes an `art_key` the database can't hold yet.
+2. `npx supabase db push --linked` (Node 20+). It applies `202611110001_art_keys.sql`.
+3. Restart the worker from this commit: `cd worker && .venv/bin/python -m selah_worker run`. It reads `app/assets/art/manifest.json` once and caches it, so any later change to the manifest needs a restart too.
+4. Build and deploy the web app (see "Live app"), and ship the new iOS and Android builds.
+
+Adding pictures later:
+
+- Add new keys to the manifest in an app release first, and only then restart the worker so it can pick them. An installed app that doesn't know a key falls back to its deterministic pick from the study's id, so nothing breaks, but the chosen picture only shows once the app has it.
+- Never rename or remove a key: studies already published keep the key they were given.
+
 ## Church calendars
 
 An owner pastes the church's calendar link in Ajustes de la iglesia (an iCal / `webcal://` link, a Google Calendar public address, or an Events Calendar site's `/events/` page). The Supabase function `supabase/functions/sync-church-events` reads it and keeps the next 60 days (at most 20 events) in `church_events`. `pg_cron` calls it every 3 hours, and Church settings calls it once whenever the link changes. Members see an Eventos tab while their church has something coming up.
