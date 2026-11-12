@@ -70,7 +70,7 @@ class SelahRepository {
   Future<List<SermonRow>> sermons(String churchId) async {
     final rows = await _client
         .from('sermons')
-        .select('id, title, youtube_url, thumbnail_url, studies!studies_sermon_id_fkey(status)')
+        .select('id, title, youtube_url, thumbnail_url, studies!studies_sermon_id_fkey(id, status, art_key)')
         .eq('church_id', churchId)
         .order('created_at', ascending: false);
     return rows.map(SermonRow.fromJson).toList();

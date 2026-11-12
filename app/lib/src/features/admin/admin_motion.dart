@@ -53,7 +53,6 @@ class Shimmer extends StatelessWidget {
         reverse: false,
         still: 0,
         builder: (context, t) {
-          if (reduceMotion(context)) return child;
           return ShaderMask(
             blendMode: BlendMode.srcIn,
             shaderCallback: (bounds) => LinearGradient(

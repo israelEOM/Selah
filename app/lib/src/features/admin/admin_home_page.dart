@@ -62,7 +62,7 @@ class AdminHomePage extends ConsumerWidget {
                       clipBehavior: Clip.antiAlias,
                       child: ListTile(
                         contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-                        leading: SelahArt(seed: sermon.id, width: 46, height: 46, radius: 10),
+                        leading: SelahArt(artKey: sermon.artKey, seed: sermon.studyId ?? sermon.id, width: 46, height: 46, radius: 10),
                         title: Text(sermon.title, style: text.titleLarge),
                         subtitle: Padding(
                           padding: const EdgeInsets.only(top: 4),

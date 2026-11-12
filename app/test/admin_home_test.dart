@@ -121,4 +121,13 @@ void main() {
     expect(done.value, 0.5);
     expect(done.color, tester.element(bar).tones.accent);
   });
+
+  testWidgets("a row shows its study's art, seeded by the study", (tester) async {
+    await _pump(tester, 1, sermons: const [
+      SermonRow(id: 's1', title: 'Uno', studyId: 'st1', artKey: 'dawn'),
+    ]);
+    final art = tester.widget<SelahArt>(find.byType(SelahArt));
+    expect(art.artKey, 'dawn');
+    expect(art.seed, 'st1');
+  });
 }

@@ -290,7 +290,7 @@ class StudyCard {
 }
 
 class SermonRow {
-  const SermonRow({required this.id, required this.title, this.thumbnailUrl, this.studyStatus});
+  const SermonRow({required this.id, required this.title, this.thumbnailUrl, this.studyStatus, this.studyId, this.artKey});
 
   factory SermonRow.fromJson(Map<String, dynamic> json) {
     final study = json['studies'];
@@ -300,6 +300,8 @@ class SermonRow {
       title: (json['title'] as String?) ?? json['youtube_url'] as String,
       thumbnailUrl: json['thumbnail_url'] as String?,
       studyStatus: (first as Map<String, dynamic>?)?['status'] as String?,
+      studyId: first?['id'] as String?,
+      artKey: first?['art_key'] as String?,
     );
   }
 
@@ -307,6 +309,8 @@ class SermonRow {
   final String title;
   final String? thumbnailUrl;
   final String? studyStatus;
+  final String? studyId;
+  final String? artKey;
 }
 
 class Job {

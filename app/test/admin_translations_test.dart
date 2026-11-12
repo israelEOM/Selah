@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:selah/src/app/theme.dart';
@@ -200,5 +202,48 @@ void main() {
     await _pump(tester, status: 'generating', jobs: jobs, reduce: true);
     expect(find.byKey(const ValueKey('breathe')), findsOneWidget);
     expect(tester.hasRunningAnimations, isFalse);
+  });
+
+  testWidgets('a step finishing springs its dot, and a page opened already done does not', (tester) async {
+    final done = {'transcript': job('transcript', 'succeeded')};
+    await _pump(tester, status: 'generating', jobs: done);
+    double scale() => tester
+        .widget<ScaleTransition>(find.ancestor(of: find.byKey(const ValueKey('step-done')), matching: find.byType(ScaleTransition)).first)
+        .scale
+        .value;
+    expect(scale(), 1);
+
+    final live = StreamController<Map<String, Job>>();
+    addTearDown(live.close);
+    await tester.pumpWidget(const SizedBox());
+    tester.view.physicalSize = const Size(1000, 4000);
+    tester.view.devicePixelRatio = 1;
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        repositoryProvider.overrideWithValue(_FakeRepository()),
+        userIdProvider.overrideWith((ref) => Stream.value('admin')),
+        churchRoleProvider('A').overrideWith((ref) async => ChurchRole.editor),
+        sermonDetailProvider('s1').overrideWith((ref) async => _detail('generating')),
+        sermonJobsProvider('s1').overrideWith((ref) => live.stream),
+        adminTranslationsProvider('st1').overrideWith((ref) async => []),
+      ],
+      child: MaterialApp(
+        theme: selahLightTheme(),
+        locale: const Locale('es'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Builder(builder: (context) => inSpanish(context, const SermonPage(church: _church, sermonId: 's1'))),
+      ),
+    ));
+    live.add({'transcript': job('transcript', 'running')});
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.byKey(const ValueKey('step-done')), findsNothing);
+    live.add({'transcript': job('transcript', 'succeeded')});
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 60));
+    expect(scale(), lessThan(1));
+    await tester.pump(const Duration(seconds: 1));
+    expect(scale(), 1);
   });
 }

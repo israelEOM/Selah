@@ -144,11 +144,11 @@ class _Progress extends ConsumerWidget {
           });
           final status = redoing ? 'pending' : job?.status ?? (_hasOutput(step) ? 'succeeded' : 'pending');
           final Widget icon = switch (status) {
-            'succeeded' => const _StepDot.done(),
+            'succeeded' => const _StepDot(_Dot.done),
             'failed' => Icon(Icons.error, color: Theme.of(context).colorScheme.error, size: 22),
-            'running' => const _StepDot.running(),
+            'running' => const _StepDot(_Dot.running),
             'queued' => Icon(Icons.schedule, color: Theme.of(context).colorScheme.primary, size: 22),
-            _ => const _StepDot.pending(),
+            _ => const _StepDot(_Dot.pending),
           };
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 6),
@@ -177,31 +177,27 @@ class _Progress extends ConsumerWidget {
   }
 }
 
-/// A step's dot: green with a check when done, a slowly breathing amber while running, a plain ring while pending.
-class _StepDot extends StatelessWidget {
-  const _StepDot.done() : _kind = 0;
-  const _StepDot.running() : _kind = 1;
-  const _StepDot.pending() : _kind = 2;
+enum _Dot { done, running, pending }
 
-  final int _kind;
+/// A step's dot: green with a check when done, a slowly breathing amber while running, a plain ring while pending.
+/// One [SpringIn] stays in place across states, so a step finishing springs and a page opening already done does not.
+class _StepDot extends StatelessWidget {
+  const _StepDot(this.kind);
+
+  final _Dot kind;
   static const _size = 22.0;
 
   @override
   Widget build(BuildContext context) {
-    switch (_kind) {
-      case 0:
-        return SpringIn(
+    final Widget dot = switch (kind) {
+      _Dot.done => Container(
           key: const ValueKey('step-done'),
-          active: true,
-          child: Container(
-            width: _size,
-            height: _size,
-            decoration: BoxDecoration(color: context.tones.done, shape: BoxShape.circle),
-            child: const Icon(Icons.check, size: 15, color: Colors.white),
-          ),
-        );
-      case 1:
-        return Breathe(
+          width: _size,
+          height: _size,
+          decoration: BoxDecoration(color: context.tones.done, shape: BoxShape.circle),
+          child: const Icon(Icons.check, size: 15, color: Colors.white),
+        ),
+      _Dot.running => Breathe(
           key: const ValueKey('breathe'),
           child: SizedBox(
             width: _size,
@@ -213,14 +209,14 @@ class _StepDot extends StatelessWidget {
               ),
             ),
           ),
-        );
-      default:
-        return Container(
+        ),
+      _Dot.pending => Container(
           width: _size,
           height: _size,
           decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: context.tones.muted, width: 1.5)),
-        );
-    }
+        ),
+    };
+    return SpringIn(active: kind == _Dot.done, child: dot);
   }
 }
 
