@@ -1,6 +1,7 @@
 import 'dart:ui' show CheckedState;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:selah/src/app/theme.dart';
 import 'package:selah/src/data/progress.dart';
@@ -63,8 +64,17 @@ void main() {
   });
 
   testWidgets('PartIcon falls back to an icon when the image is missing', (tester) async {
-    await tester.pumpWidget(host(const PartIcon(part: DayPart.reading)));
+    await tester.pumpWidget(host(DefaultAssetBundle(bundle: _NoPartImages(), child: const PartIcon(part: DayPart.reading))));
+    await tester.pumpAndSettle();
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
     await tester.pumpAndSettle();
     expect(find.byIcon(Icons.menu_book_rounded), findsOneWidget);
   });
+}
+
+/// A bundle without the part images, as before they are added.
+class _NoPartImages extends CachingAssetBundle {
+  @override
+  Future<ByteData> load(String key) async =>
+      key.startsWith('assets/art/parts/') ? throw FlutterError('$key is missing') : rootBundle.load(key);
 }

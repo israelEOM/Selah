@@ -26,6 +26,21 @@ class _PicturesBundle extends CachingAssetBundle {
       key.endsWith('.webp') ? ByteData.sublistView(Uint8List.fromList(_png)) : rootBundle.load(key);
 }
 
+/// A bundle without the library's picture files, as before they are added.
+class _NoPicturesBundle extends CachingAssetBundle {
+  @override
+  Future<ByteData> load(String key) async =>
+      key.endsWith('.webp') ? throw FlutterError('$key is missing') : rootBundle.load(key);
+}
+
+/// Pumps [child] as if none of the library's picture files had been added yet.
+Future<void> _pumpMissing(WidgetTester tester, Widget child, {String language = 'en'}) async {
+  await _pump(tester, DefaultAssetBundle(bundle: _NoPicturesBundle(), child: child), language: language);
+  await tester.pumpAndSettle();
+  await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+  await tester.pumpAndSettle();
+}
+
 /// Pumps [child] with the library's pictures available, and lets one decode.
 Future<void> _pumpLoaded(WidgetTester tester, Widget child, {String language = 'en'}) async {
   await _pump(tester, DefaultAssetBundle(bundle: _PicturesBundle(), child: child), language: language);
@@ -70,6 +85,17 @@ void main() {
 
   test('an empty library resolves to an empty key', () => expect(resolveArtKey(null, 'x', const []), ''));
 
+  test('every manifest key and every part has its picture file', () {
+    final json = jsonDecode(File('assets/art/manifest.json').readAsStringSync()) as Map<String, dynamic>;
+    for (final e in json['images'] as List) {
+      final key = (e as Map<String, dynamic>)['key'];
+      expect(File('assets/art/$key.webp').existsSync(), isTrue, reason: 'assets/art/$key.webp is missing');
+    }
+    for (final part in ['reading', 'reflection', 'prayer']) {
+      expect(File('assets/art/parts/$part.png').existsSync(), isTrue, reason: 'assets/art/parts/$part.png is missing');
+    }
+  });
+
   test('the bundled manifest parses and every entry has alt text in en, es and pt', () {
     final json = jsonDecode(File('assets/art/manifest.json').readAsStringSync()) as Map<String, dynamic>;
     expect((json['style'] as String).trim(), isNotEmpty);
@@ -88,26 +114,23 @@ void main() {
   });
 
   testWidgets('SelahArt shows a placeholder when the image file is missing', (tester) async {
-    await _pump(tester, const SelahArt(artKey: 'vine-grapes', seed: 's', width: 100, height: 80));
-    await tester.pumpAndSettle();
+    await _pumpMissing(tester, const SelahArt(artKey: 'vine-grapes', seed: 's', width: 100, height: 80));
     expect(find.byType(ArtPlaceholder), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
   testWidgets('decorative SelahArt shows nothing, not a placeholder, until its file exists', (tester) async {
-    await _pump(tester, const SelahArt(artKey: 'vine-grapes', seed: 's', width: 100, height: 80, placeholder: false));
-    await tester.pumpAndSettle();
+    await _pumpMissing(tester, const SelahArt(artKey: 'vine-grapes', seed: 's', width: 100, height: 80, placeholder: false));
     expect(find.byType(ArtPlaceholder), findsNothing);
     expect(find.byType(RawImage), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
   testWidgets('SelahArt falls back for an unknown key and a null key', (tester) async {
-    await _pump(tester, const Column(children: [
+    await _pumpMissing(tester, const Column(children: [
       SelahArt(artKey: 'nope', seed: 's', width: 50, height: 50),
       SelahArt(seed: 's', width: 50, height: 50),
     ]));
-    await tester.pumpAndSettle();
     expect(find.byType(ArtPlaceholder), findsNWidgets(2));
     expect(tester.takeException(), isNull);
   });
@@ -119,8 +142,7 @@ void main() {
   });
 
   testWidgets('a placeholder standing in for a missing picture has no alt text', (tester) async {
-    await _pump(tester, const SelahArt(artKey: 'vine-grapes', seed: 's', width: 100, height: 80), language: 'es');
-    await tester.pumpAndSettle();
+    await _pumpMissing(tester, const SelahArt(artKey: 'vine-grapes', seed: 's', width: 100, height: 80), language: 'es');
     expect(find.byType(ArtPlaceholder), findsOneWidget);
     expect(find.bySemanticsLabel('Una vid'), findsNothing);
   });
