@@ -330,11 +330,11 @@ class _Today extends ConsumerWidget {
           tag: dayHeroTag(progressId, day.number),
           child: HeroCard(
             eyebrow: '${study.title} · ${l.dayOfTotal(day.number, study.days.length)}',
+            // Only the title: the card is the way into the day, and the reader's card adds the main idea.
             title: day.title,
-            quote: day.mainIdea,
             glow: done,
             animateGlow: moment,
-            art: SelahArt(artKey: day.artKey, seed: '${study.id}-${day.number}', shape: ArtShape.circle),
+            art: SelahArt(artKey: day.artKey, seed: '${study.id}-${day.number}', radius: 0),
           ),
         ),
       ),

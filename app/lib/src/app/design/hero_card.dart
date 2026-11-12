@@ -42,7 +42,7 @@ Color heroForeground(BuildContext context) {
 }
 
 /// The gradient card with an eyebrow, a title, a serif quote and an optional badge and footer. A finished day's card
-/// holds a soft light ([glow]), and [art] sits round in the bottom-right corner.
+/// holds a soft light ([glow]), and [art] fills its right side, fading into the card behind the text.
 class HeroCard extends StatelessWidget {
   const HeroCard({
     super.key,
@@ -75,26 +75,24 @@ class HeroCard extends StatelessWidget {
   /// off mid-way lets the fade finish.
   final bool animateGlow;
 
-  /// An illustration, round, in the bottom-right corner.
+  /// An illustration behind the right [_artWidth] of the card, transparent at its left edge and [_artStrength] at
+  /// the right, so the text over it stays legible.
   final Widget? art;
 
-  /// The art's visible width (100 px, 14 px of it past the edge) less the card's 22 px padding.
-  static const _artClearance = 100.0 - 14 - 22;
+  static const _artWidth = 0.6;
+  static const _artStrength = 0.5;
 
   @override
   Widget build(BuildContext context) {
     final tones = context.tones;
     final text = Theme.of(context).textTheme;
     final onHero = heroForeground(context);
-    // With art, the title and quote stop short of its visible part, so the round corner never covers them.
-    Widget clear(Widget text) =>
-        art == null ? text : Padding(padding: const EdgeInsets.only(right: _artClearance), child: text);
     final parts = <Widget>[
       if (eyebrow != null)
         Text(eyebrow!.toUpperCase(), style: text.labelSmall?.copyWith(color: onHero.withValues(alpha: 0.8))),
       ?eyebrowAccessory,
-      if (title != null) clear(Text(title!, style: text.headlineSmall?.copyWith(color: onHero))),
-      if (quote != null) clear(Text(quote!, style: serifQuote(context).copyWith(color: onHero))),
+      if (title != null) Text(title!, style: text.headlineSmall?.copyWith(color: onHero)),
+      if (quote != null) Text(quote!, style: serifQuote(context).copyWith(color: onHero)),
       ?footer,
     ];
     final content = Padding(
@@ -134,15 +132,27 @@ class HeroCard extends StatelessWidget {
         ),
         child: Stack(
           children: [
-            if (glow) Positioned.fill(child: _Glow(animate: animateGlow && !reduceMotion(context))),
             if (art != null)
-              Positioned(
-                right: -14,
-                bottom: -18,
-                child: ExcludeSemantics(
-                  child: Opacity(opacity: 0.85, child: ClipOval(child: SizedBox.square(dimension: 100, child: art))),
+              Positioned.fill(
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: FractionallySizedBox(
+                    widthFactor: _artWidth,
+                    heightFactor: 1,
+                    child: ExcludeSemantics(
+                      child: ShaderMask(
+                        key: const ValueKey('hero-art'),
+                        blendMode: BlendMode.dstIn,
+                        shaderCallback: (rect) => LinearGradient(
+                          colors: [Colors.white.withValues(alpha: 0), Colors.white.withValues(alpha: _artStrength)],
+                        ).createShader(rect),
+                        child: art,
+                      ),
+                    ),
+                  ),
                 ),
               ),
+            if (glow) Positioned.fill(child: _Glow(animate: animateGlow && !reduceMotion(context))),
             content,
           ],
         ),

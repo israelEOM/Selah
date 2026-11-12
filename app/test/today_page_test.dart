@@ -136,7 +136,8 @@ void main() {
     expect(find.text('Iglesia Vida Nueva'), findsOneWidget);
     expect(find.text('SEGUIR A JESÚS · DÍA 1 DE 5'), findsOneWidget);
     expect(find.text('Día 1 del camino'), findsOneWidget);
-    expect(find.text('Idea principal 1'), findsOneWidget);
+    // Today's card is only the eyebrow and the title; the reader shows the main idea.
+    expect(find.text('Idea principal 1'), findsNothing);
     expect(find.text('Lectura bíblica'), findsOneWidget);
     expect(find.text('Reflexión'), findsOneWidget);
     expect(find.text('Oración'), findsOneWidget);
@@ -152,7 +153,6 @@ void main() {
     final art = find.descendant(of: find.byType(HeroCard), matching: find.byType(SelahArt));
     expect(art, findsOneWidget);
     expect(tester.widget<SelahArt>(art).artKey, 'vine-grapes');
-    expect(tester.widget<SelahArt>(art).shape, ArtShape.circle);
   });
 
   testWidgets('a day without prayer has no prayer row', (tester) async {
@@ -169,7 +169,6 @@ void main() {
     expect(find.text('Listo por hoy.'), findsOneWidget);
     expect(find.text('Ve en paz.'), findsOneWidget);
     expect(find.text('Leer el siguiente'), findsOneWidget);
-    expect(find.text('Idea principal 1'), findsOneWidget);
     expect(_weekChecks(), findsOneWidget);
     expect(find.descendant(of: find.byKey(const ValueKey('week-1')), matching: find.byIcon(Icons.check)), findsOneWidget);
   });

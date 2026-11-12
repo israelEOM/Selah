@@ -173,7 +173,6 @@ void main() {
     await _back(tester, 'Volver');
     expect(_path(router), '/today');
     expect(find.text('SEGUIR A JESÚS · DÍA 1 DE 5'), findsOneWidget);
-    expect(find.text('Idea principal 1'), findsOneWidget);
   });
 
   testWidgets('back from a reader opened on the study page returns to the study page', (tester) async {
@@ -277,7 +276,7 @@ void main() {
       expect(_path(router), _reader1);
       await _edgeSwipe(tester);
       expect(_path(router), '/today');
-      expect(find.text('Idea principal 1'), findsOneWidget);
+      expect(find.text('SEGUIR A JESÚS · DÍA 1 DE 5'), findsOneWidget);
     });
   });
 

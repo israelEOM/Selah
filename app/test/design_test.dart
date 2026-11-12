@@ -174,14 +174,27 @@ void main() {
 
   const longQuote = 'A long quote that runs the whole width of the card and wraps onto a second and a third line.';
 
-  testWidgets('HeroCard keeps its title and quote clear of the art', (tester) async {
+  testWidgets('HeroCard text runs the full width over its art', (tester) async {
     await tester.pumpWidget(host(const SizedBox(
       width: 360,
-      child: HeroCard(title: 'A title that is long enough to wrap', quote: longQuote, art: ColoredBox(color: Colors.red)),
+      child: HeroCard(title: 'A title', quote: longQuote, art: ColoredBox(color: Colors.red)),
     )));
-    final art = tester.getRect(find.byType(ClipOval));
-    expect(tester.getRect(find.text(longQuote)).right, lessThanOrEqualTo(art.left));
-    expect(tester.getRect(find.text('A title that is long enough to wrap')).right, lessThanOrEqualTo(art.left));
+    final card = tester.getRect(find.byType(HeroCard));
+    expect(tester.getRect(find.text(longQuote)).right, closeTo(card.right - 22, 0.5));
+  });
+
+  testWidgets('HeroCard art fills the right of the card and fades in from its left edge', (tester) async {
+    await tester.pumpWidget(host(const SizedBox(
+      width: 360,
+      child: HeroCard(title: 'A title', art: ColoredBox(color: Colors.red)),
+    )));
+    final card = tester.getRect(find.byType(HeroCard));
+    final art = tester.getRect(find.byKey(const ValueKey('hero-art')));
+    expect(art.right, card.right);
+    expect(art.height, card.height);
+    expect(art.width, closeTo(card.width * 0.6, 0.5));
+    final mask = tester.widget<ShaderMask>(find.byKey(const ValueKey('hero-art')));
+    expect(mask.blendMode, BlendMode.dstIn);
   });
 
   testWidgets('HeroCard without art gives its text the full width', (tester) async {

@@ -15,7 +15,7 @@ Add this paragraph to every prompt, then the scene line below. Keep every image 
 | Scenes (pickable and fixed) | `assets/art/<key>.webp` | 1200 x 900 px, WebP, about 150 KB or less |
 | Part icons | `assets/art/parts/reading.png`, `reflection.png`, `prayer.png` | 256 x 256 px, PNG with a transparent background |
 
-Keep the main subject in the centre: the same scene is cropped round (Today's hero card), square (study thumbnails) and wide (headers).
+Keep the main subject in the centre: the same scene is cropped wide behind the right of Today's card (the app fades its left edge into the green, so no transparency is needed), square (study thumbnails) and wide (headers). Keep detail soft and low in contrast so white text stays readable over it.
 
 ## Part icons
 

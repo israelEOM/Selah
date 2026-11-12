@@ -39,22 +39,22 @@ colors:
   part-prayer-soft-dark: "#393E58"
 typography:
   display:
-    fontFamily: "Source Serif 4, Georgia, serif"
+    fontFamily: "Georgia, Source Serif 4, serif"
     fontSize: "40px"
     fontWeight: 600
     lineHeight: 1.1
   headline:
-    fontFamily: "Source Serif 4, Georgia, serif"
+    fontFamily: "Georgia, Source Serif 4, serif"
     fontSize: "30px"
     fontWeight: 600
     lineHeight: 1.15
   headline-small:
-    fontFamily: "Source Serif 4, Georgia, serif"
+    fontFamily: "Georgia, Source Serif 4, serif"
     fontSize: "24px"
     fontWeight: 600
     lineHeight: 1.25
   title:
-    fontFamily: "Source Serif 4, Georgia, serif"
+    fontFamily: "Georgia, Source Serif 4, serif"
     fontSize: "20px"
     fontWeight: 600
     lineHeight: 1.3
@@ -94,12 +94,12 @@ typography:
     fontWeight: 700
     letterSpacing: "1.5px"
   quote:
-    fontFamily: "Source Serif 4, Georgia, serif"
+    fontFamily: "Georgia, Source Serif 4, serif"
     fontSize: "22px"
     fontWeight: 400
     lineHeight: 1.35
   reading:
-    fontFamily: "Source Serif 4, Georgia, serif"
+    fontFamily: "Georgia, Source Serif 4, serif"
     fontSize: "18px"
     fontWeight: 400
     lineHeight: 1.7
@@ -192,7 +192,7 @@ On the green hero card (the reader's header ring, `PartRing(onHero: true)`) the 
 
 ## Typography
 
-- **Serif: Source Serif 4** (bundled in `app/assets/fonts/`, SIL Open Font License). Use it for display, headlines, titles, the hero quote (italic) and long reading text such as reflection, prayer and the reader.
+- **Serif: Georgia**, as the app has always used. Use it for display, headlines, titles, the hero quote (italic) and long reading text such as reflection, prayer and the reader. The web and Android have no Georgia, so they fall back to **Source Serif 4** (bundled in `app/assets/fonts/`, SIL Open Font License) rather than a sans serif.
 - **Sans: the system font.** Use it for everything you operate: labels, buttons, lists, navigation, forms and metadata.
 
 | Role (`TextTheme`) | Family | Size / line height | Weight |
@@ -285,7 +285,7 @@ All components live in `app/lib/src/app/design/` and read only tokens.
 - **Site header** (`SiteHeader`, `SiteFrame`): the desktop top bar, 64 px tall, on paper with an `outlineVariant` hairline. Links are text buttons, so they can take keyboard focus.
 - **Two columns** (`TwoColumn`): a main column and a fixed side column, `Space.xxl` apart. Use it only in the website layout.
 - **Card grid** (`CardGrid`): as many columns as fit (default 280 px minimum, three at most). Tiles in a row share a top edge and keep their width when a row isn't full.
-- **Hero card** (`HeroCard`): today's study. It has a green gradient (`heroStart` → `heroEnd`), paper-colored text in light mode (ink in dark mode), `Radii.card` and 22 padding. It holds an eyebrow, a serif title and a serif italic quote. It's the one large green surface per screen. A finished day's card holds a soft light (`glow`): a pale radial highlight from the bottom centre. Optional `art` sits round in the bottom-right corner, and the title and quote then stop 64 px short of the right so the art never covers them.
+- **Hero card** (`HeroCard`): today's study. It has a green gradient (`heroStart` → `heroEnd`), paper-colored text in light mode (ink in dark mode), `Radii.card` and 22 padding. It holds an eyebrow, a serif title and a serif italic quote. It's the one large green surface per screen. A finished day's card holds a soft light (`glow`): a pale radial highlight from the bottom centre. Optional `art` fills the right 60% of the card behind the text, fading from transparent at its left edge to 50% at the right, so the title and quote run the full width and stay legible. Today's card shows only the eyebrow and the title; the reader's card adds the quote.
 - **Row** (`SelahRow`): raised paper, `Radii.row`, ink title, muted subtitle. Presses spring (`Pressable`).
 - **Tab bar** (`AdaptiveTabBar`): native glass on iOS 26, a frosted pill elsewhere on iOS, and a Material `NavigationBar` on raised paper on Android and web. The selected tab takes the done green (`tones.done`) over a soft pill of the same green at 10%; the native glass bar takes only the tint, and keeps its own glass and selection.
 - **Buttons:** primary is a filled green stadium with paper-colored text. Secondary is an outlined stadium with green text and a green border.

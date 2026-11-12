@@ -20,8 +20,10 @@ export 'design/selah_page.dart';
 export 'design/skeleton.dart';
 export 'design/tokens.dart';
 
-const _serif = 'Source Serif 4';
-const _serifFallback = ['Georgia', 'serif'];
+/// Georgia, as the app has always used, on Apple devices. The web and Android have no Georgia, so they fall back to the
+/// bundled Source Serif 4 rather than a sans serif.
+const _serif = 'Georgia';
+const _serifFallback = ['Source Serif 4', 'serif'];
 
 /// Colors beyond [ColorScheme] that the Today page and rows need.
 @immutable
