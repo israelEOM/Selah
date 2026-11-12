@@ -9,7 +9,9 @@ import '../../core/format.dart';
 import '../../core/models.dart';
 import '../../data/providers.dart';
 import '../church/church_scope.dart';
+import '../today/part_tick.dart' show SpringIn;
 import 'admin_gate.dart';
+import 'admin_motion.dart';
 import 'art_picker.dart';
 
 const _translateTargets = {'languages': ['en', 'pt']};
@@ -142,11 +144,11 @@ class _Progress extends ConsumerWidget {
           });
           final status = redoing ? 'pending' : job?.status ?? (_hasOutput(step) ? 'succeeded' : 'pending');
           final Widget icon = switch (status) {
-            'succeeded' => Icon(Icons.check_circle, color: context.tones.done, size: 22),
+            'succeeded' => const _StepDot.done(),
             'failed' => Icon(Icons.error, color: Theme.of(context).colorScheme.error, size: 22),
-            'running' => const SizedBox(width: 22, height: 22, child: Padding(padding: EdgeInsets.all(2), child: CircularProgressIndicator(strokeWidth: 2.5))),
+            'running' => const _StepDot.running(),
             'queued' => Icon(Icons.schedule, color: Theme.of(context).colorScheme.primary, size: 22),
-            _ => Icon(Icons.circle_outlined, color: context.tones.muted, size: 22),
+            _ => const _StepDot.pending(),
           };
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 6),
@@ -172,6 +174,53 @@ class _Progress extends ConsumerWidget {
         }),
       if (waiting) Padding(padding: const EdgeInsets.only(top: 6), child: Text(l.workerHint, style: text.bodyMedium)),
     ]);
+  }
+}
+
+/// A step's dot: green with a check when done, a slowly breathing amber while running, a plain ring while pending.
+class _StepDot extends StatelessWidget {
+  const _StepDot.done() : _kind = 0;
+  const _StepDot.running() : _kind = 1;
+  const _StepDot.pending() : _kind = 2;
+
+  final int _kind;
+  static const _size = 22.0;
+
+  @override
+  Widget build(BuildContext context) {
+    switch (_kind) {
+      case 0:
+        return SpringIn(
+          key: const ValueKey('step-done'),
+          active: true,
+          child: Container(
+            width: _size,
+            height: _size,
+            decoration: BoxDecoration(color: context.tones.done, shape: BoxShape.circle),
+            child: const Icon(Icons.check, size: 15, color: Colors.white),
+          ),
+        );
+      case 1:
+        return Breathe(
+          key: const ValueKey('breathe'),
+          child: SizedBox(
+            width: _size,
+            height: _size,
+            child: Center(
+              child: DecoratedBox(
+                decoration: BoxDecoration(color: context.partPalette.reflection.color, shape: BoxShape.circle),
+                child: const SizedBox(width: 14, height: 14),
+              ),
+            ),
+          ),
+        );
+      default:
+        return Container(
+          width: _size,
+          height: _size,
+          decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: context.tones.muted, width: 1.5)),
+        );
+    }
   }
 }
 
@@ -310,6 +359,7 @@ class _StudyState extends ConsumerState<_Study> {
       if (mounted) setState(() => _notice = l.jobAlreadyRunning);
       return;
     }
+    SelahHaptics.success();
     var notice = l.published;
     try {
       await repo.createJob('translate', _translateTargets, churchId: widget.churchId, sermonId: widget.sermonId);

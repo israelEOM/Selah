@@ -57,6 +57,11 @@ abstract final class Motion {
   static const ripple = Duration(milliseconds: 600);
   static const staggerStep = Duration(milliseconds: 40);
 
+  /// Admin: the Generando chip's slow sweep, and the running step's slow breathing (opacity 0.6 to 1 and back).
+  static const shimmer = Duration(milliseconds: 1600);
+  static const breathe = Duration(milliseconds: 1400);
+  static const breatheLow = 0.6;
+
   /// A scene settling in: the fade and the rise, and how far it rises.
   static const sceneIn = Duration(milliseconds: 600);
   static const sceneRise = 12.0;
