@@ -8,6 +8,7 @@ import 'package:selah/l10n/app_localizations_es.dart';
 import 'package:selah/src/core/models.dart';
 import 'package:selah/src/data/providers.dart';
 import 'package:selah/src/data/repository.dart';
+import 'package:selah/src/app/design/art.dart';
 import 'package:selah/src/features/admin/admin_home_page.dart';
 
 const _church = Church(id: 'A', slug: 'vida-nueva', name: 'Vida Nueva', monthlySermonLimit: 4);
@@ -23,7 +24,7 @@ class _FakeRepository implements SelahRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-Future<void> _pump(WidgetTester tester, int used) async {
+Future<void> _pump(WidgetTester tester, int used, {List<SermonRow> sermons = const [], bool reduce = false, bool settle = true}) async {
   tester.view.physicalSize = const Size(800, 2000);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
@@ -32,9 +33,10 @@ Future<void> _pump(WidgetTester tester, int used) async {
       repositoryProvider.overrideWithValue(_FakeRepository(used)),
       userIdProvider.overrideWith((ref) => Stream.value('user-1')),
       churchRoleProvider('A').overrideWith((ref) async => ChurchRole.editor),
-      sermonsProvider('A').overrideWith((ref) async => []),
+      sermonsProvider('A').overrideWith((ref) async => sermons),
     ],
     child: MaterialApp(
+      builder: (context, child) => MediaQuery(data: MediaQuery.of(context).copyWith(disableAnimations: reduce), child: child!),
       theme: selahLightTheme(),
       locale: const Locale('es'),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -42,7 +44,12 @@ Future<void> _pump(WidgetTester tester, int used) async {
       home: const AdminHomePage(church: _church),
     ),
   ));
-  await tester.pumpAndSettle();
+  if (settle) {
+    await tester.pumpAndSettle();
+  } else {
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+  }
 }
 
 void main() {
@@ -75,5 +82,52 @@ void main() {
     } finally {
       debugDefaultTargetPlatformOverride = null;
     }
+  });
+
+  const generating = [SermonRow(id: 's1', title: 'Uno', studyStatus: 'generating')];
+
+  testWidgets('the generating chip shimmers and stops with Reduce Motion', (tester) async {
+    await _pump(tester, 1, sermons: generating, settle: false);
+    expect(find.byKey(const ValueKey('shimmer')), findsOneWidget);
+    // A repeating sweep never settles.
+    await tester.pump(const Duration(seconds: 2));
+    expect(tester.hasRunningAnimations, isTrue);
+
+    await tester.pumpWidget(const SizedBox());
+    await _pump(tester, 1, sermons: generating, reduce: true);
+    expect(find.byKey(const ValueKey('shimmer')), findsOneWidget);
+    expect(tester.hasRunningAnimations, isFalse);
+  });
+
+  testWidgets('sermon rows show art and coloured status chips', (tester) async {
+    await _pump(tester, 1, sermons: const [
+      SermonRow(id: 's1', title: 'Uno', studyStatus: 'published'),
+      SermonRow(id: 's2', title: 'Dos', studyStatus: 'review'),
+    ]);
+    expect(find.byType(SelahArt), findsNWidgets(2));
+    expect(tester.getSize(find.byType(SelahArt).first), const Size(46, 46));
+    final ctx = tester.element(find.text('Uno'));
+    Color colourOf(String label) => tester.widget<Text>(find.text(label)).style!.color!;
+    expect(colourOf(es.statusPublished.toUpperCase()), ctx.tones.done);
+    expect(colourOf(es.statusReview.toUpperCase()), ctx.tones.accent);
+  });
+
+  testWidgets('the monthly bar fills from empty in terracotta', (tester) async {
+    await _pump(tester, 2, settle: false);
+    final bar = find.byKey(const ValueKey('usage-bar'));
+    expect(tester.widget<LinearProgressIndicator>(bar).value, lessThan(0.5)); // still filling
+    await tester.pumpAndSettle();
+    final done = tester.widget<LinearProgressIndicator>(bar);
+    expect(done.value, 0.5);
+    expect(done.color, tester.element(bar).tones.accent);
+  });
+
+  testWidgets("a row shows its study's art, seeded by the study", (tester) async {
+    await _pump(tester, 1, sermons: const [
+      SermonRow(id: 's1', title: 'Uno', studyId: 'st1', artKey: 'dawn'),
+    ]);
+    final art = tester.widget<SelahArt>(find.byType(SelahArt));
+    expect(art.artKey, 'dawn');
+    expect(art.seed, 'st1');
   });
 }

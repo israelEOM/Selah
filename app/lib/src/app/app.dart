@@ -122,12 +122,17 @@ GoRouter createRouter({String initialLocation = '/'}) {
           builder: (_, state) => SiteFrame(
             child: _inChurch(
               state,
-              (church) => ReaderPage(
-                church: church,
-                slug: state.pathParameters['slug']!,
-                dayNumber: int.tryParse(state.pathParameters['number']!) ?? 0,
-                initialStudy: state.extra is PublicStudy ? state.extra as PublicStudy : null,
-              ),
+              (church) {
+                final entry = ReaderEntry.from(state.extra);
+                return ReaderPage(
+                  church: church,
+                  slug: state.pathParameters['slug']!,
+                  dayNumber: int.tryParse(state.pathParameters['number']!) ?? 0,
+                  initialStudy: entry?.study,
+                  fromToday: entry?.fromToday ?? false,
+                  on: entry?.on,
+                );
+              },
             ),
           ),
         ),
@@ -187,6 +192,8 @@ class SelahApp extends ConsumerWidget {
         theme: selahLightTheme(),
         darkTheme: selahDarkTheme(),
         themeMode: ref.watch(themeModeProvider),
+        // Switching theme crossfades the colours.
+        themeAnimationDuration: Motion.medium,
         routerConfig: _router,
         locale: ref.watch(appLocaleProvider),
         localizationsDelegates: AppLocalizations.localizationsDelegates,

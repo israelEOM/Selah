@@ -20,7 +20,7 @@ class TodayRefresh extends Notifier<int> {
 Future<void> refreshToday(WidgetRef ref, String churchId) async {
   ref.invalidate(newestStudyProvider(churchId));
   ref.invalidate(studyProgressProvider);
-  ref.invalidate(doneDatesProvider);
+  ref.invalidate(ticksByDateProvider);
   ref.read(todayRefreshProvider.notifier).bump();
   try {
     await ref.read(newestStudyProvider(churchId).future);

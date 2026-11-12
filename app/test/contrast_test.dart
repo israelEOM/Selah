@@ -34,6 +34,22 @@ void main() {
       expect(contrast(s.onInverseSurface, s.inverseSurface), greaterThanOrEqualTo(4.5)); // snackbars
     });
 
+    test('$name part colours are legible', () {
+      final p = theme.extension<PartPalette>()!;
+      final onColor = theme.colorScheme.onPrimary;
+      for (final (part, tone) in [('reading', p.reading), ('reflection', p.reflection), ('prayer', p.prayer)]) {
+        expect(contrast(tone.color, tone.tint), greaterThanOrEqualTo(3), reason: '$part colour on its tint');
+        // The check mark is a graphic, not text, so 3:1 applies (the spec's light reflection colour is 3.55:1).
+        expect(contrast(onColor, tone.color), greaterThanOrEqualTo(3), reason: 'check mark on $part colour');
+        // Small labels in the part's colour (section eyebrows, the tick bar's chip name) are text: 4.5:1.
+        expect(contrast(tone.text, theme.scaffoldBackgroundColor), greaterThanOrEqualTo(4.5), reason: '$part text on paper');
+        expect(contrast(tone.text, tone.tint), greaterThanOrEqualTo(4.5), reason: '$part text on its tint');
+        // The tick bar's "Tap to tick" is muted text on the part's tint.
+        final muted = theme.extension<SelahTones>()!.muted;
+        expect(contrast(muted, tone.tint), greaterThanOrEqualTo(4.5), reason: 'muted text on the $part tint');
+      }
+    });
+
     test('$name surface containers are warm and never darker than the page in dark mode', () {
       final s = theme.colorScheme;
       final bg = theme.scaffoldBackgroundColor;

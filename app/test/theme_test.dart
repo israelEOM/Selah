@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:selah/src/app/theme.dart';
@@ -15,6 +14,33 @@ void main() {
     expect(tones.heroStart, const Color(0xFF2F5D4A));
   });
 
+  test('light part palette matches the spec', () {
+    final p = selahLightTheme().extension<PartPalette>()!;
+    expect(p.reading.color, const Color(0xFF2F5D4A));
+    expect(p.reflection.color, const Color(0xFFB8732E));
+    expect(p.prayer.color, const Color(0xFF5E6A9C));
+    expect(p.reflection.tint, const Color(0xFFF5EBDD));
+    expect(p.prayer.soft, const Color(0xFFD7DAEA));
+  });
+
+  test('dark theme has a part palette', () => expect(selahDarkTheme().extension<PartPalette>(), isNotNull));
+
+  testWidgets('context.partPalette reads the theme extension', (tester) async {
+    late PartPalette p;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: selahLightTheme(),
+        home: Builder(
+          builder: (context) {
+            p = context.partPalette;
+            return const SizedBox();
+          },
+        ),
+      ),
+    );
+    expect(p.reading.color, const Color(0xFF2F5D4A));
+  });
+
   test('dark theme is warm gray, not black, with sage and terracotta', () {
     final t = selahDarkTheme();
     final tones = t.extension<SelahTones>()!;
@@ -25,13 +51,14 @@ void main() {
     expect(tones.heroStart, const Color(0xFF26332C));
   });
 
-  testWidgets('headings and reading text use Source Serif 4, UI text does not', (tester) async {
+  testWidgets('headings and reading text use Georgia, falling back to the bundled Source Serif 4; UI text does not', (tester) async {
     final text = selahLightTheme().textTheme;
     for (final style in [text.displaySmall, text.headlineMedium, text.headlineSmall, text.titleLarge]) {
-      expect(style!.fontFamily, 'Source Serif 4');
+      expect(style!.fontFamily, 'Georgia');
+      expect(style.fontFamilyFallback!.first, 'Source Serif 4');
     }
     for (final style in [text.titleMedium, text.bodyLarge, text.bodyMedium, text.labelLarge, text.labelSmall]) {
-      expect(style!.fontFamily, isNot('Source Serif 4'));
+      expect(style!.fontFamily, isNot('Georgia'));
     }
     expect(text.labelSmall!.color, selahLightTheme().extension<SelahTones>()!.accent);
     late TextStyle quote, reading;
@@ -47,9 +74,9 @@ void main() {
         ),
       ),
     );
-    expect(quote.fontFamily, 'Source Serif 4');
+    expect(quote.fontFamily, 'Georgia');
     expect(quote.fontStyle, FontStyle.italic);
-    expect(reading.fontFamily, 'Source Serif 4');
+    expect(reading.fontFamily, 'Georgia');
     expect(reading.fontSize, 18);
   });
 
@@ -67,9 +94,9 @@ void main() {
   test('iOS large titles use the serif in the theme text color', () {
     for (final t in [selahLightTheme(), selahDarkTheme()]) {
       final cupertino = t.cupertinoOverrideTheme!.textTheme!;
-      expect(cupertino.navLargeTitleTextStyle.fontFamily, 'Source Serif 4');
+      expect(cupertino.navLargeTitleTextStyle.fontFamily, 'Georgia');
       expect(cupertino.navLargeTitleTextStyle.color, t.colorScheme.onSurface);
-      expect(cupertino.navTitleTextStyle.fontFamily, 'Source Serif 4');
+      expect(cupertino.navTitleTextStyle.fontFamily, 'Georgia');
     }
   });
 }

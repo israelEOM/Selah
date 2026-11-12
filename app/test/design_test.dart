@@ -172,6 +172,37 @@ void main() {
     expect(find.text('Hecho por hoy'), findsOneWidget);
   });
 
+  const longQuote = 'A long quote that runs the whole width of the card and wraps onto a second and a third line.';
+
+  testWidgets('HeroCard text runs the full width over its art', (tester) async {
+    await tester.pumpWidget(host(const SizedBox(
+      width: 360,
+      child: HeroCard(title: 'A title', quote: longQuote, art: ColoredBox(color: Colors.red)),
+    )));
+    final card = tester.getRect(find.byType(HeroCard));
+    expect(tester.getRect(find.text(longQuote)).right, closeTo(card.right - 22, 0.5));
+  });
+
+  testWidgets('HeroCard art fills the right of the card and fades in from its left edge', (tester) async {
+    await tester.pumpWidget(host(const SizedBox(
+      width: 360,
+      child: HeroCard(title: 'A title', art: ColoredBox(color: Colors.red)),
+    )));
+    final card = tester.getRect(find.byType(HeroCard));
+    final art = tester.getRect(find.byKey(const ValueKey('hero-art')));
+    expect(art.right, card.right);
+    expect(art.height, card.height);
+    expect(art.width, closeTo(card.width * 0.6, 0.5));
+    final mask = tester.widget<ShaderMask>(find.byKey(const ValueKey('hero-art')));
+    expect(mask.blendMode, BlendMode.dstIn);
+  });
+
+  testWidgets('HeroCard without art gives its text the full width', (tester) async {
+    await tester.pumpWidget(host(const SizedBox(width: 360, child: HeroCard(quote: longQuote))));
+    final card = tester.getRect(find.byType(HeroCard));
+    expect(tester.getRect(find.text(longQuote)).right, closeTo(card.right - 22, 0.5));
+  });
+
   testWidgets('Entrance shows its child immediately with Reduce Motion', (tester) async {
     await tester.pumpWidget(host(reduce: true, const Entrance(index: 3, child: Text('hi'))));
     expect(tester.widget<FadeTransition>(find.byType(FadeTransition).last).opacity.value, 1);
@@ -376,6 +407,88 @@ void main() {
     final row = tester.getRect(find.ancestor(of: find.text('item'), matching: find.byType(SizedBox)).first);
     expect(row.width, 760 - 2 * (Space.xl - 4));
     expect(row.center.dx, 500);
+  });
+
+  /// The opacity [Entrance] gives [label], or 1 when it has none.
+  double arrival(WidgetTester tester, String label) {
+    final entrance = find.ancestor(of: find.text(label), matching: find.byType(Entrance));
+    if (entrance.evaluate().isEmpty) return 1;
+    return tester.widget<FadeTransition>(find.descendant(of: entrance.first, matching: find.byType(FadeTransition)).first).opacity.value;
+  }
+
+  testWidgets('SelahPage children fade in staggered', (tester) async {
+    await tester.pumpWidget(pageApp(const SelahPage(title: 'T', children: [Text('first'), SizedBox(height: 8), Text('second')])));
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(arrival(tester, 'first'), lessThan(1));
+    expect(arrival(tester, 'second'), lessThan(arrival(tester, 'first')), reason: 'each block starts a little later');
+    await tester.pumpAndSettle();
+    expect(arrival(tester, 'first'), 1);
+    expect(arrival(tester, 'second'), 1);
+  });
+
+  testWidgets('SelahPage children are shown at once with Reduce Motion', (tester) async {
+    tester.platformDispatcher.accessibilityFeaturesTestValue = const FakeAccessibilityFeatures(disableAnimations: true);
+    addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
+    await tester.pumpWidget(pageApp(const SelahPage(title: 'T', children: [Text('first'), Text('second')])));
+    await tester.pump();
+    expect(arrival(tester, 'first'), 1);
+    expect(arrival(tester, 'second'), 1);
+  });
+
+  testWidgets('SelahPage leaves out arrival when asked, for lazy lists and for NoArrive children', (tester) async {
+    await tester.pumpWidget(pageApp(const SelahPage(title: 'T', arrive: false, children: [Text('off')])));
+    expect(find.ancestor(of: find.text('off'), matching: find.byType(Entrance)), findsNothing);
+    await tester.pumpWidget(pageApp(const SelahPage(title: 'T', lazy: true, children: [Text('lazy')])));
+    expect(find.ancestor(of: find.text('lazy'), matching: find.byType(Entrance)), findsNothing);
+    await tester.pumpWidget(pageApp(const SelahPage(title: 'T', children: [NoArrive(child: Text('own')), Text('rest')])));
+    expect(find.ancestor(of: find.text('own'), matching: find.byType(Entrance)), findsNothing);
+    expect(find.ancestor(of: find.text('rest'), matching: find.byType(Entrance)), findsOneWidget);
+    await tester.pumpAndSettle();
+  });
+
+  Widget switcherHost(ValueNotifier<bool> loading, {bool reduce = false}) => host(
+        reduce: reduce,
+        SizedBox(
+          width: 300,
+          child: ValueListenableBuilder<bool>(
+            valueListenable: loading,
+            builder: (context, value, _) =>
+                ContentSwitcher(child: value ? const SkeletonList(rows: 2) : const Text('content')),
+          ),
+        ),
+      );
+
+  testWidgets('ContentSwitcher crossfades a skeleton into content', (tester) async {
+    final loading = ValueNotifier(true);
+    await tester.pumpWidget(switcherHost(loading));
+    expect(find.byType(SkeletonList), findsOneWidget);
+    loading.value = false;
+    await tester.pump();
+    await tester.pump(Motion.medium ~/ 2);
+    // Halfway: both are on screen, the content partly faded in.
+    expect(find.byType(SkeletonList), findsOneWidget);
+    final fade = tester.widget<FadeTransition>(
+      find.ancestor(of: find.text('content'), matching: find.byType(FadeTransition)).first,
+    );
+    expect(fade.opacity.value, inExclusiveRange(0, 1));
+    expect(
+      tester.widget<HeroMode>(find.ancestor(of: find.byType(SkeletonList), matching: find.byType(HeroMode)).first).enabled,
+      isFalse,
+      reason: 'the outgoing copy leaves its heroes behind',
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(SkeletonList), findsNothing);
+    expect(find.text('content'), findsOneWidget);
+  });
+
+  testWidgets('ContentSwitcher swaps at once with Reduce Motion', (tester) async {
+    final loading = ValueNotifier(true);
+    await tester.pumpWidget(switcherHost(loading, reduce: true));
+    loading.value = false;
+    await tester.pump();
+    await tester.pump();
+    expect(find.byType(SkeletonList), findsNothing);
+    expect(find.text('content'), findsOneWidget);
   });
 
   testWidgets('SelahPage on Android uses a large Material app bar', (tester) async {

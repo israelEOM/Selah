@@ -35,13 +35,31 @@ class DayHero extends StatelessWidget {
   );
 }
 
-/// The gradient card with an eyebrow, a title, a serif quote and an optional badge and footer.
+/// The colour of text on the hero card: white on the light theme's green, the dark theme's light text on brown.
+Color heroForeground(BuildContext context) {
+  final scheme = Theme.of(context).colorScheme;
+  return Theme.of(context).brightness == Brightness.light ? scheme.onPrimary : scheme.onSurface;
+}
+
+/// The gradient card with an eyebrow, a title, a serif quote and an optional badge and footer. A finished day's card
+/// holds a soft light ([glow]), and [art] fills its right side, fading into the card behind the text.
 class HeroCard extends StatelessWidget {
-  const HeroCard({super.key, this.eyebrow, this.eyebrowAccessory, this.title, this.quote, this.badge, this.footer});
+  const HeroCard({
+    super.key,
+    this.eyebrow,
+    this.eyebrowAccessory,
+    this.title,
+    this.quote,
+    this.badge,
+    this.footer,
+    this.glow = false,
+    this.animateGlow = false,
+    this.art,
+  });
 
   final String? eyebrow;
 
-  /// Sits under the eyebrow (the reader's progress dots).
+  /// Sits under the eyebrow, or stands in for it (the reader's "Day N of M" with the day's ring).
   final Widget? eyebrowAccessory;
   final String? title;
   final String? quote;
@@ -50,13 +68,25 @@ class HeroCard extends StatelessWidget {
   final String? badge;
   final Widget? footer;
 
+  /// A light rising from the bottom of the card: the finished day's rest state.
+  final bool glow;
+
+  /// Fades the [glow] in over [Motion.glow] when it first shows (moment A), instead of showing it as-is. Turning this
+  /// off mid-way lets the fade finish.
+  final bool animateGlow;
+
+  /// An illustration behind the right [_artWidth] of the card, transparent at its left edge and [_artStrength] at
+  /// the right, so the text over it stays legible.
+  final Widget? art;
+
+  static const _artWidth = 0.6;
+  static const _artStrength = 0.35;
+
   @override
   Widget build(BuildContext context) {
     final tones = context.tones;
-    final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
-    // The hero is dark in both themes: white on the light theme's green, the dark theme's light text on brown.
-    final onHero = Theme.of(context).brightness == Brightness.light ? scheme.onPrimary : scheme.onSurface;
+    final onHero = heroForeground(context);
     final parts = <Widget>[
       if (eyebrow != null)
         Text(eyebrow!.toUpperCase(), style: text.labelSmall?.copyWith(color: onHero.withValues(alpha: 0.8))),
@@ -65,38 +95,98 @@ class HeroCard extends StatelessWidget {
       if (quote != null) Text(quote!, style: serifQuote(context).copyWith(color: onHero)),
       ?footer,
     ];
-    return Container(
-      width: double.infinity,
+    final content = Padding(
       padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(Radii.card),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [tones.heroStart, tones.heroEnd],
+      child: SizedBox(
+        width: double.infinity,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AnimatedSwitcher(
+              duration: reduceMotion(context) ? Duration.zero : Motion.medium,
+              transitionBuilder: (child, animation) => FadeTransition(
+                opacity: animation,
+                child: ScaleTransition(scale: Tween(begin: 0.8, end: 1.0).animate(animation), child: child),
+              ),
+              layoutBuilder: (current, previous) => Stack(
+                alignment: Alignment.centerLeft,
+                children: [...previous, ?current],
+              ),
+              child: badge == null ? const SizedBox(key: ValueKey('no-badge'), width: double.infinity) : _Badge(badge!, onHero),
+            ),
+            if (badge != null) const SizedBox(height: 14),
+            for (var i = 0; i < parts.length; i++) ...[if (i > 0) const SizedBox(height: 12), parts[i]],
+          ],
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          AnimatedSwitcher(
-            duration: reduceMotion(context) ? Duration.zero : Motion.medium,
-            transitionBuilder: (child, animation) => FadeTransition(
-              opacity: animation,
-              child: ScaleTransition(scale: Tween(begin: 0.8, end: 1.0).animate(animation), child: child),
-            ),
-            layoutBuilder: (current, previous) => Stack(
-              alignment: Alignment.centerLeft,
-              children: [...previous, ?current],
-            ),
-            child: badge == null ? const SizedBox(key: ValueKey('no-badge'), width: double.infinity) : _Badge(badge!, onHero),
+    );
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(Radii.card),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [tones.heroStart, tones.heroEnd],
           ),
-          if (badge != null) const SizedBox(height: 14),
-          for (var i = 0; i < parts.length; i++) ...[if (i > 0) const SizedBox(height: 12), parts[i]],
-        ],
+        ),
+        child: Stack(
+          children: [
+            if (art != null)
+              Positioned.fill(
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: FractionallySizedBox(
+                    widthFactor: _artWidth,
+                    heightFactor: 1,
+                    child: ExcludeSemantics(
+                      child: ShaderMask(
+                        key: const ValueKey('hero-art'),
+                        blendMode: BlendMode.dstIn,
+                        shaderCallback: (rect) => LinearGradient(
+                          colors: [Colors.white.withValues(alpha: 0), Colors.white.withValues(alpha: _artStrength)],
+                        ).createShader(rect),
+                        child: art,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            if (glow) Positioned.fill(child: _Glow(animate: animateGlow && !reduceMotion(context))),
+            content,
+          ],
+        ),
       ),
     );
   }
+}
+
+/// The light of moment A: a pale radial highlight from the bottom centre, gone by 65% of the way out.
+class _Glow extends StatelessWidget {
+  const _Glow({required this.animate});
+
+  final bool animate;
+
+  @override
+  Widget build(BuildContext context) => IgnorePointer(
+    // Only the first build's tween counts: the end never changes, so a later `animate: false` lets a running fade finish.
+    child: TweenAnimationBuilder<double>(
+      tween: Tween(begin: animate ? 0 : 1, end: 1),
+      duration: Motion.glow,
+      curve: Curves.easeOut,
+      builder: (context, t, child) => Opacity(key: const ValueKey('hero-glow'), opacity: t, child: child),
+      child: const DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: RadialGradient(
+            center: Alignment.bottomCenter,
+            radius: 1.2,
+            colors: [Color.fromRGBO(250, 247, 242, 0.38), Color.fromRGBO(250, 247, 242, 0)],
+            stops: [0, 0.65],
+          ),
+        ),
+      ),
+    ),
+  );
 }
 
 class _Badge extends StatelessWidget {

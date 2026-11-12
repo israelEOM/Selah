@@ -222,6 +222,7 @@ class StudyCard {
     this.thumbnailUrl,
     this.preacher,
     this.sermonDate,
+    this.artKey,
     this.translatedTitles = const {},
     this.translatedMessages = const {},
   });
@@ -238,6 +239,7 @@ class StudyCard {
       thumbnailUrl: sermon['thumbnail_url'] as String?,
       preacher: (sermon['preacher'] ?? sermon['channel']) as String?,
       sermonDate: DateTime.tryParse(sermon['sermon_date'] as String? ?? ''),
+      artKey: json['art_key'] as String?,
       translatedTitles: {
         for (final t in (json['study_translations'] as List? ?? const []).cast<Map<String, dynamic>>())
           t['language'] as String: t['title'] as String,
@@ -258,6 +260,7 @@ class StudyCard {
   final String? thumbnailUrl;
   final String? preacher;
   final DateTime? sermonDate;
+  final String? artKey;
 
   /// Titles of the visible translations, by language code.
   final Map<String, String> translatedTitles;
@@ -279,6 +282,7 @@ class StudyCard {
       thumbnailUrl: thumbnailUrl,
       preacher: preacher,
       sermonDate: sermonDate,
+      artKey: artKey,
       translatedTitles: translatedTitles,
       translatedMessages: translatedMessages,
     );
@@ -286,7 +290,7 @@ class StudyCard {
 }
 
 class SermonRow {
-  const SermonRow({required this.id, required this.title, this.thumbnailUrl, this.studyStatus});
+  const SermonRow({required this.id, required this.title, this.thumbnailUrl, this.studyStatus, this.studyId, this.artKey});
 
   factory SermonRow.fromJson(Map<String, dynamic> json) {
     final study = json['studies'];
@@ -296,6 +300,8 @@ class SermonRow {
       title: (json['title'] as String?) ?? json['youtube_url'] as String,
       thumbnailUrl: json['thumbnail_url'] as String?,
       studyStatus: (first as Map<String, dynamic>?)?['status'] as String?,
+      studyId: first?['id'] as String?,
+      artKey: first?['art_key'] as String?,
     );
   }
 
@@ -303,6 +309,8 @@ class SermonRow {
   final String title;
   final String? thumbnailUrl;
   final String? studyStatus;
+  final String? studyId;
+  final String? artKey;
 }
 
 class Job {
@@ -364,6 +372,7 @@ class PublicStudy {
     required this.days,
     this.centralMessage,
     this.publishedAt,
+    this.artKey,
     this.outputLanguage = 'es',
     this.translations = const {},
     this.translatedFrom,
@@ -382,6 +391,7 @@ class PublicStudy {
       days: days,
       centralMessage: json['central_message'] as String?,
       publishedAt: DateTime.tryParse(json['published_at'] as String? ?? ''),
+      artKey: json['art_key'] as String?,
       outputLanguage: (json['output_language'] as String?) ?? 'es',
       translations: {
         for (final t in (json['study_translations'] as List? ?? const []).cast<Map<String, dynamic>>())
@@ -403,6 +413,9 @@ class PublicStudy {
   final String? centralMessage;
   final DateTime? publishedAt;
 
+  /// A key from the art manifest, or null to fall back to a pick from the study's id.
+  final String? artKey;
+
   /// Language the study was written in (`studies.output_language`).
   final String outputLanguage;
 
@@ -411,6 +424,13 @@ class PublicStudy {
 
   /// The original language when this is a translated copy, null on the original.
   final String? translatedFrom;
+
+  String? _artKeyOfDay(int number) {
+    for (final d in days) {
+      if (d.number == number) return d.artKey;
+    }
+    return null;
+  }
 
   /// This study in [language], or `this` when it is already in that language or has no translation.
   PublicStudy localizedTo(String language) {
@@ -425,9 +445,11 @@ class PublicStudy {
       bibleVersionCode: t.bibleVersionCode,
       summary: t.summary,
       sermon: sermon,
-      days: t.days,
+      // Translations carry no art: the original's day art follows the day number.
+      days: [for (final d in t.days) d.withArtKey(_artKeyOfDay(d.number))],
       centralMessage: t.centralMessage,
       publishedAt: publishedAt,
+      artKey: artKey,
       outputLanguage: outputLanguage,
       translations: translations,
       translatedFrom: outputLanguage,
@@ -499,6 +521,7 @@ class DevotionalDay {
     this.prayer,
     this.startSeconds,
     this.endSeconds,
+    this.artKey,
   });
 
   factory DevotionalDay.fromJson(Map<String, dynamic> json) => DevotionalDay(
@@ -512,6 +535,7 @@ class DevotionalDay {
         prayer: json['prayer'] as String?,
         startSeconds: json['start_seconds'] as num?,
         endSeconds: json['end_seconds'] as num?,
+        artKey: json['art_key'] as String?,
       );
 
   final int number;
@@ -524,4 +548,22 @@ class DevotionalDay {
   final String? prayer;
   final num? startSeconds;
   final num? endSeconds;
+
+  /// A key from the art manifest, or null to fall back to a pick from the study.
+  final String? artKey;
+
+  /// This day with [artKey] set.
+  DevotionalDay withArtKey(String? artKey) => DevotionalDay(
+        number: number,
+        title: title,
+        questions: questions,
+        bibleReading: bibleReading,
+        mainIdea: mainIdea,
+        reflection: reflection,
+        application: application,
+        prayer: prayer,
+        startSeconds: startSeconds,
+        endSeconds: endSeconds,
+        artKey: artKey,
+      );
 }

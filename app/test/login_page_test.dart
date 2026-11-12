@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:selah/src/app/design/art.dart';
 import 'package:selah/src/app/theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -17,6 +19,10 @@ class _FakeRepository implements SelahRepository {
   final redirects = <String>[];
 
   @override
+  Future<void> signIn(String email, String password) async =>
+      throw const AuthException('Invalid login credentials', code: 'invalid_credentials');
+
+  @override
   Future<void> signInWithProvider(OAuthProvider provider, {required String redirectTo}) async {
     calls.add(provider);
     redirects.add(redirectTo);
@@ -26,7 +32,7 @@ class _FakeRepository implements SelahRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-Future<_FakeRepository> _pump(WidgetTester tester, {Uri? landing, String? userAgent}) async {
+Future<_FakeRepository> _pump(WidgetTester tester, {Uri? landing, String? userAgent, bool reduceMotion = false}) async {
   final fake = _FakeRepository();
   await tester.pumpWidget(ProviderScope(
     overrides: [
@@ -37,16 +43,73 @@ Future<_FakeRepository> _pump(WidgetTester tester, {Uri? landing, String? userAg
     child: MaterialApp(
       theme: selahLightTheme(),
       locale: const Locale('es'),
+      builder: (context, child) =>
+          MediaQuery(data: MediaQuery.of(context).copyWith(disableAnimations: reduceMotion), child: child!),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: LoginPage(landing: landing ?? Uri.parse('https://selah-226.pages.dev/login'), userAgent: userAgent ?? ''),
     ),
   ));
-  await tester.pumpAndSettle();
+  await tester.pump(const Duration(milliseconds: 500));
   return fake;
 }
 
+Finder _scene() => find.byWidgetPredicate((w) => w is SelahArt && w.artKey == 'scene-signin');
+
 void main() {
+  testWidgets('a wrong password shakes and warns', (tester) async {
+    final calls = <String>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+      if (call.method == 'HapticFeedback.vibrate') calls.add(call.arguments as String);
+      return null;
+    });
+    addTearDown(() => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, null));
+    await _pump(tester);
+    await tester.enterText(find.widgetWithText(TextFormField, 'Correo'), 'a@b.co');
+    await tester.enterText(find.widgetWithText(TextFormField, 'Contraseña'), 'wrongpassword');
+    await tester.ensureVisible(find.widgetWithText(FilledButton, 'Iniciar sesión'));
+    await tester.pump(const Duration(milliseconds: 500));
+    final field = tester.getTopLeft(find.widgetWithText(TextFormField, 'Correo'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Iniciar sesión'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 30));
+    expect(calls, contains('HapticFeedbackType.mediumImpact'));
+    expect(calls, isNot(contains('HapticFeedbackType.heavyImpact')));
+    expect(tester.getTopLeft(find.widgetWithText(TextFormField, 'Correo')).dx, isNot(field.dx));
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(tester.getTopLeft(find.widgetWithText(TextFormField, 'Correo')), field);
+  });
+
+  testWidgets('a wrong password does not shake with Reduce Motion', (tester) async {
+    await _pump(tester, reduceMotion: true);
+    await tester.enterText(find.widgetWithText(TextFormField, 'Correo'), 'a@b.co');
+    await tester.enterText(find.widgetWithText(TextFormField, 'Contraseña'), 'wrongpassword');
+    await tester.ensureVisible(find.widgetWithText(FilledButton, 'Iniciar sesión'));
+    await tester.pump(const Duration(milliseconds: 500));
+    final field = tester.getTopLeft(find.widgetWithText(TextFormField, 'Correo'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Iniciar sesión'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 30));
+    expect(tester.getTopLeft(find.widgetWithText(TextFormField, 'Correo')), field);
+    await tester.pump(const Duration(milliseconds: 500));
+  });
+
+  testWidgets('the sign-in scene drifts slowly, and stays still with Reduce Motion', (tester) async {
+    await _pump(tester);
+    expect(_scene(), findsOneWidget);
+    final a = tester.getTopLeft(_scene());
+    await tester.pump(const Duration(seconds: 5));
+    expect(tester.getTopLeft(_scene()).dy, isNot(a.dy));
+    expect((tester.getTopLeft(_scene()).dy - a.dy).abs(), lessThanOrEqualTo(6.01 * 2));
+  });
+
+  testWidgets('the sign-in scene is still with Reduce Motion', (tester) async {
+    await _pump(tester, reduceMotion: true);
+    final a = tester.getTopLeft(_scene());
+    await tester.pump(const Duration(seconds: 5));
+    expect(tester.getTopLeft(_scene()), a);
+  });
+
   testWidgets('shows the Google button', (tester) async {
     await _pump(tester);
     expect(find.text('Continuar con Google'), findsOneWidget);
@@ -122,7 +185,7 @@ void main() {
           supportedLocales: AppLocalizations.supportedLocales,
         ),
       ));
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 500));
       expect(find.text(c.expected), findsOneWidget);
     });
   }
@@ -150,7 +213,7 @@ void main() {
         supportedLocales: AppLocalizations.supportedLocales,
       ),
     ));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 500));
     expect(find.text('JOIN abc'), findsOneWidget);
   });
 
@@ -181,7 +244,7 @@ void main() {
         supportedLocales: AppLocalizations.supportedLocales,
       ),
     ));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 500));
     expect(find.text('HOME'), findsOneWidget);
   });
 
@@ -219,7 +282,7 @@ void main() {
           supportedLocales: AppLocalizations.supportedLocales,
         ),
       ));
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 500));
       expect(find.text(c.expected), findsOneWidget);
     });
   }
@@ -262,7 +325,7 @@ void main() {
           supportedLocales: AppLocalizations.supportedLocales,
         ),
       ));
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 500));
       expect(find.text(c.expected), findsOneWidget);
     });
   }
@@ -302,7 +365,7 @@ void main() {
         supportedLocales: AppLocalizations.supportedLocales,
       ),
     ));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 500));
     expect(find.text('JOIN abc'), findsOneWidget);
     expect(lookups, 0);
   });
@@ -336,7 +399,7 @@ void main() {
 
   testWidgets('a failing welcome check falls back to the usual destination', (tester) async {
     await pumpFailingLookup(tester, retry: false, failing: 'admin');
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 500));
     expect(find.text('HOME'), findsOneWidget);
   });
 
@@ -344,7 +407,7 @@ void main() {
     testWidgets('the $failing fetch keeps retrying and still lets sign-in through within seconds', (tester) async {
       await pumpFailingLookup(tester, retry: true, failing: failing);
       await tester.pump(const Duration(seconds: 5));
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 500));
       expect(find.text('HOME'), findsOneWidget);
       // Let Riverpod's pending retries run out before the test ends.
       await tester.pumpWidget(const SizedBox());

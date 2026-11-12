@@ -5,7 +5,7 @@ import '../theme.dart';
 
 /// A surface row that opens something: label, optional detail and a trailing chevron.
 class SelahRow extends StatelessWidget {
-  const SelahRow({super.key, required this.label, this.detail, required this.onOpen, this.trailing});
+  const SelahRow({super.key, required this.label, this.detail, required this.onOpen, this.trailing, this.leading, this.selectionHaptic = false});
 
   final String label;
   final String? detail;
@@ -13,6 +13,12 @@ class SelahRow extends StatelessWidget {
 
   /// Replaces the chevron.
   final Widget? trailing;
+
+  /// Shown before the label, such as an icon tile or round art.
+  final Widget? leading;
+
+  /// Plays the selection haptic instead of the light tick, for a row that makes a choice.
+  final bool selectionHaptic;
 
   @override
   Widget build(BuildContext context) {
@@ -24,6 +30,7 @@ class SelahRow extends StatelessWidget {
     const padding = EdgeInsets.fromLTRB(18, 14, 14, 14);
     final content = Row(
       children: [
+        if (leading != null) ...[leading!, const SizedBox(width: 14)],
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -40,9 +47,14 @@ class SelahRow extends StatelessWidget {
     // Android and web paint the fill as ink on Pressable's own Material so the ripple shows above it; iOS a plain box
     // keeps the fill independent of any ancestor Material.
     return Pressable(
-      onPressed: onOpen,
+      onPressed: selectionHaptic
+          ? () {
+              SelahHaptics.selection();
+              onOpen();
+            }
+          : onOpen,
       borderRadius: radius,
-      haptic: true,
+      haptic: !selectionHaptic,
       child: !ios
           ? Ink(decoration: decoration, padding: padding, child: content)
           : DecoratedBox(

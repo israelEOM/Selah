@@ -6,6 +6,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../app/theme.dart';
 import '../../core/models.dart';
 import '../../data/current_church.dart';
+import '../../app/design/art.dart';
 import '../../data/providers.dart';
 import '../home/church_picker_page.dart';
 import 'welcome_state.dart';
@@ -133,6 +134,8 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
         // Inside the member or leader part, back returns to the choice, unless the page opened straight into it.
         onBack: _step == _Step.choice || widget.step != null ? null : () => _show(_Step.choice),
         maxWidth: 560,
+        // Each step brings in its own scene and rows.
+        arrive: false,
         children: [
           ...children,
           if (_error != null) ...[
@@ -144,13 +147,38 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
   }
 
   List<Widget> _choice(AppLocalizations l, TextTheme text) => [
-        Eyebrow('Selah'),
-        const SizedBox(height: 8),
-        Text(l.welcomeTitle, style: text.headlineMedium),
+        const SceneIn(
+          child: SelahArt(artKey: 'scene-welcome', fixed: true, seed: 'welcome', width: double.infinity, height: 250),
+        ),
+        const SizedBox(height: 20),
+        Entrance(
+          index: 0,
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Eyebrow('Selah'),
+            const SizedBox(height: 8),
+            Text(l.welcomeTitle, style: text.headlineMedium),
+          ]),
+        ),
         const SizedBox(height: 24),
-        _ChoiceCard(icon: Icons.people_outline, label: l.welcomeMember, onTap: () => _show(_Step.member)),
+        Entrance(
+          index: 1,
+          child: SelahRow(
+            leading: const _ChoiceIcon(key: ValueKey('welcome-member-icon'), icon: Icons.person_outline_rounded),
+            label: l.welcomeMember,
+            selectionHaptic: true,
+            onOpen: () => _show(_Step.member),
+          ),
+        ),
         const SizedBox(height: 12),
-        _ChoiceCard(icon: Icons.church_outlined, label: l.welcomeLeader, onTap: () => _show(_Step.leader)),
+        Entrance(
+          index: 2,
+          child: SelahRow(
+            leading: const _ChoiceIcon(key: ValueKey('welcome-leader-icon'), icon: Icons.church_outlined),
+            label: l.welcomeLeader,
+            selectionHaptic: true,
+            onOpen: () => _show(_Step.leader),
+          ),
+        ),
         const SizedBox(height: 16),
         Align(alignment: Alignment.centerLeft, child: TextButton(onPressed: _skip, child: Text(l.notNow))),
       ];
@@ -199,22 +227,25 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
       ];
 }
 
-class _ChoiceCard extends StatelessWidget {
-  const _ChoiceCard({required this.icon, required this.label, required this.onTap});
+/// A welcome choice's icon on a neutral tile: part colours mark only the parts of a day. The tile is the page colour
+/// so it shows on the row's raised paper.
+class _ChoiceIcon extends StatelessWidget {
+  const _ChoiceIcon({super.key, required this.icon});
 
   final IconData icon;
-  final String label;
-  final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => Card(
-        clipBehavior: Clip.antiAlias,
-        child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-          leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
-          title: Text(label, style: Theme.of(context).textTheme.titleMedium),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: onTap,
-        ),
-      );
+  Widget build(BuildContext context) {
+    const size = 42.0;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: BorderRadius.circular(size * 0.3),
+      ),
+      alignment: Alignment.center,
+      child: Icon(icon, size: size * 0.5, color: context.tones.muted),
+    );
+  }
 }

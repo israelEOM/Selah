@@ -6,11 +6,12 @@ from typing import TypeVar
 
 from pydantic import BaseModel
 
+from selah_worker import art
 from selah_worker.config import settings
 from selah_worker.schemas import AnalysisOut, DevotionalOut, SummaryOut, TranslationOut
 
 log = logging.getLogger("selah")
-PROMPT_VERSION = "2026-10-19.2"
+PROMPT_VERSION = "2026-11-11.1"
 LANGUAGES = {"es": "español", "pt": "português", "en": "English"}
 T = TypeVar("T", bound=BaseModel)
 
@@ -117,6 +118,11 @@ def generate(instruction: str, source: str, schema: type[T]) -> tuple[T, dict]:
     raise RuntimeError("La IA no respondió correctamente después de varios intentos. Inténtalo de nuevo.") from last
 
 
+def _with_art(instruction: str) -> str:
+    menu = art.menu()
+    return f"{instruction}\n\n{menu}" if menu else instruction
+
+
 def analyze(transcript: str, language: str, title: str | None, channel: str | None) -> tuple[AnalysisOut, dict]:
     source = f"VIDEO TITLE: {title or 'unknown'}\nCHANNEL: {channel or 'unknown'}\n\nTRANSCRIPT\n{transcript}"
     return generate(ANALYSIS.format(language=LANGUAGES.get(language, language)), source, AnalysisOut)
@@ -124,12 +130,12 @@ def analyze(transcript: str, language: str, title: str | None, channel: str | No
 
 def summarize(analysis: dict, language: str) -> tuple[SummaryOut, dict]:
     source = "ANALYSIS\n" + json.dumps(analysis, ensure_ascii=False)
-    return generate(SUMMARY.format(language=LANGUAGES.get(language, language)), source, SummaryOut)
+    return generate(_with_art(SUMMARY.format(language=LANGUAGES.get(language, language))), source, SummaryOut)
 
 
 def devotional(analysis: dict, transcript: str, days: int, language: str) -> tuple[DevotionalOut, dict]:
     source = "ANALYSIS\n" + json.dumps(analysis, ensure_ascii=False) + "\n\nTRANSCRIPT\n" + transcript
-    return generate(DEVOTIONAL.format(days=days, language=LANGUAGES.get(language, language)), source, DevotionalOut)
+    return generate(_with_art(DEVOTIONAL.format(days=days, language=LANGUAGES.get(language, language))), source, DevotionalOut)
 
 
 def translate(source: dict, language: str) -> tuple[TranslationOut, dict]:
