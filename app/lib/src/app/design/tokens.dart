@@ -13,11 +13,14 @@ abstract final class Space {
 }
 
 abstract final class Radii {
-  static const row = 20.0;
-  static const card = 28.0;
+  static const row = 12.0;
+  static const card = 16.0;
 
   /// Inputs and small buttons.
-  static const control = 14.0;
+  static const control = 10.0;
+
+  /// The floating tab bar's capsule.
+  static const bar = 28.0;
 
   /// Fully rounded pills and chips.
   static const chip = 999.0;

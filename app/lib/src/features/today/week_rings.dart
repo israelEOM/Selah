@@ -278,7 +278,7 @@ class WeekRings extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 6),
       decoration: BoxDecoration(
         color: isSelected ? tones.surface : null,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(Radii.row),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

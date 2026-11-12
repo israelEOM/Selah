@@ -10,12 +10,14 @@ import 'responsive.dart';
 import 'skeleton.dart';
 import 'tokens.dart';
 
-/// The adaptive page scaffold: a large collapsing title (Cupertino on iOS, Material 3 elsewhere), an optional back
-/// button, pull to refresh, and a centered column of [children] that scrolls clear of the floating tab bar.
+/// The adaptive page scaffold: a compact pinned title bar (the title in bold, left-aligned, right under the status bar,
+/// with an optional [subtitle] line pinned under it), an optional back button, pull to refresh, and a centered column
+/// of [children] that scrolls under the bar and clear of the floating tab bar.
 class SelahPage extends StatelessWidget {
   const SelahPage({
     super.key,
     this.title,
+    this.subtitle,
     this.backTo,
     this.backTooltip,
     this.onBack,
@@ -33,6 +35,9 @@ class SelahPage extends StatelessWidget {
 
   /// Null means no large title, only the slim bar (the reader).
   final String? title;
+
+  /// A one-line widget pinned under [title] (Today's date and church). App layout only.
+  final Widget? subtitle;
 
   /// Where back goes when there is nothing to pop. Null means no back button.
   final String? backTo;
@@ -99,50 +104,49 @@ class SelahPage extends StatelessWidget {
     }
 
     final Widget header;
-    if (ios && title == null) {
-      // CupertinoSliverNavigationBar needs a large title or a route title, so the slim bar is a pinned plain bar.
+    if (title == null) {
+      // No title: only the slim bar with the back button and actions (the reader).
       header = SliverPersistentHeader(
         pinned: true,
         delegate: _SlimBarDelegate(
-          extent: MediaQuery.paddingOf(context).top + kMinInteractiveDimensionCupertino,
-          bar: CupertinoNavigationBar(
-            automaticallyImplyLeading: false,
-            leading: back,
-            trailing: actions.isEmpty ? null : Row(mainAxisSize: MainAxisSize.min, children: actions),
-            backgroundColor: theme.scaffoldBackgroundColor.withValues(alpha: 0.85),
-            border: null,
-            transitionBetweenRoutes: false,
+          extent: MediaQuery.paddingOf(context).top + (ios ? kMinInteractiveDimensionCupertino : kToolbarHeight),
+          bar: ios
+              ? CupertinoNavigationBar(
+                  automaticallyImplyLeading: false,
+                  leading: back,
+                  trailing: actions.isEmpty ? null : Row(mainAxisSize: MainAxisSize.min, children: actions),
+                  backgroundColor: theme.scaffoldBackgroundColor.withValues(alpha: 0.85),
+                  border: null,
+                  transitionBetweenRoutes: false,
+                )
+              : AppBar(automaticallyImplyLeading: false, leading: back, actions: actions, scrolledUnderElevation: 3),
+        ),
+      );
+    } else {
+      final scale = MediaQuery.textScalerOf(context);
+      header = SliverLayoutBuilder(
+        builder: (context, constraints) => SliverPersistentHeader(
+          pinned: true,
+          delegate: _TitleBarDelegate(
+            top: MediaQuery.paddingOf(context).top,
+            barHeight: scale.scale(_titleBarHeight),
+            subtitleHeight: subtitle == null ? 0 : scale.scale(_subtitleHeight),
+            side: (back == null ? Space.xl - 4 : Space.xs) + max(0.0, (constraints.crossAxisExtent - maxWidth) / 2),
+            endSide: Space.xl - 4 - (actions.isEmpty ? 0 : Space.s) + max(0.0, (constraints.crossAxisExtent - maxWidth) / 2),
+            background: theme.scaffoldBackgroundColor,
+            divider: theme.colorScheme.outlineVariant,
+            back: back,
+            title: Text(
+              title!,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: back == null ? theme.textTheme.headlineMedium : theme.textTheme.headlineSmall,
+            ),
+            subtitle: subtitle,
+            actions: actions,
           ),
         ),
       );
-    } else if (ios) {
-      header = CupertinoSliverNavigationBar(
-        largeTitle: title == null ? null : Text(title!),
-        automaticallyImplyLeading: false,
-        leading: back,
-        trailing: actions.isEmpty ? null : Row(mainAxisSize: MainAxisSize.min, children: actions),
-        backgroundColor: theme.scaffoldBackgroundColor.withValues(alpha: 0.85),
-        border: null,
-        transitionBetweenRoutes: false,
-      );
-    } else {
-      final titleText = title == null ? null : Text(title!);
-      header = title == null
-          ? SliverAppBar(
-              title: titleText,
-              automaticallyImplyLeading: false,
-              leading: back,
-              actions: actions,
-              pinned: true,
-              scrolledUnderElevation: 3,
-            )
-          : SliverAppBar.large(
-              title: titleText,
-              automaticallyImplyLeading: false,
-              leading: back,
-              actions: actions,
-              scrolledUnderElevation: 3,
-            );
     }
 
     // The side padding centres the body at [maxWidth] on wide windows, with the gutter inside.
@@ -159,7 +163,7 @@ class SelahPage extends StatelessWidget {
                   child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: _arriving()),
                 );
           return SliverPadding(
-            padding: EdgeInsets.fromLTRB(side, Space.l, side, bottom),
+            padding: EdgeInsets.fromLTRB(side, Space.s, side, bottom),
             sliver: slivers.isEmpty ? content : SliverMainAxisGroup(slivers: [content, ...slivers]),
           );
         },
@@ -252,6 +256,82 @@ class SelahPage extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The title row's height, and the [SelahPage.subtitle] line's, before text scaling.
+const _titleBarHeight = 52.0;
+const _subtitleHeight = 24.0;
+
+/// The pinned title bar: the back button, the title and the actions in one row, the subtitle under it, on the page
+/// colour, with a hairline once content scrolls under it.
+class _TitleBarDelegate extends SliverPersistentHeaderDelegate {
+  _TitleBarDelegate({
+    required this.top,
+    required this.barHeight,
+    required this.subtitleHeight,
+    required this.side,
+    required this.endSide,
+    required this.background,
+    required this.divider,
+    required this.back,
+    required this.title,
+    required this.subtitle,
+    required this.actions,
+  });
+
+  final double top, barHeight, subtitleHeight, side, endSide;
+  final Color background, divider;
+  final Widget? back;
+  final Widget title;
+  final Widget? subtitle;
+  final List<Widget> actions;
+
+  double get _extent => top + barHeight + subtitleHeight;
+
+  @override
+  double get minExtent => _extent;
+  @override
+  double get maxExtent => _extent;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    final scrolled = shrinkOffset > 0 || overlapsContent;
+    return AnimatedContainer(
+      duration: Motion.short,
+      color: background,
+      // In the foreground, so the hairline takes no room from the bar.
+      foregroundDecoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: scrolled ? divider : divider.withValues(alpha: 0), width: 0.5)),
+      ),
+      padding: EdgeInsets.only(top: top, left: side, right: endSide),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            height: barHeight,
+            child: Row(
+              children: [
+                ?back,
+                Expanded(child: Semantics(header: true, child: title)),
+                ...actions,
+              ],
+            ),
+          ),
+          if (subtitle case final line?)
+            SizedBox(
+              height: subtitleHeight,
+              child: Padding(
+                padding: EdgeInsets.only(left: back == null ? 0 : Space.xl - 4 - Space.xs),
+                child: Align(alignment: Alignment.topLeft, child: line),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  bool shouldRebuild(_TitleBarDelegate old) => true;
 }
 
 /// A [SelahPage] child that keeps still while the page arrives: it has its own motion, or holds a Hero.

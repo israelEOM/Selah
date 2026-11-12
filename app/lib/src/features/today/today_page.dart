@@ -103,17 +103,21 @@ class _Today extends ConsumerWidget {
         : past == localDate(DateTime(now.year, now.month, now.day - 1))
             ? l.todayYesterday
             : _capitalised(DateFormat.EEEE(l.localeName).format(DateTime.parse(past)));
-    final eyebrowStyle = text.labelMedium?.copyWith(color: context.tones.muted, fontWeight: FontWeight.w600, letterSpacing: 1);
+    final eyebrowStyle = text.labelMedium?.copyWith(color: context.tones.muted, fontWeight: FontWeight.w600, letterSpacing: 0.6);
+    final dateLine = Text.rich(
+      TextSpan(children: [
+        TextSpan(text: DateFormat.MMMMEEEEd(l.localeName).format(now).toUpperCase()),
+        const TextSpan(text: '  ·  '),
+        TextSpan(text: church.name),
+      ]),
+      style: eyebrowStyle,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    );
+    final site = siteLayout(context);
     final header = [
-      Wrap(
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          Text(DateFormat.MMMMEEEEd(l.localeName).format(now).toUpperCase(), style: eyebrowStyle),
-          Text('  ·  ', style: eyebrowStyle),
-          Text(church.name, style: eyebrowStyle),
-        ],
-      ),
-      const SizedBox(height: Space.l),
+      // The app layout pins the date line under the title instead.
+      if (site) ...[dateLine, const SizedBox(height: Space.l)],
       WeekRings(
         ticks: ticks,
         now: now,
@@ -140,9 +144,10 @@ class _Today extends ConsumerWidget {
           ],
         ),
       );
-      if (!siteLayout(context)) {
+      if (!site) {
         return SelahPage(
           title: title,
+          subtitle: dateLine,
           onRefresh: () => refreshToday(ref, church.id),
           // The part rows stagger in on their own, and the hero card must sit still for its flight to the reader.
           arrive: false,

@@ -1,3 +1,4 @@
+import 'dart:math' show max;
 import 'dart:ui' show ImageFilter;
 
 import 'package:cupertino_native_better/cupertino_native_better.dart';
@@ -24,6 +25,14 @@ class SelahTab {
   final String symbol, selectedSymbol;
 }
 
+/// Space under a floating bar: it overlaps the home indicator's inset, keeping [_barMinBottom] clear of the edge.
+const _barInsetOverlap = 14.0;
+const _barMinBottom = 8.0;
+
+/// The floating bar's padding: tight at the sides and down by the home indicator.
+EdgeInsets _floatingBarPadding(BuildContext context) =>
+    EdgeInsets.fromLTRB(12, 4, 12, max(_barMinBottom, MediaQuery.paddingOf(context).bottom - _barInsetOverlap));
+
 /// How strongly the active tab's soft pill is tinted with the done tone.
 const _activePillAlpha = 0.10;
 
@@ -47,24 +56,23 @@ class AdaptiveTabBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (nativeGlassAvailable) {
-      return SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: CNTabBar(
-            // The plugin builds its native view once from the first item list and doesn't add or drop items
-            // afterwards, so a bar that gains or loses a tab (Eventos) would keep the old count and send taps to the
-            // wrong branch. A new key whenever the tabs change makes it build a fresh native bar.
-            key: nativeTabBarKey(tabs),
-            // The native bar exposes only its tint; its glass and selection stay the system's.
-            tint: context.tones.done,
-            items: [
-              for (final tab in tabs)
-                CNTabBarItem(label: tab.label, icon: CNSymbol(tab.symbol), activeIcon: CNSymbol(tab.selectedSymbol)),
-            ],
-            currentIndex: currentIndex,
-            onTap: _tap,
-          ),
+      return Padding(
+        // The native glass bar keeps its own margins around the pill, so it takes no padding of ours: that puts the
+        // pill where the system's own tab bars sit, full width and just above the home indicator.
+        padding: EdgeInsets.zero,
+        child: CNTabBar(
+          // The plugin builds its native view once from the first item list and doesn't add or drop items
+          // afterwards, so a bar that gains or loses a tab (Eventos) would keep the old count and send taps to the
+          // wrong branch. A new key whenever the tabs change makes it build a fresh native bar.
+          key: nativeTabBarKey(tabs),
+          // The native bar exposes only its tint; its glass and selection stay the system's.
+          tint: context.tones.done,
+          items: [
+            for (final tab in tabs)
+              CNTabBarItem(label: tab.label, icon: CNSymbol(tab.symbol), activeIcon: CNSymbol(tab.selectedSymbol)),
+          ],
+          currentIndex: currentIndex,
+          onTap: _tap,
         ),
       );
     }
@@ -75,9 +83,11 @@ class AdaptiveTabBar extends StatelessWidget {
     final bar = NavigationBarTheme.of(context);
     return NavigationBarTheme(
       data: bar.copyWith(
-        iconTheme: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected)
-            ? IconThemeData(color: done)
-            : bar.iconTheme?.resolve(states) ?? IconThemeData(color: context.tones.muted)),
+        iconTheme: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? IconThemeData(color: done)
+              : bar.iconTheme?.resolve(states) ?? IconThemeData(color: context.tones.muted),
+        ),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final base = bar.labelTextStyle?.resolve(states) ?? Theme.of(context).textTheme.labelMedium;
           return states.contains(WidgetState.selected) ? base?.copyWith(color: done) : base;
@@ -116,42 +126,47 @@ class FrostedTabBar extends StatelessWidget {
     final x = tabs.length < 2 ? 0.0 : -1 + 2 * currentIndex / (tabs.length - 1);
     return SafeArea(
       top: false,
+      bottom: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+        padding: _floatingBarPadding(context),
         child: Align(
           heightFactor: 1,
           child: ConstrainedBox(
             // The width of PageBody's content.
             constraints: const BoxConstraints(maxWidth: 720),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(Radii.card),
+              borderRadius: BorderRadius.circular(Radii.bar),
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                 child: ColoredBox(
                   color: tones.surface.withValues(alpha: 0.7),
                   child: Padding(
                     padding: const EdgeInsets.all(6),
-                    child: Stack(children: [
-                      Positioned.fill(
-                        child: AnimatedAlign(
-                          alignment: Alignment(x, 0),
-                          duration: reduceMotion(context) ? Duration.zero : Motion.medium,
-                          curve: Curves.easeOutCubic,
-                          child: FractionallySizedBox(
-                            widthFactor: 1 / tabs.length,
-                            heightFactor: 1,
-                            child: DecoratedBox(
-                              key: capsuleKey,
-                              decoration: ShapeDecoration(shape: const StadiumBorder(), color: capsule),
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: AnimatedAlign(
+                            alignment: Alignment(x, 0),
+                            duration: reduceMotion(context) ? Duration.zero : Motion.medium,
+                            curve: Curves.easeOutCubic,
+                            child: FractionallySizedBox(
+                              widthFactor: 1 / tabs.length,
+                              heightFactor: 1,
+                              child: DecoratedBox(
+                                key: capsuleKey,
+                                decoration: ShapeDecoration(shape: const StadiumBorder(), color: capsule),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      Row(children: [
-                        for (var i = 0; i < tabs.length; i++)
-                          _FrostedTab(tab: tabs[i], selected: i == currentIndex, onTap: () => onTap(i)),
-                      ]),
-                    ]),
+                        Row(
+                          children: [
+                            for (var i = 0; i < tabs.length; i++)
+                              _FrostedTab(tab: tabs[i], selected: i == currentIndex, onTap: () => onTap(i)),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -183,14 +198,21 @@ class _FrostedTab extends StatelessWidget {
           onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-              Icon(selected ? tab.selectedIcon : tab.icon, color: color),
-              const SizedBox(height: 2),
-              Text(
-                tab.label,
-                style: TextStyle(fontSize: 12, fontWeight: selected ? FontWeight.w700 : FontWeight.w500, color: color),
-              ),
-            ]),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(selected ? tab.selectedIcon : tab.icon, color: color),
+                const SizedBox(height: 2),
+                Text(
+                  tab.label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                    color: color,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
