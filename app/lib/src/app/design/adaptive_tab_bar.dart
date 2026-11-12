@@ -27,6 +27,9 @@ class SelahTab {
 /// How strongly the active tab's soft pill is tinted with the done tone.
 const _activePillAlpha = 0.10;
 
+/// Identifies the native bar by its tabs, so a different set of tabs gets a new native view.
+Key nativeTabBarKey(List<SelahTab> tabs) => ValueKey(tabs.map((t) => '${t.symbol}|${t.label}').join(','));
+
 /// The bottom tab bar: native Liquid Glass on iOS 26, a frosted pill elsewhere on iOS, Material on Android and web.
 /// The active tab takes the done tone, over a soft done-tinted pill where the bar draws one.
 class AdaptiveTabBar extends StatelessWidget {
@@ -49,6 +52,10 @@ class AdaptiveTabBar extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: CNTabBar(
+            // The plugin builds its native view once from the first item list and doesn't add or drop items
+            // afterwards, so a bar that gains or loses a tab (Eventos) would keep the old count and send taps to the
+            // wrong branch. A new key whenever the tabs change makes it build a fresh native bar.
+            key: nativeTabBarKey(tabs),
             // The native bar exposes only its tint; its glass and selection stay the system's.
             tint: context.tones.done,
             items: [

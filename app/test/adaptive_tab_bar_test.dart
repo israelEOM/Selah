@@ -221,4 +221,20 @@ void main() {
     final list = tester.getRect(find.byType(CustomScrollView));
     expect(list.bottom, greaterThan(tester.getRect(find.byType(FrostedTabBar)).top));
   });
+
+  // The native bar can't run in tests, so this checks the key it is built with: the plugin's native view keeps the
+  // item list it was created with, and only a new key makes it pick up an added or removed tab.
+  test('the native bar gets a new key when a tab is added or removed', () {
+    const events = SelahTab(
+      label: 'Eventos',
+      icon: Icons.event_outlined,
+      selectedIcon: Icons.event,
+      symbol: 'calendar',
+      selectedSymbol: 'calendar',
+    );
+    final withEvents = [_tabs[0], _tabs[1], events, _tabs[2]];
+    expect(nativeTabBarKey(_tabs), nativeTabBarKey(List.of(_tabs)));
+    expect(nativeTabBarKey(withEvents), isNot(nativeTabBarKey(_tabs)));
+    expect(nativeTabBarKey(_tabs.sublist(0, 2)), isNot(nativeTabBarKey(_tabs)));
+  });
 }
