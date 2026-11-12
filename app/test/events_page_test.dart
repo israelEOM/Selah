@@ -49,7 +49,7 @@ class _FakeRepository implements SelahRepository {
 }
 
 Future<(_FakeRepository, List<Uri>)> _pump(WidgetTester tester, List<ChurchEvent> events,
-    {Size size = const Size(800, 1800), TargetPlatform? platform}) async {
+    {Size size = const Size(800, 1800), TargetPlatform? platform, bool reduceMotion = false}) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
@@ -62,6 +62,8 @@ Future<(_FakeRepository, List<Uri>)> _pump(WidgetTester tester, List<ChurchEvent
       locale: const Locale('es'),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
+      builder: (context, child) =>
+          MediaQuery(data: MediaQuery.of(context).copyWith(disableAnimations: reduceMotion), child: child!),
       home: EventsPage(church: _church, open: opened.add, now: DateTime(2026, 11, 12, 10)),
     ),
   ));
@@ -258,5 +260,15 @@ void main() {
     await tester.tap(find.descendant(of: sheet, matching: find.text(es.eventsDetails)));
     await tester.pumpAndSettle();
     expect(opened, [_youth.url]);
+  });
+
+  testWidgets('with Reduce Motion the event sheet is there at once, without sliding up', (tester) async {
+    await _pump(tester, [_women, _men, _youth], size: const Size(390, 844), reduceMotion: true);
+    await tester.tap(find.text(_youth.title));
+    await tester.pump();
+    await tester.pump();
+    final first = tester.getTopLeft(find.byType(BottomSheet));
+    await tester.pumpAndSettle();
+    expect(tester.getTopLeft(find.byType(BottomSheet)), first);
   });
 }

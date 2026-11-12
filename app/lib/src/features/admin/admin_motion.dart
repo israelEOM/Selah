@@ -41,29 +41,31 @@ class _LoopState extends State<_Loop> with SingleTickerProviderStateMixin {
   }
 }
 
-/// A slow light sweeping across [child], on repeat; no sweep with Reduce Motion.
+/// A slow band of full opacity sweeping across [child], on repeat; [child] as it is with Reduce Motion. The band only
+/// sets the alpha (`dstIn`), so the child keeps its own colours.
 class Shimmer extends StatelessWidget {
   const Shimmer({super.key, required this.child});
 
   final Widget child;
 
   @override
-  Widget build(BuildContext context) => _Loop(
-        duration: Motion.shimmer,
-        reverse: false,
-        still: 0,
-        builder: (context, t) {
-          return ShaderMask(
-            blendMode: BlendMode.srcIn,
-            shaderCallback: (bounds) => LinearGradient(
-              begin: Alignment(-1.5 + 3 * t, 0),
-              end: Alignment(-0.5 + 3 * t, 0),
-              colors: const [Color(0x66FFFFFF), Color(0xFFFFFFFF), Color(0x66FFFFFF)],
-            ).createShader(bounds),
-            child: child,
-          );
-        },
-      );
+  Widget build(BuildContext context) {
+    if (reduceMotion(context)) return child;
+    return _Loop(
+      duration: Motion.shimmer,
+      reverse: false,
+      still: 0,
+      builder: (context, t) => ShaderMask(
+        blendMode: BlendMode.dstIn,
+        shaderCallback: (bounds) => LinearGradient(
+          begin: Alignment(-1.5 + 3 * t, 0),
+          end: Alignment(-0.5 + 3 * t, 0),
+          colors: const [Color(0x8C000000), Color(0xFF000000), Color(0x8C000000)],
+        ).createShader(bounds),
+        child: child,
+      ),
+    );
+  }
 }
 
 /// Fades [child] between 0.6 and full opacity, slowly, on repeat; steady with Reduce Motion.

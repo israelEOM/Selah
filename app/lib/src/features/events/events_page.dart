@@ -305,6 +305,7 @@ Future<void> showEventSheet(BuildContext context, ChurchEvent event, void Functi
   return showModalBottomSheet<void>(
     context: context,
     showDragHandle: true,
+    sheetAnimationStyle: reduceMotion(context) ? AnimationStyle.noAnimation : null,
     builder: (sheet) {
       final l = AppLocalizations.of(sheet)!;
       final text = Theme.of(sheet).textTheme;

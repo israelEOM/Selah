@@ -292,7 +292,7 @@ All components live in `app/lib/src/app/design/` and read only tokens.
 - **Inputs:** a raised paper fill with no border, `Radii.control`, and a 1.5 px green border on focus.
 - **Eyebrow** (`Eyebrow`): `labelSmall`, upper case, terracotta. It sits above a section heading.
 - **Skeletons** (`skeleton.dart`): raised-paper shapes matching the content while it loads; never a bare spinner on member screens.
-- **Week rings** (`WeekRings`, Today): seven rings, one arc per part in its part colour; a finished day is a filled green circle with a check, and today's number is terracotta. Today or an earlier day can be tapped to show it; the content slides 24 px the way the selection moved (a fade only with Reduce Motion), and the title becomes "Yesterday" or the weekday.
+- **Week rings** (`WeekRings`, Today): seven rings, one arc per part in its part colour; a finished day is a filled green circle with a check (it springs in when the day finishes on screen, and is simply there otherwise), and today's number is terracotta. Today or an earlier day can be tapped to show it; the content slides 24 px the way the selection moved (a fade only with Reduce Motion), and the title becomes "Yesterday" or the weekday.
 - **Finishing a day (moment A):** the light rises in the hero card (`Motion.glow`), then the serif `FinishLine` ("That's today. / Go in peace.", or "Day complete. / Nothing lost." on a past date) rises 8 px and fades in, with one success haptic. It plays once, live; later the day shows in that settled state. Nothing pops up or needs dismissing.
 - **Tick bar** (`TickDock`, the reader on phones): a floating pill, 64 px tall, 12 px in from the sides and 14 px above the safe bottom, in paper at 72% over a 16 px blur, `Elevation.raised`. One chip per part the day has; the part whose section is in view widens (flex 2.8, `Motion.medium`, a spring curve) to show its name and "Tap to tick", the others show only their icon. A ticked part's icon hops and gets a check badge. When every part is ticked the bar slides away and a green "Day complete · back to Today ›" pill rises in its place (`Motion.dockSwap`, 600 ms; a fade with Reduce Motion). It never navigates on its own. Reading sections carry a 3 px rule in their part colour and an eyebrow in its `text` colour. The website reader keeps a tick beside each part instead.
 
@@ -310,7 +310,7 @@ Calm and brief: things settle into place, nothing bounces for attention, and not
 - **Finishing a day (moment A):** the light rises in the hero card over 1.8 s (`glow`); after 700 ms (`finishDelay`) the finish line rises 8 px and fades in over 1 s (`finishRise`). Once, live, and never blocking.
 - **The reader's dock:** the current part's chip widens over `medium`; when the day is done the bar slides down and the "Day complete" pill rises in over 600 ms (`dockSwap`).
 - **Progress bars** (the featured study, the admin monthly usage) fill from empty over `long` when they first appear; the next event's date counts up to its day the same way.
-- **Admin work in progress:** the Generando chip has a slow light sweeping across it (`shimmer`, 1.6 s, on repeat), and the running step breathes between 60% and full opacity (`breathe`, 1.4 s each way).
+- **Admin work in progress:** the Generando chip has a slow band of full opacity sweeping across it (`shimmer`, 1.6 s, on repeat; the chip dims to 55% outside the band and keeps its own colours), and the running step breathes between 60% and full opacity (`breathe`, 1.4 s each way).
 
 **Haptics** (`SelahHaptics`, none on the web) form a small vocabulary; use these and nothing else:
 - `selection`: switching days in the week, switching a segment or a tab, and picking one of Welcome's two paths.
@@ -318,7 +318,7 @@ Calm and brief: things settle into place, nothing bounces for attention, and not
 - `success`: finishing a day, joining a church from an invitation, and publishing a study. Once per event.
 - `warning`: a refused sign-in.
 
-**Reduce Motion** (`reduceMotion(context)`) is honoured everywhere. Arrival, scenes, rings and progress bars show in place; Today's day switch, the dock and the hero card's glow become a plain fade, and skeletons swap at once; the press, hop, ripple, drift, shake, shimmer and breathing don't play; the finish line simply appears. Haptics still play.
+**Reduce Motion** (`reduceMotion(context)`) is honoured everywhere. Arrival, scenes, rings and progress bars show in place; Today's day switch and the dock become a plain fade; the hero card's glow, a finished ring's disc and bottom sheets appear at once, and skeletons swap at once; the press, hop, ripple, drift, shake, shimmer and breathing don't play; the finish line simply appears. Haptics still play.
 
 ## Do's and Don'ts
 

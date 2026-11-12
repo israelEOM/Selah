@@ -198,6 +198,35 @@ void main() {
     }
   });
 
+  testWidgets('the finished disc springs in when a day finishes, but not when it was already finished', (tester) async {
+    double discOpacity() => tester
+        .widget<FadeTransition>(
+          find.descendant(of: find.byKey(const ValueKey('ring-disc')), matching: find.byType(FadeTransition)).first,
+        )
+        .opacity
+        .value;
+    Widget ring(bool complete, {bool reduce = false}) =>
+        host(Center(child: PartRing(parts: DayPart.values.toSet(), complete: complete)), reduce: reduce);
+
+    // Already finished when first shown: the disc is simply there.
+    await tester.pumpWidget(ring(true));
+    expect(discOpacity(), 1);
+
+    await tester.pumpWidget(const SizedBox());
+    await tester.pumpWidget(ring(false));
+    await tester.pumpWidget(ring(true));
+    await tester.pump(const Duration(milliseconds: 60));
+    expect(discOpacity(), inExclusiveRange(0, 1));
+    await tester.pumpAndSettle();
+    expect(discOpacity(), 1);
+
+    // With Reduce Motion it appears at once.
+    await tester.pumpWidget(const SizedBox());
+    await tester.pumpWidget(ring(false, reduce: true));
+    await tester.pumpWidget(ring(true, reduce: true));
+    expect(discOpacity(), 1);
+  });
+
   testWidgets('week rings fit at 200% text on a 320pt-wide screen', (tester) async {
     await tester.pumpWidget(
       host(

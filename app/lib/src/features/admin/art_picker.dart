@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../app/design/art.dart';
+import '../../app/design/platform.dart';
 import '../../app/design/tokens.dart';
 
 /// Lets an admin choose an illustration. Returns the chosen key, or null when the sheet is dismissed.
@@ -10,6 +11,7 @@ Future<String?> showArtPicker(BuildContext context, {String? current}) => showMo
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
+      sheetAnimationStyle: reduceMotion(context) ? AnimationStyle.noAnimation : null,
       builder: (context) => _ArtPicker(current: current),
     );
 

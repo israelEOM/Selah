@@ -7,7 +7,6 @@ import '../../../l10n/app_localizations.dart';
 import '../../app/theme.dart';
 import '../../data/progress.dart';
 import 'part_style.dart';
-import 'part_tick.dart';
 
 const _stroke = 3.2;
 const _gap = 0.30; // radians between arcs
@@ -57,8 +56,9 @@ class RingArcPainter extends CustomPainter {
 }
 
 /// A day as three arcs, one per part, each in its part's colour once ticked. A finished day becomes a filled
-/// check circle instead. [label] (the date number) sits inside.
-class PartRing extends StatelessWidget {
+/// check circle instead, which springs in when the day finishes while it is on screen. [label] (the date number)
+/// sits inside.
+class PartRing extends StatefulWidget {
   const PartRing({
     super.key,
     required this.parts,
@@ -80,7 +80,22 @@ class PartRing extends StatelessWidget {
   final bool onHero;
 
   @override
+  State<PartRing> createState() => _PartRingState();
+}
+
+class _PartRingState extends State<PartRing> {
+  /// Whether the day finished while this ring was on screen; only then does the disc spring in.
+  bool _finishedHere = false;
+
+  @override
+  void didUpdateWidget(PartRing old) {
+    super.didUpdateWidget(old);
+    if (widget.complete && !old.complete) _finishedHere = true;
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final PartRing(:parts, :complete, :label, :size, :today, :onHero) = widget;
     final tones = context.tones;
     final reduce = reduceMotion(context);
     final on = heroForeground(context);
@@ -119,7 +134,7 @@ class PartRing extends StatelessWidget {
                 padding: const EdgeInsets.all(_stroke + 1),
                 child: FittedBox(
                   child: Text(
-                    label!,
+                    label,
                     textScaler: TextScaler.noScaling,
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                       color: today ? tones.today : tones.muted,
@@ -130,8 +145,9 @@ class PartRing extends StatelessWidget {
               ),
             ),
           if (complete)
-            SpringIn(
-              active: true,
+            _Disc(
+              key: const ValueKey('ring-disc'),
+              animate: _finishedHere && !reduce,
               child: Container(
                 width: size,
                 height: size,
@@ -146,6 +162,42 @@ class PartRing extends StatelessWidget {
       ),
     );
   }
+}
+
+/// A finished day's disc: springs up from 80% and fades in when [animate], or is simply there.
+class _Disc extends StatefulWidget {
+  const _Disc({super.key, required this.animate, required this.child});
+
+  final bool animate;
+  final Widget child;
+
+  @override
+  State<_Disc> createState() => _DiscState();
+}
+
+class _DiscState extends State<_Disc> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller =
+      AnimationController(vsync: this, duration: Motion.medium, value: widget.animate ? 0 : 1);
+  late final Animation<double> _scale =
+      Tween(begin: 0.8, end: 1.0).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.animate) _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => FadeTransition(
+        opacity: _controller,
+        child: ScaleTransition(scale: _scale, child: widget.child),
+      );
 }
 
 /// Monday to Sunday of [now]'s week: the weekday initial above a [PartRing]. The selected day sits on a pill;
