@@ -212,7 +212,7 @@ class _Chip extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(partLabel(l, part), style: theme.textTheme.titleSmall?.copyWith(color: tone.color)),
+                          Text(partLabel(l, part), style: theme.textTheme.titleSmall?.copyWith(color: tone.text)),
                           Text(l.tapToTick, style: theme.textTheme.bodySmall?.copyWith(color: context.tones.muted)),
                         ],
                       ),

@@ -261,7 +261,7 @@ class _DayState extends ConsumerState<_Day> {
                   ),
                 ),
                 const SizedBox(width: Space.s),
-                PartRing(parts: ticked, complete: progress?.isDone(day) ?? false, size: 22),
+                PartRing(parts: ticked, complete: progress?.isDone(day) ?? false, size: 22, onHero: true),
               ],
             ),
             title: day.title,

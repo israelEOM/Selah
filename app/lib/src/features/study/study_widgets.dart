@@ -41,10 +41,12 @@ class ReadingSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = part == null ? null : partTone(context, part!).color;
-    final eyebrow = color == null
+    final tone = part == null ? null : partTone(context, part!);
+    final color = tone?.color;
+    // The rule takes the part's colour; the small label its darker text colour, to stay legible.
+    final eyebrow = tone == null
         ? Eyebrow(label)
-        : Text(label.toUpperCase(), style: Theme.of(context).textTheme.labelSmall?.copyWith(color: color));
+        : Text(label.toUpperCase(), style: Theme.of(context).textTheme.labelSmall?.copyWith(color: tone.text));
     Widget body = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

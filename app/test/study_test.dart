@@ -349,6 +349,20 @@ void main() {
     expect(container.read(justFinishedProvider), (studyId: 'study-1', day: 1));
   });
 
+  testWidgets('small part labels use the part text colour and the header ring is drawn for the hero', (tester) async {
+    await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/1', size: _phone);
+    final palette = tester.element(find.byType(ReaderPage)).partPalette;
+    // The chip of the part in view: reading, at the top of the page.
+    final chipLabel = tester.widget<Text>(
+      find.descendant(of: find.byKey(const ValueKey('dock-reading')), matching: find.text('Lectura')),
+    );
+    expect(chipLabel.style?.color, palette.reading.text);
+    await tester.scrollUntilVisible(find.text('REFLEXIÓN'), 300);
+    expect(tester.widget<Text>(find.text('REFLEXIÓN')).style?.color, palette.reflection.text);
+    final ring = find.descendant(of: find.byType(HeroCard), matching: find.byType(PartRing));
+    expect(tester.widget<PartRing>(ring).onHero, isTrue);
+  });
+
   testWidgets('each chip in the bar is a checkable button named for its part', (tester) async {
     final handle = tester.ensureSemantics();
     await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/1', size: _phone);

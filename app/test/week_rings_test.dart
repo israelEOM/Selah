@@ -175,6 +175,29 @@ void main() {
     expect(reading(tester), 1); // no sweep: it changes at once
   });
 
+  testWidgets('on the hero card the reading arc, track and finished disc stand out from the green', (tester) async {
+    for (final complete in [false, true]) {
+      await tester.pumpWidget(host(Center(child: PartRing(parts: const {DayPart.reading}, complete: complete, onHero: true))));
+      await tester.pumpAndSettle();
+      final hero = tester.element(find.byType(PartRing)).tones.heroStart;
+      if (!complete) {
+        final reading = tester
+            .widgetList<CustomPaint>(arcsIn(find.byType(PartRing)))
+            .map((e) => e.painter! as RingArcPainter)
+            .firstWhere((p) => p.part == DayPart.reading);
+        expect(reading.color, isNot(hero));
+        expect(reading.track, isNot(hero));
+      } else {
+        final disc = tester.widget<Container>(
+          find.descendant(of: find.byType(PartRing), matching: find.byWidgetPredicate((w) => w is Container && w.decoration != null)),
+        );
+        final fill = (disc.decoration! as BoxDecoration).color;
+        expect(fill, isNot(hero));
+        expect(tester.widget<Icon>(find.byIcon(Icons.check)).color, hero);
+      }
+    }
+  });
+
   testWidgets('week rings fit at 200% text on a 320pt-wide screen', (tester) async {
     await tester.pumpWidget(
       host(

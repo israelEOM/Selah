@@ -66,6 +66,7 @@ class PartRing extends StatelessWidget {
     this.label,
     this.size = 30,
     this.today = false,
+    this.onHero = false,
   });
 
   final Set<DayPart> parts;
@@ -74,12 +75,23 @@ class PartRing extends StatelessWidget {
   final double size;
   final bool today;
 
+  /// Drawn on the green hero card, where green marks vanish: the reading arc and the finished disc take the hero's
+  /// text colour, the other arcs are lightened towards it, and the track is a faint wash of it.
+  final bool onHero;
+
   @override
   Widget build(BuildContext context) {
     final tones = context.tones;
     final reduce = reduceMotion(context);
-    final track = Color.lerp(tones.surface, Colors.black, 0.08)!;
-    final onDone = Theme.of(context).colorScheme.onPrimary;
+    final on = heroForeground(context);
+    final track = onHero ? on.withValues(alpha: 0.25) : Color.lerp(tones.surface, Colors.black, 0.08)!;
+    final done = onHero ? on : tones.done;
+    final onDone = onHero ? tones.heroStart : Theme.of(context).colorScheme.onPrimary;
+    Color arc(DayPart part) {
+      final colour = partTone(context, part).color;
+      if (!onHero) return colour;
+      return part == DayPart.reading ? on : Color.lerp(colour, on, 0.5)!;
+    }
     return SizedBox(
       width: size,
       height: size,
@@ -95,7 +107,7 @@ class PartRing extends StatelessWidget {
                 size: Size.square(size),
                 painter: RingArcPainter(
                   part: part,
-                  color: partTone(context, part).color,
+                  color: arc(part),
                   track: track,
                   progress: value,
                 ),
@@ -125,7 +137,7 @@ class PartRing extends StatelessWidget {
                 height: size,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: tones.done,
+                  color: done,
                 ),
                 child: Icon(Icons.check, size: size * 0.6, color: onDone),
               ),

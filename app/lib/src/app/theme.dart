@@ -82,17 +82,22 @@ extension SelahThemeX on BuildContext {
   SelahTones get tones => Theme.of(this).extension<SelahTones>()!;
 }
 
-/// One part's colour: [color] for marks and fills, [tint] for a quiet background, [soft] for an unfilled track.
+/// One part's colour: [color] for marks and fills, [text] for small labels in the part's colour, [tint] for a quiet
+/// background, [soft] for an unfilled track.
 @immutable
 class PartTone {
-  const PartTone({required this.color, required this.tint, required this.soft});
+  const PartTone({required this.color, required this.text, required this.tint, required this.soft});
 
   final Color color;
+
+  /// [color], darkened where needed so small text reaches 4.5:1 on the page and on [tint].
+  final Color text;
   final Color tint;
   final Color soft;
 
   static PartTone lerp(PartTone a, PartTone b, double t) => PartTone(
     color: Color.lerp(a.color, b.color, t)!,
+    text: Color.lerp(a.text, b.text, t)!,
     tint: Color.lerp(a.tint, b.tint, t)!,
     soft: Color.lerp(a.soft, b.soft, t)!,
   );
@@ -184,9 +189,9 @@ const _light = _Palette(
     heroEnd: Color(0xFF244A3B),
   ),
   parts: PartPalette(
-    reading: PartTone(color: Color(0xFF2F5D4A), tint: Color(0xFFE6EEE8), soft: Color(0xFFD3E2D8)),
-    reflection: PartTone(color: Color(0xFFB8732E), tint: Color(0xFFF5EBDD), soft: Color(0xFFEEDCC2)),
-    prayer: PartTone(color: Color(0xFF5E6A9C), tint: Color(0xFFE8E9F2), soft: Color(0xFFD7DAEA)),
+    reading: PartTone(color: Color(0xFF2F5D4A), text: Color(0xFF2F5D4A), tint: Color(0xFFE6EEE8), soft: Color(0xFFD3E2D8)),
+    reflection: PartTone(color: Color(0xFFB8732E), text: Color(0xFF8F561F), tint: Color(0xFFF5EBDD), soft: Color(0xFFEEDCC2)),
+    prayer: PartTone(color: Color(0xFF5E6A9C), text: Color(0xFF545F90), tint: Color(0xFFE8E9F2), soft: Color(0xFFD7DAEA)),
   ),
 );
 
@@ -206,9 +211,9 @@ const _dark = _Palette(
     heroEnd: Color(0xFF1F2A24),
   ),
   parts: PartPalette(
-    reading: PartTone(color: Color(0xFFA9CDB8), tint: Color(0xFF27332C), soft: Color(0xFF33443A)),
-    reflection: PartTone(color: Color(0xFFE2B27A), tint: Color(0xFF392F23), soft: Color(0xFF4A3C2A)),
-    prayer: PartTone(color: Color(0xFFB4BDEB), tint: Color(0xFF2B2F42), soft: Color(0xFF393E58)),
+    reading: PartTone(color: Color(0xFFA9CDB8), text: Color(0xFFA9CDB8), tint: Color(0xFF27332C), soft: Color(0xFF33443A)),
+    reflection: PartTone(color: Color(0xFFE2B27A), text: Color(0xFFE2B27A), tint: Color(0xFF392F23), soft: Color(0xFF4A3C2A)),
+    prayer: PartTone(color: Color(0xFFB4BDEB), text: Color(0xFFB4BDEB), tint: Color(0xFF2B2F42), soft: Color(0xFF393E58)),
   ),
 );
 

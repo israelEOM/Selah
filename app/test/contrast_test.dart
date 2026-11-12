@@ -41,6 +41,9 @@ void main() {
         expect(contrast(tone.color, tone.tint), greaterThanOrEqualTo(3), reason: '$part colour on its tint');
         // The check mark is a graphic, not text, so 3:1 applies (the spec's light reflection colour is 3.55:1).
         expect(contrast(onColor, tone.color), greaterThanOrEqualTo(3), reason: 'check mark on $part colour');
+        // Small labels in the part's colour (section eyebrows, the tick bar's chip name) are text: 4.5:1.
+        expect(contrast(tone.text, theme.scaffoldBackgroundColor), greaterThanOrEqualTo(4.5), reason: '$part text on paper');
+        expect(contrast(tone.text, tone.tint), greaterThanOrEqualTo(4.5), reason: '$part text on its tint');
       }
     });
 
