@@ -77,8 +77,10 @@ class BuildTest(unittest.TestCase):
     def test_calls_to_action_point_at_the_app(self):
         for lang, html in self.pages.items():
             with self.subTest(lang=lang):
-                for href in ['href="/churches"', 'href="/login?next=%2Fwelcome%3Fstep%3Dleader"', 'href="/today"']:
-                    self.assertIn(href, html)
+                self.assertIn('href="/today"', html)
+                # While Selah runs with one church, nothing on the page offers to find or bring another.
+                for href in ['href="/churches"', 'href="/login?next=%2Fwelcome%3Fstep%3Dleader"', 'href="#audiences"']:
+                    self.assertNotIn(href, html)
 
     def test_images_have_alt_and_size(self):
         for lang, html in self.pages.items():
@@ -163,7 +165,7 @@ class BuildTest(unittest.TestCase):
         for lang, html in self.pages.items():
             with self.subTest(lang=lang):
                 header = re.search(r'(?s)<header class="top">.*?</header>', html).group(0)
-                for section in ["how", "today", "audiences"]:
+                for section in ["how", "today"]:
                     self.assertIn(f'href="#{section}"', header)
                     self.assertIn(f'id="{section}"', html)
                 self.assertIn('href="/login"', header)

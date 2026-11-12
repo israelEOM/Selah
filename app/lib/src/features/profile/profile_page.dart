@@ -6,6 +6,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../app/design/art.dart';
 import '../../app/theme.dart';
 import '../../app/theme_mode.dart';
+import '../../core/config.dart';
 import '../../core/models.dart';
 import '../../data/current_church.dart';
 import '../../data/providers.dart';
@@ -24,9 +25,10 @@ class ProfilePage extends ConsumerWidget {
     final canEdit = church != null && (ref.watch(churchRoleProvider(church.id)).value?.canEdit ?? false);
     final signedIn = ref.watch(userIdProvider).value != null;
     final platformAdmin = ref.watch(isPlatformAdminProvider).value == true;
-    final noChurch = signedIn && ref.watch(myChurchesProvider).value?.isEmpty == true;
+    // With one church there is no other to join, bring or create.
+    final noChurch = !singleChurch && signedIn && ref.watch(myChurchesProvider).value?.isEmpty == true;
     // An approved request needs no line: the church shows up as theirs.
-    final shown = signedIn ? ref.watch(myChurchRequestProvider).value : null;
+    final shown = signedIn && !singleChurch ? ref.watch(myChurchRequestProvider).value : null;
     final request = shown?.status == ChurchRequestStatus.approved ? null : shown;
     final userId = ref.watch(userIdProvider).value;
     final name = ref.watch(userNameProvider);
@@ -58,12 +60,13 @@ class ProfilePage extends ConsumerWidget {
                     ],
                     Expanded(child: Text(church?.name ?? l.pickChurch, style: text.titleLarge)),
                   ]),
-                  const SizedBox(height: 12),
+                  if (!singleChurch || canEdit) const SizedBox(height: 12),
                   Wrap(spacing: 8, runSpacing: 8, children: [
-                    OutlinedButton(
-                      onPressed: () => context.push('/churches'),
-                      child: Text(church == null ? l.pickChurch : l.changeChurch),
-                    ),
+                    if (!singleChurch)
+                      OutlinedButton(
+                        onPressed: () => context.push('/churches'),
+                        child: Text(church == null ? l.pickChurch : l.changeChurch),
+                      ),
                     if (canEdit)
                       OutlinedButton(
                         onPressed: () => context.push('/c/${church.slug}/admin'),
@@ -132,7 +135,7 @@ class ProfilePage extends ConsumerWidget {
             onChanged: (code) => ref.read(appLocaleProvider.notifier).set(code),
           ),
           const SizedBox(height: 32),
-          if (platformAdmin) ...[
+          if (platformAdmin && !singleChurch) ...[
             Align(
               alignment: Alignment.centerLeft,
               child: OutlinedButton.icon(

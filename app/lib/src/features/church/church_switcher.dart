@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../../core/config.dart';
 import '../../core/models.dart';
 import '../../data/providers.dart';
 
@@ -22,7 +23,7 @@ class ChurchSwitcher extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final memberships = ref.watch(myChurchesProvider).value ?? const <Membership>[];
-    if (memberships.length < 2) return const SizedBox.shrink();
+    if (singleChurch || memberships.length < 2) return const SizedBox.shrink();
     final l = AppLocalizations.of(context)!;
     final canCreate = ref.watch(isPlatformAdminProvider).value == true;
     return PopupMenuButton<String>(

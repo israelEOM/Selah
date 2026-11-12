@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../core/config.dart';
 import '../data/current_church.dart';
 import '../data/providers.dart';
 import '../features/welcome/welcome_state.dart';
@@ -39,7 +40,7 @@ class SiteHeaderTrailing extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (church != null)
-          memberships.length > 1
+          !singleChurch && memberships.length > 1
               ? ChurchSwitcher(current: church, admin: false)
               : Flexible(
                   child: Text(church.name, style: Theme.of(context).textTheme.bodyMedium, maxLines: 1, overflow: TextOverflow.ellipsis),
