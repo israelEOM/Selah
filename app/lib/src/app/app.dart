@@ -9,6 +9,7 @@ import '../features/admin/import_page.dart';
 import '../features/admin/people_page.dart';
 import '../features/admin/requests_page.dart';
 import '../features/admin/sermon_page.dart';
+import '../core/config.dart';
 import '../core/models.dart';
 import '../features/auth/login_page.dart';
 import '../features/church/church_page.dart';
@@ -64,6 +65,9 @@ GoRoute _page({
   ),
 );
 
+/// The pages that only make sense with more than one church.
+const _otherChurchPages = {'/churches', '/churches/new', '/welcome', '/requests'};
+
 GoRouter createRouter({String initialLocation = '/'}) {
   // On web, the address bar shows the page on top, pushed or not, so it can be copied and reopened.
   GoRouter.optionURLReflectsImperativeAPIs = true;
@@ -72,7 +76,13 @@ GoRouter createRouter({String initialLocation = '/'}) {
       initialLocation: initialLocation,
       // Today lives at /today so the website's root can hold the landing page. Everything that still goes to `/`
       // (the native apps' start, in-app links) lands on Today.
-      redirect: (_, state) => state.uri.path == '/' ? Uri(path: '/today', query: state.uri.query.isEmpty ? null : state.uri.query).toString() : null,
+      redirect: (_, state) {
+        final path = state.uri.path;
+        if (path == '/') return Uri(path: '/today', query: state.uri.query.isEmpty ? null : state.uri.query).toString();
+        // With one church, the pages for finding, creating or asking for another lead back to Today.
+        if (singleChurch && _otherChurchPages.contains(path)) return '/today';
+        return null;
+      },
       // Hides the native glass bar while a page opens above the tabs.
       observers: [CNTabBarRouteObserver()],
       routes: [

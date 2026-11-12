@@ -2,10 +2,13 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
+import 'package:selah/src/core/config.dart';
 
-/// Loads the bundled serif so layout tests measure a real serif instead of the placeholder font. Tests have no
+/// Opens the app to every church, and loads the bundled serif so layout tests measure a real serif instead of the placeholder font. Tests have no
 /// Georgia, the app's serif on Apple devices, so the same faces stand in under that name too.
 Future<void> testExecutable(FutureOr<void> Function() testMain) async {
+  // The suite covers every church; single_church_test.dart pins the pilot itself.
+  pilotChurchSlug = '';
   for (final family in ['Source Serif 4', 'Georgia']) {
     final loader = FontLoader(family);
     for (final face in ['Regular', 'It', 'Semibold', 'SemiboldIt', 'Bold']) {

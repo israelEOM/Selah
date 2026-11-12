@@ -12,3 +12,11 @@ class AppConfig {
 
   bool get hasBackend => supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty;
 }
+
+/// While Selah is tested with one church, the app shows only this one (ICP Alcorcón): no church list, no
+/// switching, no joining or bringing another. Build with `--dart-define=PILOT_CHURCH=` to open it to every church.
+/// Tests start with it empty (see test/flutter_test_config.dart) and set it where they check the pilot.
+String pilotChurchSlug = const String.fromEnvironment('PILOT_CHURCH', defaultValue: 'selah');
+
+/// Whether the app is pinned to [pilotChurchSlug].
+bool get singleChurch => pilotChurchSlug.isNotEmpty;

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/config.dart';
 import '../core/models.dart';
 import 'providers.dart';
 
@@ -13,7 +14,7 @@ final chosenChurchSlugProvider = NotifierProvider<ChosenChurch, String?>(ChosenC
 
 class ChosenChurch extends Notifier<String?> {
   @override
-  String? build() => ref.watch(savedChurchProvider);
+  String? build() => singleChurch ? pilotChurchSlug : ref.watch(savedChurchProvider);
 
   Future<void> choose(String slug) async {
     state = slug;
@@ -23,7 +24,9 @@ class ChosenChurch extends Notifier<String?> {
 }
 
 /// The church the app shows: the chosen one when it applies to this person, else their first church.
+/// With [singleChurch], always the pilot church.
 final currentChurchProvider = FutureProvider<Church?>((ref) async {
+  if (singleChurch) return ref.watch(churchProvider(pilotChurchSlug).future);
   final chosen = ref.watch(chosenChurchSlugProvider);
   final userId = await ref.watch(userIdProvider.future);
   final mine = userId == null ? const <Membership>[] : await ref.watch(myChurchesProvider.future);

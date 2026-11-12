@@ -32,7 +32,6 @@
         <nav class="top-nav" aria-label="${nav_label}">
           <a href="#how">${how_heading}</a>
           <a href="#today">${nav_app}</a>
-          <a href="#audiences">${nav_churches}</a>
         </nav>
         <div class="top-actions">
           <a class="top-login" href="/login">${nav_login}</a>
@@ -54,8 +53,7 @@
           </blockquote>
           <p class="lede">${hero_lede}</p>
           <p class="actions">
-            <a class="pill pill-primary" href="/churches">${cta_start}</a>
-            <a class="pill pill-ghost" href="/today">${open_app}</a>
+            <a class="pill pill-primary" href="/today">${cta_start}</a>
           </p>
         </div>
       </section>
@@ -176,20 +174,6 @@
         </div>
       </section>
 
-      <section class="section audiences" id="audiences">
-        <div class="wrap audiences-inner">
-          <div class="card audience" data-reveal>
-            <h2>${members_heading}</h2>
-            <p>${members_text}</p>
-            <p><a class="pill pill-ghost" href="/churches">${members_cta}</a></p>
-          </div>
-          <div class="card audience" data-reveal style="--delay: 100ms">
-            <h2>${leaders_heading}</h2>
-            <p>${leaders_text}</p>
-            <p><a class="pill pill-ghost" href="/login?next=%2Fwelcome%3Fstep%3Dleader">${leaders_cta}</a></p>
-          </div>
-        </div>
-      </section>
     </main>
 
     <footer class="foot">

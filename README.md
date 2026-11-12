@@ -43,6 +43,8 @@ tool/build_web.sh
 npx --yes wrangler pages deploy build/web --project-name selah --branch main
 ```
 
+While Selah is tested with ICP Alcorcón only, the app is pinned to that church (`pilotChurchSlug` in `app/lib/src/core/config.dart`): no church list, switching, joining or bringing another, and the landing page has no members/pastors section. To open it to every church, add `--dart-define=PILOT_CHURCH=` to the build in `tool/build_web.sh` (and bring the landing section back from git history).
+
 Wrangler needs Node 20+ (`PATH=/usr/local/n/versions/node/22.21.0/bin:$PATH`). The Supabase auth site address points to this URL, so confirmation emails open the live app.
 
 ## Run the worker
