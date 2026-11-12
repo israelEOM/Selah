@@ -20,8 +20,11 @@ export 'design/selah_page.dart';
 export 'design/skeleton.dart';
 export 'design/tokens.dart';
 
-/// Georgia, as the app has always used, on Apple devices. The web and Android have no Georgia, so they fall back to the
-/// bundled Source Serif 4 rather than a sans serif.
+/// The interface sans, bundled so every platform sets the same face.
+const _sans = 'Inter';
+
+/// The serif is kept for reading text only (the hero quote, reflection, prayer): Georgia on Apple devices, the bundled
+/// Source Serif 4 on the web and Android, which have no Georgia.
 const _serif = 'Georgia';
 const _serifFallback = ['Source Serif 4', 'serif'];
 
@@ -219,15 +222,25 @@ const _dark = _Palette(
   ),
 );
 
-/// Headings are set in the serif.
-TextStyle _heading(double size, Color color, {double height = 1.15}) =>
+/// Headings are set bold in the sans, tracked in a little more the larger they get.
+TextStyle _heading(double size, Color color, {double height = 1.2}) =>
     TextStyle(
-      fontFamily: _serif,
-      fontFamilyFallback: _serifFallback,
+      fontFamily: _sans,
       fontSize: size,
       height: height,
-      fontWeight: FontWeight.w600,
-      letterSpacing: -0.3,
+      fontWeight: FontWeight.w700,
+      letterSpacing: size >= 24 ? -0.5 : -0.2,
+      color: color,
+    );
+
+/// Body and label text in the sans.
+TextStyle _text(double size, double height, Color color, {FontWeight weight = FontWeight.w400, double spacing = 0}) =>
+    TextStyle(
+      fontFamily: _sans,
+      fontSize: size,
+      height: height,
+      fontWeight: weight,
+      letterSpacing: spacing,
       color: color,
     );
 
@@ -255,27 +268,23 @@ ThemeData _build(_Palette p) {
       );
   return ThemeData(
     brightness: p.brightness,
+    fontFamily: _sans,
     colorScheme: scheme,
     scaffoldBackgroundColor: p.background,
     extensions: [p.tones, p.parts],
     pageTransitionsTheme: selahPageTransitions(),
     textTheme: TextTheme(
-      displaySmall: _heading(40, p.text, height: 1.1),
-      headlineMedium: _heading(30, p.text),
-      headlineSmall: _heading(24, p.text, height: 1.25),
-      titleLarge: _heading(20, p.text, height: 1.3),
-      titleMedium: TextStyle(fontSize: 17, height: 1.35, fontWeight: FontWeight.w600, color: p.text),
-      bodyLarge: TextStyle(fontSize: 17, height: 1.55, color: p.text),
-      bodyMedium: TextStyle(fontSize: 15, height: 1.5, color: p.tones.muted),
-      bodySmall: TextStyle(fontSize: 13, height: 1.45, color: p.tones.muted),
-      labelLarge: TextStyle(fontSize: 15, height: 1.2, fontWeight: FontWeight.w600, color: p.text),
-      labelMedium: TextStyle(fontSize: 12, height: 1.3, fontWeight: FontWeight.w600, color: p.text),
-      labelSmall: TextStyle(
-        fontSize: 11,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 1.5,
-        color: p.tones.accent,
-      ),
+      displaySmall: _heading(32, p.text, height: 1.15),
+      headlineMedium: _heading(28, p.text),
+      headlineSmall: _heading(22, p.text, height: 1.25),
+      titleLarge: _heading(19, p.text, height: 1.3),
+      titleMedium: _text(16, 1.35, p.text, weight: FontWeight.w600),
+      bodyLarge: _text(16, 1.5, p.text),
+      bodyMedium: _text(14, 1.45, p.tones.muted),
+      bodySmall: _text(13, 1.4, p.tones.muted),
+      labelLarge: _text(15, 1.2, p.text, weight: FontWeight.w600),
+      labelMedium: _text(12, 1.3, p.text, weight: FontWeight.w600),
+      labelSmall: _text(12, 1.3, p.tones.accent, weight: FontWeight.w600, spacing: 0.6),
     ),
     // iOS large and slim titles come from the Cupertino theme, not the Material text theme.
     cupertinoOverrideTheme: CupertinoThemeData(
@@ -283,8 +292,9 @@ ThemeData _build(_Palette p) {
       primaryColor: p.primary,
       textTheme: CupertinoTextThemeData(
         primaryColor: p.primary,
-        navLargeTitleTextStyle: _heading(34, p.text, height: 1.15),
-        navTitleTextStyle: _heading(17, p.text, height: 1.3),
+        textStyle: _text(16, 1.35, p.text),
+        navLargeTitleTextStyle: _heading(28, p.text),
+        navTitleTextStyle: _text(17, 1.3, p.text, weight: FontWeight.w600),
       ),
     ),
     navigationBarTheme: NavigationBarThemeData(
@@ -314,15 +324,29 @@ ThemeData _build(_Palette p) {
         backgroundColor: p.primary,
         foregroundColor: p.onPrimary,
         shape: const StadiumBorder(),
-        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
-        textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+        minimumSize: const Size(0, 40),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+        textStyle: _text(15, 1.2, p.onPrimary, weight: FontWeight.w600),
       ),
     ),
+    // The quiet button: a soft filled pill, no outline.
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
-        foregroundColor: p.primary,
-        side: BorderSide(color: p.primary),
+        foregroundColor: p.text,
+        backgroundColor: p.tones.surface,
+        side: BorderSide.none,
         shape: const StadiumBorder(),
+        minimumSize: const Size(0, 40),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+        textStyle: _text(15, 1.2, p.text, weight: FontWeight.w600),
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: p.primary,
+        minimumSize: const Size(0, 36),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        textStyle: _text(15, 1.2, p.primary, weight: FontWeight.w600),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(

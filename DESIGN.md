@@ -39,60 +39,60 @@ colors:
   part-prayer-soft-dark: "#393E58"
 typography:
   display:
-    fontFamily: "Georgia, Source Serif 4, serif"
-    fontSize: "40px"
-    fontWeight: 600
-    lineHeight: 1.1
-  headline:
-    fontFamily: "Georgia, Source Serif 4, serif"
-    fontSize: "30px"
-    fontWeight: 600
+    fontFamily: "Inter, sans-serif"
+    fontSize: "32px"
+    fontWeight: 700
     lineHeight: 1.15
+  headline:
+    fontFamily: "Inter, sans-serif"
+    fontSize: "28px"
+    fontWeight: 700
+    lineHeight: 1.2
   headline-small:
-    fontFamily: "Georgia, Source Serif 4, serif"
-    fontSize: "24px"
-    fontWeight: 600
+    fontFamily: "Inter, sans-serif"
+    fontSize: "22px"
+    fontWeight: 700
     lineHeight: 1.25
   title:
-    fontFamily: "Georgia, Source Serif 4, serif"
-    fontSize: "20px"
-    fontWeight: 600
+    fontFamily: "Inter, sans-serif"
+    fontSize: "19px"
+    fontWeight: 700
     lineHeight: 1.3
   title-ui:
-    fontFamily: "system-ui, sans-serif"
-    fontSize: "17px"
+    fontFamily: "Inter, sans-serif"
+    fontSize: "16px"
     fontWeight: 600
     lineHeight: 1.35
   body:
-    fontFamily: "system-ui, sans-serif"
-    fontSize: "17px"
-    fontWeight: 400
-    lineHeight: 1.55
-  body-secondary:
-    fontFamily: "system-ui, sans-serif"
-    fontSize: "15px"
+    fontFamily: "Inter, sans-serif"
+    fontSize: "16px"
     fontWeight: 400
     lineHeight: 1.5
-  body-small:
-    fontFamily: "system-ui, sans-serif"
-    fontSize: "13px"
+  body-secondary:
+    fontFamily: "Inter, sans-serif"
+    fontSize: "14px"
     fontWeight: 400
     lineHeight: 1.45
+  body-small:
+    fontFamily: "Inter, sans-serif"
+    fontSize: "13px"
+    fontWeight: 400
+    lineHeight: 1.4
   label:
-    fontFamily: "system-ui, sans-serif"
+    fontFamily: "Inter, sans-serif"
     fontSize: "15px"
     fontWeight: 600
     lineHeight: 1.2
   label-small:
-    fontFamily: "system-ui, sans-serif"
+    fontFamily: "Inter, sans-serif"
     fontSize: "12px"
     fontWeight: 600
     lineHeight: 1.3
   eyebrow:
-    fontFamily: "system-ui, sans-serif"
-    fontSize: "11px"
-    fontWeight: 700
-    letterSpacing: "1.5px"
+    fontFamily: "Inter, sans-serif"
+    fontSize: "12px"
+    fontWeight: 600
+    letterSpacing: "0.6px"
   quote:
     fontFamily: "Georgia, Source Serif 4, serif"
     fontSize: "22px"
@@ -104,9 +104,10 @@ typography:
     fontWeight: 400
     lineHeight: 1.7
 rounded:
-  control: "14px"
-  row: "20px"
-  card: "28px"
+  control: "10px"
+  row: "12px"
+  card: "16px"
+  bar: "28px"
   chip: "999px"
 spacing:
   xs: "4px"
@@ -122,7 +123,14 @@ components:
     backgroundColor: "{colors.selah-green}"
     textColor: "{colors.paper}"
     rounded: "{rounded.chip}"
-    padding: "16px 22px"
+    padding: "10px 18px"
+    height: "40px"
+  button-secondary:
+    backgroundColor: "{colors.paper-raised}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.chip}"
+    padding: "10px 18px"
+    height: "40px"
   row:
     backgroundColor: "{colors.paper-raised}"
     textColor: "{colors.ink}"
@@ -146,14 +154,14 @@ The code is the source of truth: `app/lib/src/app/theme.dart` (palette, `SelahTo
 
 **Creative North Star: "The devotional book"**
 
-Selah should feel like a well-made devotional book or journal: calm, warm and personal, not a tech dashboard. The page is cream paper in light mode and warm charcoal in dark mode. Headings and Scripture are set in a serif, as in a printed book; the interface around them (labels, buttons, lists) is a quiet sans-serif. Selah green carries the identity in a few large places. Terracotta marks small things that need a glance. Everything else steps back so the words of the study lead.
+Selah should feel like a well-made devotional book or journal: calm, warm and personal, not a tech dashboard. The page is cream paper in light mode and warm charcoal in dark mode. Scripture and long reading text are set in a serif, as in a printed book; everything around them (titles, labels, buttons, lists) is a clean, compact sans, Inter, sized after the YouVersion Bible app so the screen feels light and the words of the study stand out. Selah green carries the identity in a few large places. Terracotta marks small things that need a glance. Everything else steps back so the words of the study lead.
 
 The website and the app are the same people's product in two shapes. On a computer it is a website; on a phone it is an app. Neither is the other one stretched or squeezed.
 
 **Key characteristics:**
 - Warm paper and warm charcoal; never pure white or pure black backgrounds.
 - One strong color (green) for large areas, one (terracotta) only for small marks.
-- Serif for reading and headings, sans for interface.
+- Serif for reading, Inter for everything else.
 - Generous but consistent spacing; long text keeps a book-like line length.
 
 ## Colors
@@ -192,26 +200,26 @@ On the green hero card (the reader's header ring, `PartRing(onHero: true)`) the 
 
 ## Typography
 
-- **Serif: Georgia**, as the app has always used. Use it for display, headlines, titles, the hero quote (italic) and long reading text such as reflection, prayer and the reader. The web and Android have no Georgia, so they fall back to **Source Serif 4** (bundled in `app/assets/fonts/`, SIL Open Font License) rather than a sans serif.
-- **Sans: the system font.** Use it for everything you operate: labels, buttons, lists, navigation, forms and metadata.
+- **Sans: Inter** (4.1, bundled in `app/assets/fonts/`, SIL Open Font License, `Inter-OFL.txt`), the same face on iOS, Android and the web. Use it for titles, headings, labels, buttons, lists, navigation, forms and metadata. Headings are bold, tracked in slightly (-0.5 from 24 px up, -0.2 below).
+- **Serif: Georgia**, only for reading: the hero quote (italic) and long reading text such as reflection, prayer and the reader. The web and Android have no Georgia, so they fall back to **Source Serif 4** (bundled, SIL Open Font License) rather than a sans serif.
 
 | Role (`TextTheme`) | Family | Size / line height | Weight |
 |---|---|---|---|
-| `displaySmall` | serif | 40 / 1.1 | 600 |
-| `headlineMedium` | serif | 30 / 1.15 | 600 |
-| `headlineSmall` | serif | 24 / 1.25 | 600 |
-| `titleLarge` | serif | 20 / 1.3 | 600 |
-| `titleMedium` | sans | 17 / 1.35 | 600 |
-| `bodyLarge` | sans | 17 / 1.55 | 400 |
-| `bodyMedium` | sans, muted | 15 / 1.5 | 400 |
-| `bodySmall` | sans, muted | 13 / 1.45 | 400 |
-| `labelLarge` | sans | 15 / 1.2 | 600 |
-| `labelMedium` | sans | 12 / 1.3 | 600 |
-| `labelSmall` (eyebrow) | sans, terracotta | 11, +1.5 tracking | 700 |
+| `displaySmall` | Inter | 32 / 1.15 | 700 |
+| `headlineMedium` (page titles) | Inter | 28 / 1.2 | 700 |
+| `headlineSmall` | Inter | 22 / 1.25 | 700 |
+| `titleLarge` | Inter | 19 / 1.3 | 700 |
+| `titleMedium` | Inter | 16 / 1.35 | 600 |
+| `bodyLarge` | Inter | 16 / 1.5 | 400 |
+| `bodyMedium` | Inter, muted | 14 / 1.45 | 400 |
+| `bodySmall` | Inter, muted | 13 / 1.4 | 400 |
+| `labelLarge` | Inter | 15 / 1.2 | 600 |
+| `labelMedium` | Inter | 12 / 1.3 | 600 |
+| `labelSmall` (eyebrow) | Inter, terracotta | 12, +0.6 tracking | 600 |
 | `serifQuote()` | serif italic | 22 / 1.35 | 400 |
 | `serifReading()` | serif | 18 / 1.7 | 400 |
 
-iOS large and slim page titles use the same serif through `cupertinoOverrideTheme`. Pages use these roles; they never set a raw `fontSize`. The only exceptions are the frosted tab bar's 12 px label and Google's sign-in button (brand rules).
+`ThemeData.fontFamily` is Inter, and the iOS bar titles use it too through `cupertinoOverrideTheme`. Pages use these roles; they never set a raw `fontSize`. The only exceptions are the frosted tab bar's 12 px label and Google's sign-in button (brand rules).
 
 ## Layout
 
@@ -222,6 +230,8 @@ iOS large and slim page titles use the same serif through `cupertinoOverrideThem
 - `readingMeasure` 680: long text never runs wider (about 60–75 characters).
 - `formWidth` 440: forms never stretch.
 - `bottomGap` 16: the space between the last item and the tab bar or the bottom edge.
+
+**Page header** (`SelahPage`, app layout): a compact title bar pinned right under the status bar, as in the YouVersion app, instead of iOS's tall large title. The title is `headlineMedium` (28, bold, left-aligned) on a tab's root page and `headlineSmall` next to a back button, with the page actions on the right, all in a 52 px row. An optional `subtitle` line is pinned under it (Today's date and church, 24 px). The bar sits on paper; a 0.5 px `outlineVariant` hairline fades in once content scrolls under it. Content starts `Space.s` below it. A page with no title (the reader) keeps the slim bar with only the back button and actions.
 
 **Screen sizes** (`screenSizeOf(context)`):
 
@@ -285,10 +295,11 @@ The design is mostly flat and tonal. Depth comes from surface lightness (paper �
 
 ## Shapes
 
-Soft, rounded and friendly, never sharp.
-- `Radii.control` 14: inputs, small buttons.
-- `Radii.row` 20: rows, cards in lists, images.
-- `Radii.card` 28: the hero card and large cards.
+Gently rounded, after the YouVersion app: corners are soft but small, never sharp and never bubbly.
+- `Radii.control` 10: inputs, small buttons.
+- `Radii.row` 12: rows, cards in lists, images, the selected day in the week.
+- `Radii.card` 16: the hero card and large cards.
+- `Radii.bar` 28: the frosted floating tab bar's capsule.
 - `Radii.chip`: fully rounded pills, tags and primary buttons (stadium shape).
 
 ## Components
@@ -297,10 +308,10 @@ All components live in `app/lib/src/app/design/` and read only tokens.
 - **Site header** (`SiteHeader`, `SiteFrame`): the desktop top bar, 64 px tall, on paper with an `outlineVariant` hairline. Links are text buttons, so they can take keyboard focus.
 - **Two columns** (`TwoColumn`): a main column and a fixed side column, `Space.xxl` apart. Use it only in the website layout.
 - **Card grid** (`CardGrid`): as many columns as fit (default 280 px minimum, three at most). Tiles in a row share a top edge and keep their width when a row isn't full.
-- **Hero card** (`HeroCard`): today's study. It has a green gradient (`heroStart` → `heroEnd`), paper-colored text in light mode (ink in dark mode), `Radii.card` and 22 padding. It holds an eyebrow, a serif title and a serif italic quote. It's the one large green surface per screen. A finished day's card holds a soft light (`glow`): a pale radial highlight from the bottom centre. Optional `art` fills the right 60% of the card behind the text, fading from transparent at its left edge to 35% at the right, so the title and quote run the full width and stay legible: across the whole library the title keeps at least 3.8:1 in light mode and 4.5:1 in dark. Today's card shows only the eyebrow and the title; the reader's card adds the quote. Both show the day's art, and until its file exists the card is plain green, with no placeholder.
+- **Hero card** (`HeroCard`): today's study. It has a green gradient (`heroStart` → `heroEnd`), paper-colored text in light mode (ink in dark mode), `Radii.card` and 22 padding. It holds an eyebrow, a bold Inter title and a serif italic quote. It's the one large green surface per screen. A finished day's card holds a soft light (`glow`): a pale radial highlight from the bottom centre. Optional `art` fills the right 60% of the card behind the text, fading from transparent at its left edge to 35% at the right, so the title and quote run the full width and stay legible: across the whole library the title keeps at least 3.8:1 in light mode and 4.5:1 in dark. Today's card shows only the eyebrow and the title; the reader's card adds the quote. Both show the day's art, and until its file exists the card is plain green, with no placeholder.
 - **Row** (`SelahRow`): raised paper, `Radii.row`, ink title, muted subtitle. Presses spring (`Pressable`).
-- **Tab bar** (`AdaptiveTabBar`): native glass on iOS 26, a frosted pill elsewhere on iOS, and a Material `NavigationBar` on raised paper on Android and web. The selected tab takes the done green (`tones.done`) over a soft pill of the same green at 10%; the native glass bar takes only the tint, and keeps its own glass and selection.
-- **Buttons:** primary is a filled green stadium with paper-colored text. Secondary is an outlined stadium with green text and a green border.
+- **Tab bar** (`AdaptiveTabBar`): native glass on iOS 26, a frosted pill elsewhere on iOS, and a Material `NavigationBar` on raised paper on Android and web. The native glass bar gets no padding of ours, since it keeps its own margins: that puts it full width and just above the home indicator, where the system's tab bars sit. The frosted pill sits 12 px in from the sides and 14 px into the bottom inset (at least 8 px above the edge). The selected tab takes the done green (`tones.done`) over a soft pill of the same green at 10%; the native glass bar takes only the tint, and keeps its own glass and selection.
+- **Buttons:** compact stadiums, 40 px tall with 18 × 10 padding and 15 px semibold text (tap targets stay 48 px). Primary is filled green with paper-colored text. Secondary (`OutlinedButton`) is a soft raised-paper pill with ink text and no border. Text buttons are green, 36 px tall.
 - **Inputs:** a raised paper fill with no border, `Radii.control`, and a 1.5 px green border on focus.
 - **Eyebrow** (`Eyebrow`): `labelSmall`, upper case, terracotta. It sits above a section heading.
 - **Skeletons** (`skeleton.dart`): raised-paper shapes matching the content while it loads; never a bare spinner on member screens.

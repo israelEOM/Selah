@@ -351,11 +351,14 @@ void main() {
     );
   }
 
-  testWidgets('SelahPage on iOS uses a large collapsing title', (tester) async {
+  testWidgets('SelahPage on iOS pins a compact title bar', (tester) async {
     debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
     try {
       await tester.pumpWidget(pageApp(const SelahPage(title: 'Today', children: [Text('body')])));
-      expect(find.byType(CupertinoSliverNavigationBar), findsOneWidget);
+      expect(find.byType(CupertinoSliverNavigationBar), findsNothing);
+      expect(find.byType(SliverPersistentHeader), findsOneWidget);
+      // The title sits right under the status bar, not in a tall large-title band.
+      expect(tester.getRect(find.text('Today')).bottom, lessThan(MediaQueryData.fromView(tester.view).padding.top + 52));
       expect(find.text('Today'), findsWidgets);
       expect(find.text('body'), findsOneWidget);
     } finally {
@@ -491,11 +494,12 @@ void main() {
     expect(find.text('content'), findsOneWidget);
   });
 
-  testWidgets('SelahPage on Android uses a large Material app bar', (tester) async {
+  testWidgets('SelahPage on Android pins the same compact title bar', (tester) async {
     debugDefaultTargetPlatformOverride = TargetPlatform.android;
     try {
       await tester.pumpWidget(pageApp(const SelahPage(title: 'Today', children: [Text('body')])));
-      expect(find.byType(SliverAppBar), findsOneWidget);
+      expect(find.byType(SliverAppBar), findsNothing);
+      expect(find.byType(SliverPersistentHeader), findsOneWidget);
       expect(find.byType(CupertinoSliverNavigationBar), findsNothing);
       expect(find.text('Today'), findsWidgets);
     } finally {
@@ -602,7 +606,7 @@ void main() {
       await gesture.moveBy(const Offset(0, 120));
       await tester.pump();
       // The bar is a sliver, so read its extent rather than a box rect. It is pinned at the top.
-      final barBottom = tester.renderObject<RenderSliver>(find.byType(CupertinoSliverNavigationBar)).geometry!.paintExtent;
+      final barBottom = tester.renderObject<RenderSliver>(find.byType(SliverPersistentHeader)).geometry!.paintExtent;
       final spinner = tester.getRect(find.byType(CupertinoActivityIndicator));
       expect(spinner.top, greaterThanOrEqualTo(barBottom));
       await gesture.up();

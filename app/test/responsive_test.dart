@@ -72,9 +72,10 @@ void main() {
     expect(find.byIcon(Icons.arrow_back), findsOneWidget);
   });
 
-  testWidgets('SelahPage below desktop keeps the large app bar', (tester) async {
+  testWidgets('SelahPage below desktop keeps the pinned title bar', (tester) async {
     await pumpAt(tester, const Size(390, 800), const SelahPage(title: 'Hoje', backTo: '/', children: [Text('body')]));
-    expect(find.byType(SliverAppBar), findsOneWidget);
+    expect(find.byType(SliverPersistentHeader), findsOneWidget);
+    expect(find.text('Hoje'), findsOneWidget);
   });
 
   testWidgets('content is capped at 1200 on a 1920 window', (tester) async {

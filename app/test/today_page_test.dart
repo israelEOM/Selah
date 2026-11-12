@@ -133,7 +133,7 @@ void main() {
 
   testWidgets('shows day 1 of a fresh study', (tester) async {
     await _pump(tester);
-    expect(find.text('Iglesia Vida Nueva'), findsOneWidget);
+    expect(find.textContaining('Iglesia Vida Nueva', findRichText: true), findsOneWidget);
     expect(find.text('SEGUIR A JESÚS · DÍA 1 DE 5'), findsOneWidget);
     expect(find.text('Día 1 del camino'), findsOneWidget);
     // Today's card is only the eyebrow and the title; the reader shows the main idea.
@@ -141,7 +141,7 @@ void main() {
     expect(find.text('Lectura bíblica'), findsOneWidget);
     expect(find.text('Reflexión'), findsOneWidget);
     expect(find.text('Oración'), findsOneWidget);
-    expect(find.text('MARTES, 27 DE OCTUBRE'), findsOneWidget);
+    expect(find.textContaining('MARTES, 27 DE OCTUBRE', findRichText: true), findsOneWidget);
     expect(_weekChecks(), findsNothing);
     expect(find.byType(FinishLine), findsNothing);
   });
@@ -239,7 +239,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Listo por hoy.'), findsNothing);
       expect(find.text('SEGUIR A JESÚS · DÍA 2 DE 5'), findsOneWidget);
-      expect(find.text('MIÉRCOLES, 28 DE OCTUBRE'), findsOneWidget);
+      expect(find.textContaining('MIÉRCOLES, 28 DE OCTUBRE', findRichText: true), findsOneWidget);
     });
 
     testWidgets('shows at midnight with the app open', (tester) async {

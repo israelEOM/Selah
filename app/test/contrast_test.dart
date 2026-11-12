@@ -62,9 +62,11 @@ void main() {
       }
     });
 
-    test('$name outlined buttons have a green border', () {
-      final side = theme.outlinedButtonTheme.style!.side!.resolve({});
-      expect(side!.color, theme.colorScheme.primary);
+    test('$name outlined buttons are soft filled pills with no border', () {
+      final style = theme.outlinedButtonTheme.style!;
+      expect(style.side!.resolve({}), BorderSide.none);
+      expect(style.backgroundColor!.resolve({}), theme.extension<SelahTones>()!.surface);
+      expect(contrast(style.foregroundColor!.resolve({})!, style.backgroundColor!.resolve({})!), greaterThanOrEqualTo(4.5));
     });
 
     test('$name background is neither pure white nor pure black', () {

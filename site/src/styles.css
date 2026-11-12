@@ -190,7 +190,7 @@ html[lang="en"] .languages a[hreflang="en"] { color: var(--text); font-weight: 4
 .app-screen {
   --paper: #FAF7F2; --raised: #F1EBE1; --ink: #262320; --ink-muted: #6F655A; --green: #2F5D4A; --green-deep: #244A3B;
   --terracotta: #A65033; --track: #E4DDD1;
-  --app-serif: Georgia, "Source Serif 4", serif; --app-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --app-serif: Georgia, "Source Serif 4", serif; --app-sans: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   background: var(--paper); color: var(--ink); font-family: var(--app-sans); text-align: left;
 }
 .part-reading, .a-reading, .chip-reading, .rd-reading, .lg-reading { --part: #2F5D4A; --part-text: #2F5D4A; --part-tint: #E6EEE8; --part-soft: #D3E2D8; }
@@ -217,9 +217,9 @@ html[lang="en"] .languages a[hreflang="en"] { color: var(--text); font-weight: 4
 .feature p { margin-top: var(--space-4); color: var(--text-muted); }
 
 .demo .app-screen { padding: var(--space-24) var(--space-16) var(--space-20); }
-.app-title { font: 600 30px/1.1 var(--app-serif); }
+.app-title { font: 700 26px/1.15 var(--app-sans); letter-spacing: -0.02em; }
 .week { list-style: none; margin: var(--space-16) 0 var(--space-16); padding: 0; display: grid; grid-template-columns: repeat(7, 1fr); }
-.wk { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 0; border-radius: 14px; }
+.wk { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 0; border-radius: 11px; }
 .wk-today { background: var(--raised); }
 .wk-future { opacity: 0.45; }
 .wk-day { font: 600 11px/1 var(--app-sans); color: var(--ink-muted); }
@@ -241,7 +241,7 @@ html[lang="en"] .languages a[hreflang="en"] { color: var(--text); font-weight: 4
 
 /* The green hero card: art on the right fading into the green, and moment A's light rising from the bottom. */
 .app-hero {
-  position: relative; isolation: isolate; overflow: hidden; border-radius: 22px; padding: 18px;
+  position: relative; isolation: isolate; overflow: hidden; border-radius: 14px; padding: 18px;
   background: linear-gradient(135deg, var(--green) 0%, var(--green-deep) 100%); color: var(--paper);
 }
 .app-hero-art {
@@ -254,13 +254,13 @@ html[lang="en"] .languages a[hreflang="en"] { color: var(--text); font-weight: 4
 }
 .demo.is-done .app-hero-glow { opacity: 1; transition: opacity 1800ms ease-out; }
 .app-eyebrow { font: 600 10px/1.3 var(--app-sans); letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.85; }
-.app-hero-title { margin-top: 6px; font: 600 22px/1.2 var(--app-serif); }
+.app-hero-title { margin-top: 6px; font: 700 19px/1.25 var(--app-sans); letter-spacing: -0.01em; }
 .app-hero-quote { margin-top: 10px; font: italic 400 17px/1.4 var(--app-serif); }
 
 /* The three part rows: tint background, a painted icon on its soft tile, the round tick in the part colour. */
 .parts { list-style: none; margin: var(--space-12) 0 0; padding: 0; display: grid; gap: 8px; }
-.part { display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 16px; background: var(--part-tint); }
-.part-icon { width: 40px; height: 40px; border-radius: 12px; background: var(--part-soft); display: grid; place-items: center; }
+.part { display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 11px; background: var(--part-tint); }
+.part-icon { width: 40px; height: 40px; border-radius: 10px; background: var(--part-soft); display: grid; place-items: center; }
 .part-icon img, .chip-icon img { width: 30px; height: 30px; }
 .part-text { display: flex; flex-direction: column; min-width: 0; }
 .part-text b { font: 600 15px/1.25 var(--app-sans); }

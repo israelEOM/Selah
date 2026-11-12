@@ -51,14 +51,14 @@ void main() {
     expect(tones.heroStart, const Color(0xFF26332C));
   });
 
-  testWidgets('headings and reading text use Georgia, falling back to the bundled Source Serif 4; UI text does not', (tester) async {
+  testWidgets('interface text is set in Inter; only reading text uses Georgia, falling back to Source Serif 4', (tester) async {
     final text = selahLightTheme().textTheme;
     for (final style in [text.displaySmall, text.headlineMedium, text.headlineSmall, text.titleLarge]) {
-      expect(style!.fontFamily, 'Georgia');
-      expect(style.fontFamilyFallback!.first, 'Source Serif 4');
+      expect(style!.fontFamily, 'Inter');
+      expect(style.fontWeight, FontWeight.w700);
     }
     for (final style in [text.titleMedium, text.bodyLarge, text.bodyMedium, text.labelLarge, text.labelSmall]) {
-      expect(style!.fontFamily, isNot('Georgia'));
+      expect(style!.fontFamily, 'Inter');
     }
     expect(text.labelSmall!.color, selahLightTheme().extension<SelahTones>()!.accent);
     late TextStyle quote, reading;
@@ -91,12 +91,12 @@ void main() {
     }
   });
 
-  test('iOS large titles use the serif in the theme text color', () {
+  test('iOS bar titles use Inter in the theme text color', () {
     for (final t in [selahLightTheme(), selahDarkTheme()]) {
       final cupertino = t.cupertinoOverrideTheme!.textTheme!;
-      expect(cupertino.navLargeTitleTextStyle.fontFamily, 'Georgia');
+      expect(cupertino.navLargeTitleTextStyle.fontFamily, 'Inter');
       expect(cupertino.navLargeTitleTextStyle.color, t.colorScheme.onSurface);
-      expect(cupertino.navTitleTextStyle.fontFamily, 'Georgia');
+      expect(cupertino.navTitleTextStyle.fontFamily, 'Inter');
     }
   });
 }
