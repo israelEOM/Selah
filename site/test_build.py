@@ -86,9 +86,46 @@ class BuildTest(unittest.TestCase):
                 images = re.findall(r"<img\b[^>]*>", html)
                 self.assertGreaterEqual(len(images), 2)
                 for img in images:
-                    self.assertRegex(img, r'alt="[^"]+"')
+                    self.assertRegex(img, r'alt="[^"]*"')
                     self.assertRegex(img, r'width="\d+"')
                     self.assertRegex(img, r'height="\d+"')
+                # Only decoration goes without words: the steps' and cards' paintings, the part icons, the looping copies.
+                described = [img for img in images if 'alt=""' not in img]
+                for name in ["hero-1920", "laptop-today", "phone-today-done"]:
+                    self.assertTrue(any(name in img for img in described), name)
+
+    def test_every_image_exists(self):
+        for lang, html in self.pages.items():
+            with self.subTest(lang=lang):
+                for path in set(re.findall(r'src="/site/(img/[^"]+)"', html)):
+                    self.assertTrue(os.path.isfile(os.path.join(HERE, "src", path)), path)
+
+    def test_today_demo(self):
+        for lang, html in self.pages.items():
+            with self.subTest(lang=lang):
+                demo = re.search(r'(?s)<div class="device demo" data-demo="today".*?</figure>', html).group(0)
+                self.assertEqual(demo.count('aria-pressed="false"'), 3)
+                self.assertEqual(demo.count('class="wk '), 7)
+                self.assertEqual(demo.count("wk-today"), 1)
+                self.assertIn('class="finish"', demo)
+                self.assertIn('class="pill pill-ghost pill-small replay"', demo)
+
+    def test_reader_demo(self):
+        strings = {lang: json.load(open(os.path.join(HERE, "src", "strings", f"{lang}.json"), encoding="utf-8")) for lang in self.pages}
+        for lang, html in self.pages.items():
+            with self.subTest(lang=lang):
+                for part in ["reading", "reflection", "prayer"]:
+                    self.assertIn(f'class="chip chip-{part}"', html)
+                    self.assertIn(f'class="rd rd-{part}"', html)
+                self.assertIn(strings[lang]["day_complete"], html)
+
+    def test_art_gallery_names_each_painting(self):
+        with open(os.path.join(HERE, "src", "art.json"), encoding="utf-8") as f:
+            art = json.load(f)
+        for lang, html in self.pages.items():
+            with self.subTest(lang=lang):
+                for item in art:
+                    self.assertIn(f'src="/site/img/art/{item["key"]}.webp" width="640" height="480" alt="{item["alt"][lang]}"', html)
 
     def test_hero_photo_when_present(self):
         present = os.path.isfile(os.path.join(HERE, "src", "img", f"hero-{HERO_WIDTHS[-1]}.webp"))
@@ -103,6 +140,34 @@ class BuildTest(unittest.TestCase):
         for lang, html in self.pages.items():
             with self.subTest(lang=lang):
                 self.assertEqual(html.count("pill-primary"), 1)
+
+    def test_motion_script_reveals_sections(self):
+        for lang, html in self.pages.items():
+            with self.subTest(lang=lang):
+                head = html.split("</head>")[0]
+                self.assertIn("IntersectionObserver", head)
+                self.assertIn("prefers-reduced-motion", head)
+                self.assertGreaterEqual(html.count("data-reveal"), 8)
+
+    def test_motion_respects_reduced_motion(self):
+        with open(os.path.join(self.out, "site", "styles.css"), encoding="utf-8") as f:
+            css = f.read()
+        reduced = css[css.rindex("@media (prefers-reduced-motion: reduce)"):]
+        self.assertIn(".js-motion [data-reveal]", reduced)
+        # The demos' hop and ripple stop too.
+        demos = css[css.index("@media (prefers-reduced-motion: reduce) {\n  .wk-arc"):]
+        self.assertIn(".part.is-ticked .part-icon img", demos.split("\n}\n")[0])
+        self.assertIn("opacity: 1", reduced)
+
+    def test_header_links_point_at_sections(self):
+        for lang, html in self.pages.items():
+            with self.subTest(lang=lang):
+                header = re.search(r'(?s)<header class="top">.*?</header>', html).group(0)
+                for section in ["how", "today", "audiences"]:
+                    self.assertIn(f'href="#{section}"', header)
+                    self.assertIn(f'id="{section}"', html)
+                self.assertIn('href="/login"', header)
+                self.assertIn('href="/today"', header)
 
     def test_one_h1_per_page(self):
         for lang, html in self.pages.items():

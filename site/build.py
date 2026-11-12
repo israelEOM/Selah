@@ -53,6 +53,54 @@ def _hero_media(alt: str) -> str:
     )
 
 
+# The Today demo's week: the date, then how much was done (Monday finished, Tuesday two parts, Wednesday is today).
+WEEK = [(9, "done"), (10, "partial"), (11, "today"), (12, "future"), (13, "future"), (14, "future"), (15, "future")]
+PARTS = ["reading", "reflection", "prayer"]
+
+
+def _ring(number: int) -> str:
+    """One week ring after the app's WeekRings: a pale track, an arc per part, and a green disc with a check."""
+    arcs = "".join(f'<circle class="wk-arc a-{part}" cx="18" cy="18" r="15" pathLength="100"/>' for part in PARTS)
+    return (
+        '<svg viewBox="0 0 36 36" aria-hidden="true"><g transform="rotate(-90 18 18)"><circle class="wk-track" cx="18" cy="18" r="15" pathLength="100"/>'
+        f'{arcs}</g><circle class="wk-disc" cx="18" cy="18" r="16.5"/><path class="wk-check" d="M12.5 18.5l3.8 3.8 7.4-8" pathLength="1"/>'
+        f'</svg><span class="wk-num">{number}</span>'
+    )
+
+
+def _week_rings(days: str) -> str:
+    """The demo's seven rings, Monday first, with the weekday letters from strings."""
+    letters = days.split(",")
+    items = []
+    for letter, (number, state) in zip(letters, WEEK):
+        classes = f"wk wk-{state}"
+        if state == "done":
+            classes += " on-reading on-reflection on-prayer is-done"
+        elif state == "partial":
+            classes += " on-reading on-reflection"
+        items.append(f'<li class="{classes}"><span class="wk-day">{letter}</span><span class="wk-ring">{_ring(number)}</span></li>')
+    return "".join(items)
+
+
+def _art_gallery(lang: str) -> str:
+    """Two drifting rows of the app's illustrations; each row is repeated once, hidden from screen readers, so it loops."""
+    with open(os.path.join(SRC, "art.json"), encoding="utf-8") as f:
+        art = json.load(f)
+    half = (len(art) + 1) // 2
+    rows = []
+    for row in (art[:half], art[half:]):
+        tiles = "".join(
+            f'<li><img src="/site/img/art/{a["key"]}.webp" width="640" height="480" alt="{a["alt"][lang]}" loading="lazy" decoding="async"></li>'
+            for a in row
+        )
+        copy = "".join(
+            f'<li><img src="/site/img/art/{a["key"]}.webp" width="640" height="480" alt="" loading="lazy" decoding="async"></li>'
+            for a in row
+        )
+        rows.append(f'<div class="art-row"><ul class="art-strip">{tiles}</ul><ul class="art-strip" aria-hidden="true">{copy}</ul></div>')
+    return "".join(rows)
+
+
 def render(lang: str) -> str:
     """The page for [lang]. Fails when a strings file lacks a key the Spanish one has, or a placeholder is left."""
     strings = _strings(lang)
@@ -63,9 +111,12 @@ def render(lang: str) -> str:
         template = Template(f.read())
     with open(os.path.join(SRC, "redirect.js"), encoding="utf-8") as f:
         redirect_script = f.read()
+    with open(os.path.join(SRC, "motion.js"), encoding="utf-8") as f:
+        motion_script = f.read()
     page = template.substitute(
         strings,
         redirect_script=redirect_script,
+        motion_script=motion_script,
         lang=lang,
         og_locale=LOCALES[lang],
         og_image=f"{ORIGIN}/site/img/og.png",
@@ -73,6 +124,8 @@ def render(lang: str) -> str:
         canonical=ORIGIN + PAGES[lang],
         alternates=_alternates(),
         hero_media=_hero_media(strings["alt_hero"]),
+        week_rings=_week_rings(strings["week_days"]),
+        art_gallery=_art_gallery(lang),
     )
     left = re.findall(r"\$\{[^}]*\}", page)
     if left:
