@@ -28,13 +28,10 @@ class ExternalLink extends StatelessWidget {
 /// A labelled block of reading text. With a [part], a 3px rule in that part's colour runs down its left and the
 /// label takes the same colour.
 class ReadingSection extends StatelessWidget {
-  const ReadingSection({super.key, required this.label, required this.child, this.trailing, this.part});
+  const ReadingSection({super.key, required this.label, required this.child, this.part});
 
   final String label;
   final Widget child;
-
-  /// Shown beside the label: the website reader's tick for this section's part.
-  final Widget? trailing;
 
   /// The part of the day this section belongs to.
   final DayPart? part;
@@ -50,7 +47,7 @@ class ReadingSection extends StatelessWidget {
     Widget body = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (trailing == null) eyebrow else Row(children: [Expanded(child: eyebrow), trailing!]),
+        eyebrow,
         const SizedBox(height: Space.m),
         child,
       ],

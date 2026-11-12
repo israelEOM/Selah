@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -11,7 +13,6 @@ import '../../data/progress.dart';
 import '../../data/providers.dart';
 import '../home/language_menu.dart';
 import '../../l10n/locale.dart';
-import '../today/part_tick.dart';
 import '../today/today_page.dart' show tickWithFeedback;
 import '../today/today_selection.dart';
 import '../today/week_rings.dart' show PartRing;
@@ -171,22 +172,34 @@ class _DayState extends ConsumerState<_Day> {
     }
   }
 
-  /// The last part whose section starts above 45% of the screen, or the last part once the page is scrolled to its
-  /// end (the final section can be too short to reach that line).
+  /// Whether a check of the current part is already waiting for the next frame.
+  bool _spyQueued = false;
+
+  /// On each scroll, after the frame lays out the new offset (a single mouse-wheel step sends one notification, and
+  /// the sections only move at layout): the last part whose section starts above 45% of the screen, or the last part
+  /// once the page is scrolled to its end (the final section can be too short to reach that line).
   bool _onScroll(ScrollNotification n) {
-    if (n.depth != 0 || n.metrics.axis != Axis.vertical) return false;
-    final parts = partsFor(widget.day);
-    var current = parts.first;
-    if (n.metrics.maxScrollExtent > 0 && n.metrics.extentAfter < 1) {
-      current = parts.last;
-    } else {
-      final line = MediaQuery.sizeOf(context).height * 0.45;
-      for (final part in parts) {
-        final box = _sections[part]!.currentContext?.findRenderObject() as RenderBox?;
-        if (box != null && box.attached && box.localToGlobal(Offset.zero).dy <= line) current = part;
+    if (n.depth != 0 || n.metrics.axis != Axis.vertical || _spyQueued) return false;
+    _spyQueued = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _spyQueued = false;
+      if (!mounted) return;
+      final parts = partsFor(widget.day);
+      final scrollable = _sections[parts.first]!.currentContext;
+      final metrics = scrollable == null ? null : Scrollable.maybeOf(scrollable)?.position;
+      var current = parts.first;
+      if (metrics != null && metrics.maxScrollExtent > 0 && metrics.extentAfter < 1) {
+        current = parts.last;
+      } else {
+        final line = MediaQuery.sizeOf(context).height * 0.45;
+        for (final part in parts) {
+          final box = _sections[part]!.currentContext?.findRenderObject() as RenderBox?;
+          if (box != null && box.attached && box.localToGlobal(Offset.zero).dy <= line) current = part;
+        }
       }
-    }
-    if (current != _current) setState(() => _current = current);
+      if (current != _current) setState(() => _current = current);
+    });
+    WidgetsBinding.instance.ensureVisualUpdate();
     return false;
   }
 
@@ -227,19 +240,11 @@ class _DayState extends ConsumerState<_Day> {
     final text = Theme.of(context).textTheme;
     final progress = ref.watch(studyProgressProvider(original.id)).value;
     final ticked = progress?.days[day.number]?.parts ?? const <DayPart>{};
-    // Phones tick from the floating bar; the website layout keeps a tick beside each part.
-    final inline = siteLayout(context);
-    Widget tick(DayPart part, String label) => PartTick(
-          part: part,
-          key: ValueKey('tick-${part.name}'),
-          label: label,
-          ticked: ticked.contains(part),
-          onTap: () => _tick(part),
-        );
+    // Every layout ticks from the floating bar; the website layout floats it under the text column.
+    final site = siteLayout(context);
     // The reflection part starts at the first of reflection, application and questions that the day has.
     final reflectionHolder = day.reflection != null ? 0 : day.application != null ? 1 : day.questions.isNotEmpty ? 2 : -1;
     Key? reflectionKey(int i) => i == reflectionHolder ? _sections[DayPart.reflection] : null;
-    Widget? reflectionTick(int i) => inline && i == reflectionHolder ? tick(DayPart.reflection, l.reflection) : null;
     final total = study.days.length;
     final reading = serifReading(context);
     String dayPath(int n) => '/c/${church.slug}/studies/${study.slug}/day/$n';
@@ -277,16 +282,11 @@ class _DayState extends ConsumerState<_Day> {
           key: _sections[DayPart.reading],
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(children: [
-              Expanded(
-                child: ExternalLink(
-                  icon: Icons.menu_book_outlined,
-                  label: l.readReference(day.bibleReading!, study.bibleVersionCode),
-                  uri: bibleReaderUrl(day.bibleReading!, study.bibleVersionCode),
-                ),
-              ),
-              if (inline) tick(DayPart.reading, l.bibleReading),
-            ]),
+            ExternalLink(
+              icon: Icons.menu_book_outlined,
+              label: l.readReference(day.bibleReading!, study.bibleVersionCode),
+              uri: bibleReaderUrl(day.bibleReading!, study.bibleVersionCode),
+            ),
             Text(l.externalReaderNote, style: text.bodySmall),
           ],
         ),
@@ -296,7 +296,6 @@ class _DayState extends ConsumerState<_Day> {
           key: reflectionKey(0),
           label: l.reflection,
           part: DayPart.reflection,
-          trailing: reflectionTick(0),
           child: Text(day.reflection!, style: reading),
         ),
       if (day.application != null)
@@ -304,7 +303,6 @@ class _DayState extends ConsumerState<_Day> {
           key: reflectionKey(1),
           label: l.application,
           part: DayPart.reflection,
-          trailing: reflectionTick(1),
           child: Text(day.application!, style: reading),
         ),
       if (day.questions.isNotEmpty)
@@ -312,7 +310,6 @@ class _DayState extends ConsumerState<_Day> {
           key: reflectionKey(2),
           label: l.questions,
           part: DayPart.reflection,
-          trailing: reflectionTick(2),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -329,7 +326,6 @@ class _DayState extends ConsumerState<_Day> {
           key: _sections[DayPart.prayer],
           label: l.prayer,
           part: DayPart.prayer,
-          trailing: inline ? tick(DayPart.prayer, l.prayer) : null,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -367,54 +363,72 @@ class _DayState extends ConsumerState<_Day> {
         ],
       ),
     ];
-    if (inline) {
-      // The website layout: the text at reading width, the study's days beside it.
-      return SelahPage(
-        backTo: '/c/${church.slug}/studies/${study.slug}',
-        actions: const [LanguageMenu(pageAction: true), SizedBox(width: 8)],
-        maxWidth: Layout.readingMeasure + Space.xxl + 280,
-        children: [
-          TwoColumn(
-            sideWidth: 280,
-            main: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: content),
-            side: _DayList(
-              study: study,
-              current: day.number,
-              onOpen: (n) => _goToDay(context, dayPath(n), original, fromToday: widget.fromToday),
-            ),
-          ),
-        ],
-      );
-    }
-    final page = SelahPage(
-      backTo: '/c/${church.slug}/studies/${study.slug}',
-      actions: const [LanguageMenu(pageAction: true), SizedBox(width: 8)],
-      maxWidth: 680,
-      children: [...content, const SizedBox(height: TickDock.clearance)],
-    );
+    const sideWidth = 280.0;
+    const siteWidth = Layout.readingMeasure + Space.xxl + sideWidth;
+    final page = site
+        // The website layout: the text at reading width, the study's days beside it.
+        ? SelahPage(
+            backTo: '/c/${church.slug}/studies/${study.slug}',
+            actions: const [LanguageMenu(pageAction: true), SizedBox(width: 8)],
+            maxWidth: siteWidth,
+            children: [
+              TwoColumn(
+                sideWidth: sideWidth,
+                main: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    ...content,
+                    const SizedBox(height: TickDock.clearance),
+                  ],
+                ),
+                side: _DayList(
+                  study: study,
+                  current: day.number,
+                  onOpen: (n) => _goToDay(context, dayPath(n), original, fromToday: widget.fromToday),
+                ),
+              ),
+            ],
+          )
+        : SelahPage(
+            backTo: '/c/${church.slug}/studies/${study.slug}',
+            actions: const [LanguageMenu(pageAction: true), SizedBox(width: 8)],
+            maxWidth: 680,
+            children: [
+              ...content,
+              const SizedBox(height: TickDock.clearance),
+            ],
+          );
     return NotificationListener<ScrollNotification>(
       onNotification: _onScroll,
-      child: Stack(
-        children: [
-          page,
-          Positioned(
-            left: TickDock.sideInset,
-            right: TickDock.sideInset,
-            bottom: TickDock.bottomInset + MediaQuery.paddingOf(context).bottom,
-            child: TickDock(
-              parts: partsFor(day),
-              ticked: ticked,
-              current: _current,
-              onTick: (part) {
-                // Decided before the tick, not from its result: that only arrives after the success haptic.
-                final finishes = !ticked.contains(part) && partsFor(day).every((p) => p == part || ticked.contains(p));
-                if (finishes) _finishedHere = true;
-                _tick(part, announce: false);
-              },
-              onComplete: _backToToday,
-            ),
-          ),
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // On the website the bar spans the text column, matching SelahPage's centred site width and TwoColumn.
+          final siteSide = max(Space.xl, (constraints.maxWidth - min(siteWidth, Layout.maxContent)) / 2);
+          final siteMain = constraints.maxWidth - 2 * siteSide - Space.xxl - sideWidth;
+          return Stack(
+            children: [
+              page,
+              Positioned(
+                left: site ? siteSide : TickDock.sideInset,
+                right: site ? constraints.maxWidth - siteSide - siteMain : TickDock.sideInset,
+                bottom: TickDock.bottomInset + MediaQuery.paddingOf(context).bottom,
+                child: TickDock(
+                  parts: partsFor(day),
+                  ticked: ticked,
+                  current: _current,
+                  onTick: (part) {
+                    // Decided before the tick, not from its result: that only arrives after the success haptic.
+                    final finishes =
+                        !ticked.contains(part) && partsFor(day).every((p) => p == part || ticked.contains(p));
+                    if (finishes) _finishedHere = true;
+                    _tick(part, announce: false);
+                  },
+                  onComplete: _backToToday,
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

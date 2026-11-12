@@ -234,7 +234,7 @@ void main() {
     expect(inChip('prayer', 'Oración'), findsNothing);
     // The reflection's heading passes 45% of the screen while the page still has more below.
     final heading = tester.getTopLeft(find.text('REFLEXIÓN')).dy;
-    // In two drags, as a finger scrolls: the section positions the bar reads lag the scroll by a frame.
+    // In two drags, as a finger scrolls.
     final distance = heading - 844 * 0.3;
     await tester.drag(find.byType(Scrollable).first, Offset(0, -distance / 2));
     await tester.pumpAndSettle();
@@ -416,6 +416,18 @@ void main() {
     }
   });
 
+  testWidgets('one jump of the scroll, like a mouse wheel step, moves the current part', (tester) async {
+    await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/1', size: const Size(1280, 900), platform: TargetPlatform.android);
+    Finder inChip(String part, String text) =>
+        find.descendant(of: find.byKey(ValueKey('dock-$part')), matching: find.text(text));
+    expect(inChip('reading', 'Lectura'), findsOneWidget);
+    final heading = tester.getTopLeft(find.text('REFLEXIÓN')).dy;
+    final position = tester.state<ScrollableState>(find.byType(Scrollable).first).position;
+    position.jumpTo(position.pixels + heading - 900 * 0.3);
+    await tester.pumpAndSettle();
+    expect(inChip('reflection', 'Reflexión'), findsOneWidget);
+  });
+
   testWidgets('a rebuild with the same current part does not restart the widening', (tester) async {
     var current = DayPart.reading;
     late StateSetter rebuild;
@@ -467,15 +479,20 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('the desktop reader keeps inline ticks and no dock', (tester) async {
+  testWidgets('the desktop reader floats the tick bar under the text column', (tester) async {
     await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/1', size: const Size(1280, 900), platform: TargetPlatform.android);
-    expect(find.byType(TickDock), findsNothing);
-    expect(find.byType(PartTick), findsNWidgets(3));
+    expect(find.byType(TickDock).hitTestable(), findsOneWidget);
+    expect(find.byType(PartTick), findsNothing);
+    // Under the reading text, clear of the days listed beside it.
+    final dock = tester.getRect(find.byType(TickDock));
+    expect(dock.left, closeTo(tester.getTopLeft(find.byType(HeroCard).first).dx, 1));
+    expect(dock.right, lessThan(tester.getTopLeft(find.textContaining('Título día 2')).dx));
+    expect(dock.bottom, lessThanOrEqualTo(900));
     for (final part in ['reading', 'reflection', 'prayer']) {
-      await tester.ensureVisible(find.byKey(ValueKey('tick-$part')));
-      await tester.tap(find.byKey(ValueKey('tick-$part')));
+      await tester.tap(find.byKey(ValueKey('dock-$part')));
       await tester.pumpAndSettle();
     }
+    expect(find.text('Día completo · volver a Hoy'), findsOneWidget);
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getString('progress:study-1'), contains('"doneOn"'));
   });

@@ -1,6 +1,6 @@
 import 'dart:ui' show ImageFilter, lerpDouble;
 
-import 'package:flutter/foundation.dart' show listEquals;
+import 'package:flutter/foundation.dart' show kIsWeb, listEquals;
 import 'package:flutter/material.dart';
 
 import '../../../l10n/app_localizations.dart';
@@ -76,7 +76,8 @@ class TickDock extends StatelessWidget {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
           child: ColoredBox(
-            color: theme.scaffoldBackgroundColor.withValues(alpha: 0.72),
+            // The web build draws the blur weakly, so the text behind would show through a see-through bar.
+            color: theme.scaffoldBackgroundColor.withValues(alpha: kIsWeb ? 0.94 : 0.72),
             child: Padding(
               padding: const EdgeInsets.all(6),
               child: TweenAnimationBuilder<_Flexes>(
