@@ -17,12 +17,17 @@ class SelectedDate extends Notifier<String?> {
   void select(String? date) => state = date;
 }
 
-/// The day a tick has just finished, until Today plays moment A for it.
+/// The day a tick has just finished, until Today plays moment A for it. Cleared when another date is picked or Today
+/// refreshes, so a mark Today never showed can't play later.
 final justFinishedProvider = NotifierProvider<JustFinished, ({String studyId, int day})?>(JustFinished.new);
 
 class JustFinished extends Notifier<({String studyId, int day})?> {
   @override
-  ({String studyId, int day})? build() => null;
+  ({String studyId, int day})? build() {
+    ref.watch(selectedDateProvider);
+    ref.watch(todayRefreshProvider);
+    return null;
+  }
 
   void set(({String studyId, int day}) day) => state = day;
 

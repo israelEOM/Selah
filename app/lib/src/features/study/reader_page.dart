@@ -19,9 +19,36 @@ import 'study_widgets.dart';
 import 'tick_dock.dart';
 import 'translation_banner.dart';
 
+/// What the opener hands the reader as the route's `extra`: the study it already has, whether it is Today, and the
+/// past date Today was showing, if any.
+class ReaderEntry {
+  const ReaderEntry({required this.study, this.fromToday = false, this.on});
+
+  final PublicStudy study;
+  final bool fromToday;
+
+  /// The past date (`yyyy-MM-dd`) picked on Today; ticks in the reader are recorded on it.
+  final String? on;
+
+  /// The entry in a route's `extra`, which may also be a bare [PublicStudy] (from the study page) or nothing (a link).
+  static ReaderEntry? from(Object? extra) => switch (extra) {
+        final ReaderEntry entry => entry,
+        final PublicStudy study => ReaderEntry(study: study),
+        _ => null,
+      };
+}
+
 /// One devotional day, laid out for reading on a phone.
 class ReaderPage extends ConsumerWidget {
-  const ReaderPage({super.key, required this.church, required this.slug, required this.dayNumber, this.initialStudy});
+  const ReaderPage({
+    super.key,
+    required this.church,
+    required this.slug,
+    required this.dayNumber,
+    this.initialStudy,
+    this.fromToday = false,
+    this.on,
+  });
 
   final Church church;
   final String slug;
@@ -29,6 +56,12 @@ class ReaderPage extends ConsumerWidget {
 
   /// The study the opener already has; shown while [studyProvider] loads so the hero header is there on the first frame.
   final PublicStudy? initialStudy;
+
+  /// Opened from Today: "back to Today" returns to it as it was, on the date it showed.
+  final bool fromToday;
+
+  /// The past date Today was showing when it opened the reader; ticks land on it. Null ticks today.
+  final String? on;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -49,7 +82,15 @@ class ReaderPage extends ConsumerWidget {
           children: [Text(l.studyNotFound, style: text.bodyLarge)],
         );
       }
-      return _Day(church: church, study: s, original: original, language: language, day: day);
+      return _Day(
+        church: church,
+        study: s,
+        original: original,
+        language: language,
+        day: day,
+        fromToday: fromToday,
+        on: on,
+      );
     }
 
     // While the fetch runs, the study the opener passed in stands in, so the hero header is on screen for the flight.
@@ -80,9 +121,12 @@ class ReaderPage extends ConsumerWidget {
 }
 
 /// Swaps the day in place. Neglected, so on web the browser's back leaves the reader like the in-app back, instead of
-/// walking through each day read.
-void _goToDay(BuildContext context, String path, PublicStudy original) =>
-    Router.neglect(context, () => context.pushReplacement(path, extra: original));
+/// walking through each day read. A reader opened from Today stays so, but another day's ticks count today: only the
+/// day Today showed belongs to its past date.
+void _goToDay(BuildContext context, String path, PublicStudy original, {required bool fromToday}) => Router.neglect(
+      context,
+      () => context.pushReplacement(path, extra: ReaderEntry(study: original, fromToday: fromToday)),
+    );
 
 class _Day extends ConsumerStatefulWidget {
   const _Day({
@@ -91,6 +135,8 @@ class _Day extends ConsumerStatefulWidget {
     required this.original,
     required this.language,
     required this.day,
+    required this.fromToday,
+    required this.on,
   });
 
   final Church church;
@@ -98,6 +144,8 @@ class _Day extends ConsumerStatefulWidget {
   final PublicStudy original;
   final String language;
   final DevotionalDay day;
+  final bool fromToday;
+  final String? on;
 
   @override
   ConsumerState<_Day> createState() => _DayState();
@@ -148,16 +196,20 @@ class _DayState extends ConsumerState<_Day> {
         widget.day,
         part,
         ref.read(clockProvider)(),
-        on: ref.read(selectedDateProvider),
+        on: widget.on,
         announce: announce,
       );
 
-  /// Back to Today, which plays moment A for this day if it was finished here.
+  /// Back to Today, which plays moment A for this day if it was finished here. Opened from Today, it returns to Today
+  /// as it was, on the date it showed; from anywhere else it goes to Today on today.
   void _backToToday() {
+    final back = widget.fromToday && context.canPop();
+    // Picked first: changing the date clears a just-finished mark.
+    if (!back) ref.read(selectedDateProvider.notifier).select(null);
     if (_finishedHere) {
       ref.read(justFinishedProvider.notifier).set((studyId: widget.original.id, day: widget.day.number));
     }
-    if (context.canPop()) {
+    if (back) {
       context.pop();
     } else {
       context.go('/today');
@@ -303,12 +355,15 @@ class _DayState extends ConsumerState<_Day> {
         children: [
           if (day.number > 1)
             TextButton.icon(
-              onPressed: () => _goToDay(context, dayPath(day.number - 1), original),
+              onPressed: () => _goToDay(context, dayPath(day.number - 1), original, fromToday: widget.fromToday),
               icon: const Icon(Icons.arrow_back, size: 18),
               label: Text(l.previousDay),
             ),
           if (day.number < total)
-            FilledButton(onPressed: () => _goToDay(context, dayPath(day.number + 1), original), child: Text(l.nextDay)),
+            FilledButton(
+              onPressed: () => _goToDay(context, dayPath(day.number + 1), original, fromToday: widget.fromToday),
+              child: Text(l.nextDay),
+            ),
         ],
       ),
     ];
@@ -325,7 +380,7 @@ class _DayState extends ConsumerState<_Day> {
             side: _DayList(
               study: study,
               current: day.number,
-              onOpen: (n) => _goToDay(context, dayPath(n), original),
+              onOpen: (n) => _goToDay(context, dayPath(n), original, fromToday: widget.fromToday),
             ),
           ),
         ],

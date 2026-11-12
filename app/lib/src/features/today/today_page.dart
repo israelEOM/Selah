@@ -15,6 +15,7 @@ import '../../data/providers.dart';
 import '../../l10n/locale.dart';
 import '../events/events_page.dart';
 import '../home/church_picker_page.dart';
+import '../study/reader_page.dart' show ReaderEntry;
 import '../study/translation_banner.dart';
 import 'finish_moment.dart';
 import 'part_row.dart';
@@ -269,7 +270,10 @@ class _Today extends ConsumerWidget {
                           child: Align(
                             alignment: Alignment.centerLeft,
                             child: TextButton(
-                              onPressed: () => context.push(_dayPath(study, next.number), extra: original),
+                              onPressed: () => context.push(
+                                _dayPath(study, next.number),
+                                extra: ReaderEntry(study: original, fromToday: true),
+                              ),
                               child: Text(l.readNext),
                             ),
                           ),
@@ -313,7 +317,9 @@ class _Today extends ConsumerWidget {
     final progressId = original.id;
     final ticked = progress.days[day.number]?.parts ?? const <DayPart>{};
     final done = progress.isDone(day);
-    void openDay() => context.push(_dayPath(study, day.number), extra: original);
+    // The reader is told it came from Today, and which past date was shown, so its ticks and its way back match.
+    void openDay() =>
+        context.push(_dayPath(study, day.number), extra: ReaderEntry(study: original, fromToday: true, on: on));
     final parts = partsFor(day);
     return [
       Pressable(

@@ -315,14 +315,38 @@ void main() {
     expect(prefs.getString('progress:study-1'), contains('reading'));
   });
 
-  testWidgets('a tick from the bar lands on the date picked on Today', (tester) async {
-    await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/1', size: _phone);
-    final container = ProviderScope.containerOf(tester.element(find.byType(ReaderPage)));
+  testWidgets('a date picked on Today does not move ticks made in a reader opened from the study page', (tester) async {
+    final router = await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual', size: _phone);
+    final container = ProviderScope.containerOf(tester.element(find.byType(StudyPage)));
     container.read(selectedDateProvider.notifier).select('2020-01-02');
+    await tester.scrollUntilVisible(find.text('Día 1 · Título día 1'), 300);
+    await tester.tap(find.text('Día 1 · Título día 1'));
+    await tester.pumpAndSettle();
+    expect(router.state.uri.path, '/c/vida-nueva/studies/retiro-espiritual/day/1');
     await tester.tap(find.byKey(const ValueKey('dock-reading')));
     await tester.pumpAndSettle();
-    final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getString('progress:study-1'), contains('2020-01-02'));
+    final saved = (await SharedPreferences.getInstance()).getString('progress:study-1')!;
+    expect(saved, isNot(contains('2020-01-02')));
+    expect(saved, contains(localDate(DateTime.now())));
+  });
+
+  testWidgets('from the study page, the day complete pill goes to Today on today', (tester) async {
+    final router = await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual', size: _phone);
+    final container = ProviderScope.containerOf(tester.element(find.byType(StudyPage)));
+    container.read(selectedDateProvider.notifier).select('2020-01-02');
+    await tester.scrollUntilVisible(find.text('Día 1 · Título día 1'), 300);
+    await tester.tap(find.text('Día 1 · Título día 1'));
+    await tester.pumpAndSettle();
+    for (final part in ['reading', 'reflection', 'prayer']) {
+      await tester.tap(find.byKey(ValueKey('dock-$part')));
+      await tester.pumpAndSettle();
+    }
+    await tester.tap(find.text('Día completo · volver a Hoy'));
+    await tester.pumpAndSettle();
+    // Not back to the study page: on to Today, showing today, where moment A plays.
+    expect(router.state.uri.path, '/today');
+    expect(container.read(selectedDateProvider), isNull);
+    expect(container.read(justFinishedProvider), (studyId: 'study-1', day: 1));
   });
 
   testWidgets('each chip in the bar is a checkable button named for its part', (tester) async {

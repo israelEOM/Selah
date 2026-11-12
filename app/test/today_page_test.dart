@@ -16,6 +16,8 @@ import 'package:selah/src/data/providers.dart';
 import 'package:selah/src/features/study/reader_page.dart';
 import 'package:selah/src/features/today/finish_moment.dart';
 import 'package:selah/src/features/today/today_page.dart';
+import 'package:selah/src/features/today/today_refresh.dart';
+import 'package:selah/src/features/today/today_selection.dart';
 import 'package:selah/src/l10n/locale.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -294,7 +296,7 @@ void main() {
         church: _church,
         slug: s.pathParameters['slug']!,
         dayNumber: int.parse(s.pathParameters['n']!),
-        initialStudy: s.extra as PublicStudy?,
+        initialStudy: ReaderEntry.from(s.extra)?.study,
       ),
     );
     await tester.tap(find.byType(HeroCard));
@@ -513,6 +515,53 @@ void main() {
       expect(selected(tester, 2), isTrue);
       expect(find.text('Hoy'), findsWidgets);
     });
+  });
+
+  test('the just-finished mark clears when the picked date changes or Today refreshes', () {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    container.listen(justFinishedProvider, (_, _) {});
+    container.read(justFinishedProvider.notifier).set((studyId: 'study-1', day: 1));
+    container.read(selectedDateProvider.notifier).select('2026-10-26');
+    expect(container.read(justFinishedProvider), isNull);
+    container.read(justFinishedProvider.notifier).set((studyId: 'study-1', day: 1));
+    container.read(todayRefreshProvider.notifier).bump();
+    expect(container.read(justFinishedProvider), isNull);
+  });
+
+  testWidgets('a reader opened from a past date ticks that date and its pill goes back to it', (tester) async {
+    await _pump(
+      tester,
+      size: const Size(390, 844),
+      overrides: [studyProvider.overrideWith((ref, key) async => PublicStudy.fromJson(_json()))],
+      reader: (s) {
+        final entry = ReaderEntry.from(s.extra);
+        return ReaderPage(
+          church: _church,
+          slug: s.pathParameters['slug']!,
+          dayNumber: int.parse(s.pathParameters['n']!),
+          initialStudy: entry?.study,
+          fromToday: entry?.fromToday ?? false,
+          on: entry?.on,
+        );
+      },
+    );
+    await _tap(tester, find.byKey(const ValueKey('week-0')));
+    await _tap(tester, find.byType(HeroCard));
+    expect(find.byType(ReaderPage), findsOneWidget);
+    for (final part in ['reading', 'reflection', 'prayer']) {
+      await tester.tap(find.byKey(ValueKey('dock-$part')));
+      await tester.pumpAndSettle();
+    }
+    final ticks = await loadTicksByDate();
+    expect(ticks['2026-10-26']?.complete, isTrue);
+    expect(ticks['2026-10-27'], isNull);
+    await tester.tap(find.text('Día completo · volver a Hoy'));
+    await tester.pumpAndSettle();
+    // Back on Today, still on that date, where the day rests finished.
+    expect(find.byType(ReaderPage), findsNothing);
+    expect(find.text('Ayer'), findsWidgets);
+    expect(find.text('Día completo.'), findsOneWidget);
   });
 
   group('moment A', () {
