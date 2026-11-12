@@ -288,6 +288,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get regenerateAll => 'Volver a analizar todo';
 
   @override
+  String get changeImage => 'Cambiar imagen';
+
+  @override
+  String get pickImage => 'Elige una imagen';
+
+  @override
   String watchMoment(String time) {
     return 'Watch this moment ($time)';
   }
@@ -453,6 +459,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get followChurch => 'Follow';
+
+  @override
+  String get followingChurch => 'Following';
 
   @override
   String get roleOwner => 'Owner';
@@ -751,4 +760,56 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get eventsNone => 'No upcoming events.';
+
+  @override
+  String weekDaySemantics(String day, String state) {
+    return '$day, $state';
+  }
+
+  @override
+  String get weekStateToday => 'today';
+
+  @override
+  String get weekStateDone => 'done';
+
+  @override
+  String weekStateParts(int n) {
+    return '$n of 3 parts';
+  }
+
+  @override
+  String get weekStateNone => 'nothing yet';
+
+  @override
+  String get todayYesterday => 'Yesterday';
+
+  @override
+  String get finishTodayTitle => 'That\'s today.';
+
+  @override
+  String get finishTodayLine => 'Go in peace.';
+
+  @override
+  String get finishPastTitle => 'Day complete.';
+
+  @override
+  String get finishPastLine => 'Nothing lost.';
+
+  @override
+  String get pastDayNotTooLate =>
+      'Not too late. You can still finish this day.';
+
+  @override
+  String get tapToTick => 'Tap to tick';
+
+  @override
+  String get dayCompleteBackToToday => 'Day complete · back to Today';
+
+  @override
+  String dayNumber(int number) {
+    return 'Day $number';
+  }
+
+  @override
+  String get continueStudy => 'Continue';
 }

@@ -1,9 +1,14 @@
-"""Serves build/web locally, answering unknown paths with index.html so deep links work."""
+"""Serves build/web locally the way Cloudflare Pages does: the landing site at /, /pt/ and /en/, the app for every
+app address (see routes.py), the landing page for unknown addresses, and *.html redirected without the extension."""
 import http.server
 import os
 import sys
 
-ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "build", "web")
+from routes import html_redirect, resolve
+
+# The folder to serve: build/web by default, or another build given after the port (the demo uses build/demo).
+ROOT = os.path.abspath(sys.argv[2]) if len(sys.argv) > 2 else os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "..", "build", "web")
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
@@ -16,10 +21,17 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         super().end_headers()
 
     def send_head(self):
-        path = self.translate_path(self.path)
-        if not os.path.exists(path) and "." not in os.path.basename(path):
-            self.path = "/index.html"
+        # Pages redirects *.html to the address without it; do the same so local checks match production.
+        target = html_redirect(self.path)
+        if target is not None:
+            self.send_response(308)
+            self.send_header("Location", target)
+            self.end_headers()
+            return None
         return super().send_head()
+
+    def translate_path(self, path):
+        return resolve(ROOT, path)
 
 
 if __name__ == "__main__":

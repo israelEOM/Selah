@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:selah/src/app/design/art.dart';
 import 'package:selah/src/app/theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -45,6 +46,19 @@ Future<void> _pump(WidgetTester tester, {String? userId, ChurchRole? role, bool 
 }
 
 void main() {
+  testWidgets('church rows carry the church art hero tag', (tester) async {
+    await _pump(tester);
+    for (final church in [_vida, _otra]) {
+      expect(find.byWidgetPredicate((w) => w is Hero && w.tag == churchArtTag(church.id)), findsOneWidget);
+    }
+    expect(find.byWidgetPredicate((w) => w is SelahArt && w.shape == ArtShape.circle && w.width == 42), findsNWidgets(2));
+  });
+
+  testWidgets('a church the person belongs to shows a Following chip', (tester) async {
+    await _pump(tester, userId: 'user-1', role: ChurchRole.member);
+    expect(find.text('✓ Siguiendo'), findsOneWidget);
+  });
+
   testWidgets('a visitor sees the public churches', (tester) async {
     await _pump(tester);
     expect(find.text('Elige tu iglesia'), findsWidgets);

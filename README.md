@@ -19,13 +19,15 @@ cd app
 flutter run -d chrome --dart-define-from-file=config/beta.json
 ```
 
-Or build once and serve the result (deep links work, nothing is cached):
+Or build the app and the landing page together and serve the result the way Cloudflare does (the landing page at `/`, the app at `/today` and every other app address, deep links work, nothing is cached):
 
 ```sh
 cd app
-flutter build web --release --dart-define-from-file=config/beta.json
+tool/build_web.sh
 python3 tool/serve.py 3100
 ```
+
+The landing page's source is in `site/` (see `site/build.py`); which addresses belong to the app is listed once in `app/tool/routes.py`.
 
 Importing a sermon needs the worker running (see below); reading published studies does not.
 
@@ -37,7 +39,7 @@ https://selah-226.pages.dev (Cloudflare Pages project `selah`). To publish a new
 
 ```sh
 cd app
-flutter build web --release --dart-define-from-file=config/beta.json
+tool/build_web.sh
 npx --yes wrangler pages deploy build/web --project-name selah --branch main
 ```
 
@@ -123,6 +125,20 @@ The migrations and the new app must go out together: the old app does not unders
 ## Releasing church requests and the Today page
 
 Migration `202610300001_church_requests.sql` (a table and functions only) must be pushed (`npx supabase db push --linked`) before deploying this app version, because the new app calls the request functions at sign-up and from Perfil → Solicitudes de iglesias. The old app keeps working against the new schema.
+
+## Releasing illustrations
+
+The app now reads an `art_key` on studies and days, and the worker writes one, so migration `202611110001_art_keys.sql` must be applied before either runs. Until it is, Today, Studies, the study page, the reader, the admin list and the summary and devotional jobs all fail. In order:
+
+1. Stop the worker (Ctrl+C), so no job writes an `art_key` the database can't hold yet.
+2. `npx supabase db push --linked` (Node 20+). It applies `202611110001_art_keys.sql`.
+3. Restart the worker from this commit: `cd worker && .venv/bin/python -m selah_worker run`. It reads `app/assets/art/manifest.json` once and caches it, so any later change to the manifest needs a restart too.
+4. Build and deploy the web app (see "Live app"), and ship the new iOS and Android builds.
+
+Adding pictures later:
+
+- Add new keys to the manifest in an app release first, and only then restart the worker so it can pick them. An installed app that doesn't know a key falls back to its deterministic pick from the study's id, so nothing breaks, but the chosen picture only shows once the app has it.
+- Never rename or remove a key: studies already published keep the key they were given.
 
 ## Church calendars
 

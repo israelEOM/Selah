@@ -49,6 +49,19 @@ void main() {
     expect(localized.sermon.videoId, 'Bflib6PHb68');
   });
 
+  test('a translated study keeps the original study and day art keys', () {
+    final json = _studyJson()
+      ..['art_key'] = 'vine-grapes'
+      ..['devotional_days'] = [
+        {'day_number': 1, 'title': 'Día uno', 'art_key': 'oil-lamp', 'questions': <String>[]},
+      ];
+    final localized = PublicStudy.fromJson(json).localizedTo('en');
+    expect(localized.translatedFrom, 'es');
+    expect(localized.artKey, 'vine-grapes');
+    expect(localized.days.firstWhere((d) => d.number == 1).artKey, 'oil-lamp');
+    expect(localized.days.firstWhere((d) => d.number == 2).artKey, isNull);
+  });
+
   test('localizedTo the original language returns the original', () {
     final study = PublicStudy.fromJson(_studyJson());
     expect(identical(study.localizedTo('es'), study), isTrue);
@@ -68,6 +81,20 @@ void main() {
     final study = PublicStudy.fromJson(json);
     expect(study.outputLanguage, 'es');
     expect(study.translations, isEmpty);
+  });
+
+  test('StudyCard.localizedTo keeps the art key', () {
+    final card = StudyCard.fromJson({
+      'id': '1',
+      'slug': 's',
+      'title': 'Título',
+      'number_of_days': 3,
+      'art_key': 'dove',
+      'study_translations': [
+        {'language': 'en', 'title': 'Title'},
+      ],
+    });
+    expect(card.localizedTo('en').artKey, 'dove');
   });
 
   test('StudyCard.localizedTo swaps the title', () {

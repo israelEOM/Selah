@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../app/theme.dart';
+import '../../data/progress.dart';
+import '../today/part_style.dart';
 
 /// A gold text link that opens outside the app (YouTube, the Bible reader).
 class ExternalLink extends StatelessWidget {
@@ -23,26 +25,39 @@ class ExternalLink extends StatelessWidget {
   );
 }
 
-/// A labelled block of reading text.
+/// A labelled block of reading text. With a [part], a 3px rule in that part's colour runs down its left and the
+/// label takes the same colour.
 class ReadingSection extends StatelessWidget {
-  const ReadingSection({super.key, required this.label, required this.child, this.tick});
+  const ReadingSection({super.key, required this.label, required this.child, this.part});
 
   final String label;
   final Widget child;
 
-  /// A tick for the part this section belongs to, shown beside the label.
-  final Widget? tick;
+  /// The part of the day this section belongs to.
+  final DayPart? part;
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(top: Space.xxl),
-    child: Column(
+  Widget build(BuildContext context) {
+    final tone = part == null ? null : partTone(context, part!);
+    final color = tone?.color;
+    // The rule takes the part's colour; the small label its darker text colour, to stay legible.
+    final eyebrow = tone == null
+        ? Eyebrow(label)
+        : Text(label.toUpperCase(), style: Theme.of(context).textTheme.labelSmall?.copyWith(color: tone.text));
+    Widget body = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (tick == null) Eyebrow(label) else Row(children: [Expanded(child: Eyebrow(label)), tick!]),
+        eyebrow,
         const SizedBox(height: Space.m),
         child,
       ],
-    ),
-  );
+    );
+    if (color != null) {
+      body = DecoratedBox(
+        decoration: BoxDecoration(border: Border(left: BorderSide(color: color, width: 3))),
+        child: Padding(padding: const EdgeInsets.only(left: Space.l), child: body),
+      );
+    }
+    return Padding(padding: const EdgeInsets.only(top: Space.xxl), child: body);
+  }
 }

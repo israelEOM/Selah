@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../../app/design/art.dart';
 import '../../app/theme.dart';
 import '../../core/models.dart';
 import '../../data/providers.dart';
@@ -33,6 +36,7 @@ class _JoinPageState extends ConsumerState<JoinPage> {
     try {
       final slug = await ref.read(repositoryProvider).acceptInvite(widget.token);
       ref.invalidate(myChurchesProvider);
+      unawaited(SelahHaptics.success());
       if (mounted) context.go(info.role.canEdit ? '/c/$slug/admin' : '/c/$slug');
     } catch (e) {
       if (mounted) {
@@ -82,6 +86,10 @@ class _JoinPageState extends ConsumerState<JoinPage> {
         body = const SkeletonList(rows: 2);
       } else {
         body = Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Center(
+            child: SelahArt(artKey: 'scene-invite', fixed: true, seed: 'invite', shape: ArtShape.circle, width: 120, height: 120),
+          ),
+          const SizedBox(height: 24),
           Text(l.joinChurchAs(invite.churchName, roleLabel(l, invite.role)), style: text.headlineMedium),
           const SizedBox(height: 24),
           FilledButton(

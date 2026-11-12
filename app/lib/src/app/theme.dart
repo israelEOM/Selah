@@ -1,20 +1,29 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import 'design/tokens.dart';
 import 'design/transitions.dart';
 
 export 'design/adaptive_controls.dart';
+export 'design/breakpoints.dart';
+export 'design/content_switcher.dart';
 export 'design/haptics.dart';
 export 'design/hero_card.dart';
 export 'design/navigation.dart';
 export 'design/platform.dart';
 export 'design/pressable.dart';
+export 'design/responsive.dart';
+export 'design/scene.dart';
 export 'design/selah_row.dart';
+export 'design/site_header.dart';
 export 'design/selah_page.dart';
 export 'design/skeleton.dart';
 export 'design/tokens.dart';
 
+/// Georgia, as the app has always used, on Apple devices. The web and Android have no Georgia, so they fall back to the
+/// bundled Source Serif 4 rather than a sans serif.
 const _serif = 'Georgia';
-const _serifFallback = ['Times New Roman', 'serif'];
+const _serifFallback = ['Source Serif 4', 'serif'];
 
 /// Colors beyond [ColorScheme] that the Today page and rows need.
 @immutable
@@ -75,7 +84,59 @@ extension SelahThemeX on BuildContext {
   SelahTones get tones => Theme.of(this).extension<SelahTones>()!;
 }
 
-/// Georgia for the hero quote.
+/// One part's colour: [color] for marks and fills, [text] for small labels in the part's colour, [tint] for a quiet
+/// background, [soft] for an unfilled track.
+@immutable
+class PartTone {
+  const PartTone({required this.color, required this.text, required this.tint, required this.soft});
+
+  final Color color;
+
+  /// [color], darkened where needed so small text reaches 4.5:1 on the page and on [tint].
+  final Color text;
+  final Color tint;
+  final Color soft;
+
+  static PartTone lerp(PartTone a, PartTone b, double t) => PartTone(
+    color: Color.lerp(a.color, b.color, t)!,
+    text: Color.lerp(a.text, b.text, t)!,
+    tint: Color.lerp(a.tint, b.tint, t)!,
+    soft: Color.lerp(a.soft, b.soft, t)!,
+  );
+}
+
+/// The colours of the three parts of a day. They mark those parts and nothing else.
+@immutable
+class PartPalette extends ThemeExtension<PartPalette> {
+  const PartPalette({required this.reading, required this.reflection, required this.prayer});
+
+  final PartTone reading;
+  final PartTone reflection;
+  final PartTone prayer;
+
+  @override
+  PartPalette copyWith({PartTone? reading, PartTone? reflection, PartTone? prayer}) => PartPalette(
+    reading: reading ?? this.reading,
+    reflection: reflection ?? this.reflection,
+    prayer: prayer ?? this.prayer,
+  );
+
+  @override
+  PartPalette lerp(ThemeExtension<PartPalette>? other, double t) {
+    if (other is! PartPalette) return this;
+    return PartPalette(
+      reading: PartTone.lerp(reading, other.reading, t),
+      reflection: PartTone.lerp(reflection, other.reflection, t),
+      prayer: PartTone.lerp(prayer, other.prayer, t),
+    );
+  }
+}
+
+extension PartPaletteX on BuildContext {
+  PartPalette get partPalette => Theme.of(this).extension<PartPalette>()!;
+}
+
+/// The serif, in italic, for the hero quote.
 TextStyle serifQuote(BuildContext context) => TextStyle(
   fontFamily: _serif,
   fontFamilyFallback: _serifFallback,
@@ -85,7 +146,7 @@ TextStyle serifQuote(BuildContext context) => TextStyle(
   color: Theme.of(context).colorScheme.onSurface,
 );
 
-/// Georgia for long reading text (reflection, application, prayer).
+/// The serif for long reading text (reflection, application, prayer).
 TextStyle serifReading(BuildContext context) => TextStyle(
   fontFamily: _serif,
   fontFamilyFallback: _serifFallback,
@@ -102,6 +163,7 @@ class _Palette {
     required this.primary,
     required this.onPrimary,
     required this.tones,
+    required this.parts,
   });
 
   final Brightness brightness;
@@ -110,48 +172,62 @@ class _Palette {
   final Color primary;
   final Color onPrimary;
   final SelahTones tones;
+  final PartPalette parts;
 }
 
 const _light = _Palette(
   brightness: Brightness.light,
-  background: Color(0xFFFFFFFF),
-  text: Color(0xFF0E2341),
-  primary: Color(0xFF2E4A38),
-  onPrimary: Color(0xFFFFFFFF),
+  background: Color(0xFFFAF7F2),
+  text: Color(0xFF262320),
+  primary: Color(0xFF2F5D4A),
+  onPrimary: Color(0xFFFAF7F2),
   tones: SelahTones(
-    surface: Color(0xFFEDEFF3),
-    muted: Color(0xFF697380),
-    accent: Color(0xFFF15A24),
-    done: Color(0xFF2E4A38),
-    today: Color(0xFFF15A24),
-    heroStart: Color(0xFF2E4A38),
-    heroEnd: Color(0xFF1D3326),
+    surface: Color(0xFFF1EBE1),
+    muted: Color(0xFF6F655A),
+    accent: Color(0xFFA65033),
+    done: Color(0xFF2F5D4A),
+    today: Color(0xFFA65033),
+    heroStart: Color(0xFF2F5D4A),
+    heroEnd: Color(0xFF244A3B),
+  ),
+  parts: PartPalette(
+    reading: PartTone(color: Color(0xFF2F5D4A), text: Color(0xFF2F5D4A), tint: Color(0xFFE6EEE8), soft: Color(0xFFD3E2D8)),
+    reflection: PartTone(color: Color(0xFFB8732E), text: Color(0xFF8F561F), tint: Color(0xFFF5EBDD), soft: Color(0xFFEEDCC2)),
+    prayer: PartTone(color: Color(0xFF5E6A9C), text: Color(0xFF545F90), tint: Color(0xFFE8E9F2), soft: Color(0xFFD7DAEA)),
   ),
 );
 
 const _dark = _Palette(
   brightness: Brightness.dark,
-  background: Color(0xFF0B0B0C),
-  text: Color(0xFFF2F2F2),
-  primary: Color(0xFF5BC49A),
-  onPrimary: Color(0xFF0B0B0C),
+  background: Color(0xFF1E1C1A),
+  text: Color(0xFFEDE8E1),
+  primary: Color(0xFFA9CDB8),
+  onPrimary: Color(0xFF1E1C1A),
   tones: SelahTones(
-    surface: Color(0xFF1A1A1C),
-    muted: Color(0xFF8B8B90),
-    accent: Color(0xFF5BC49A),
-    done: Color(0xFFC9A46A),
-    today: Color(0xFFF2F2F2),
-    heroStart: Color(0xFF5A4630),
-    heroEnd: Color(0xFF2A2016),
+    surface: Color(0xFF272421),
+    muted: Color(0xFFA39B91),
+    accent: Color(0xFFE0906E),
+    done: Color(0xFFA9CDB8),
+    today: Color(0xFFE0906E),
+    heroStart: Color(0xFF26332C),
+    heroEnd: Color(0xFF1F2A24),
+  ),
+  parts: PartPalette(
+    reading: PartTone(color: Color(0xFFA9CDB8), text: Color(0xFFA9CDB8), tint: Color(0xFF27332C), soft: Color(0xFF33443A)),
+    reflection: PartTone(color: Color(0xFFE2B27A), text: Color(0xFFE2B27A), tint: Color(0xFF392F23), soft: Color(0xFF4A3C2A)),
+    prayer: PartTone(color: Color(0xFFB4BDEB), text: Color(0xFFB4BDEB), tint: Color(0xFF2B2F42), soft: Color(0xFF393E58)),
   ),
 );
 
+/// Headings are set in the serif.
 TextStyle _heading(double size, Color color, {double height = 1.15}) =>
     TextStyle(
+      fontFamily: _serif,
+      fontFamilyFallback: _serifFallback,
       fontSize: size,
       height: height,
-      fontWeight: FontWeight.w700,
-      letterSpacing: -0.5,
+      fontWeight: FontWeight.w600,
+      letterSpacing: -0.3,
       color: color,
     );
 
@@ -166,31 +242,59 @@ ThemeData _build(_Palette p) {
         secondary: p.tones.accent,
         surface: p.background,
         onSurface: p.text,
+        // Every container steps from the page toward the raised surface, so none picks up the seed's green-gray.
+        surfaceContainerLowest: p.background,
+        surfaceContainerLow: Color.lerp(p.background, p.tones.surface, 0.25),
+        surfaceContainer: Color.lerp(p.background, p.tones.surface, 0.5),
+        surfaceContainerHigh: Color.lerp(p.background, p.tones.surface, 0.75),
         surfaceContainerHighest: p.tones.surface,
+        outline: p.tones.muted,
+        outlineVariant: p.tones.muted.withValues(alpha: 0.3),
+        inverseSurface: p.text,
+        onInverseSurface: p.background,
       );
   return ThemeData(
     brightness: p.brightness,
     colorScheme: scheme,
     scaffoldBackgroundColor: p.background,
-    extensions: [p.tones],
+    extensions: [p.tones, p.parts],
     pageTransitionsTheme: selahPageTransitions(),
     textTheme: TextTheme(
-      displaySmall: _heading(40, p.text),
+      displaySmall: _heading(40, p.text, height: 1.1),
       headlineMedium: _heading(30, p.text),
       headlineSmall: _heading(24, p.text, height: 1.25),
       titleLarge: _heading(20, p.text, height: 1.3),
-      bodyLarge: TextStyle(fontSize: 17, height: 1.6, color: p.text),
-      bodyMedium: TextStyle(
-        fontSize: 15,
-        height: 1.55,
-        color: p.text.withValues(alpha: 0.75),
-      ),
+      titleMedium: TextStyle(fontSize: 17, height: 1.35, fontWeight: FontWeight.w600, color: p.text),
+      bodyLarge: TextStyle(fontSize: 17, height: 1.55, color: p.text),
+      bodyMedium: TextStyle(fontSize: 15, height: 1.5, color: p.tones.muted),
+      bodySmall: TextStyle(fontSize: 13, height: 1.45, color: p.tones.muted),
+      labelLarge: TextStyle(fontSize: 15, height: 1.2, fontWeight: FontWeight.w600, color: p.text),
+      labelMedium: TextStyle(fontSize: 12, height: 1.3, fontWeight: FontWeight.w600, color: p.text),
       labelSmall: TextStyle(
         fontSize: 11,
         fontWeight: FontWeight.w700,
-        letterSpacing: 2,
-        color: p.primary,
+        letterSpacing: 1.5,
+        color: p.tones.accent,
       ),
+    ),
+    // iOS large and slim titles come from the Cupertino theme, not the Material text theme.
+    cupertinoOverrideTheme: CupertinoThemeData(
+      brightness: p.brightness,
+      primaryColor: p.primary,
+      textTheme: CupertinoTextThemeData(
+        primaryColor: p.primary,
+        navLargeTitleTextStyle: _heading(34, p.text, height: 1.15),
+        navTitleTextStyle: _heading(17, p.text, height: 1.3),
+      ),
+    ),
+    navigationBarTheme: NavigationBarThemeData(
+      backgroundColor: p.tones.surface,
+      surfaceTintColor: Colors.transparent,
+      indicatorColor: p.primary.withValues(alpha: 0.16),
+    ),
+    navigationRailTheme: NavigationRailThemeData(
+      backgroundColor: p.background,
+      indicatorColor: p.primary.withValues(alpha: 0.16),
     ),
     appBarTheme: AppBarTheme(
       backgroundColor: p.background,
@@ -203,7 +307,7 @@ ThemeData _build(_Palette p) {
       color: p.tones.surface,
       elevation: 0,
       margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.row)),
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
@@ -214,19 +318,26 @@ ThemeData _build(_Palette p) {
         textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
       ),
     ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: p.primary,
+        side: BorderSide(color: p.primary),
+        shape: const StadiumBorder(),
+      ),
+    ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: p.tones.surface,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(Radii.control),
         borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(Radii.control),
         borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(Radii.control),
         borderSide: BorderSide(color: p.primary, width: 1.5),
       ),
     ),
@@ -265,7 +376,7 @@ class PageBody extends StatelessWidget {
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: maxWidth),
         child: ListView(
-          padding: EdgeInsets.fromLTRB(20, 16, 20, 40 + MediaQuery.paddingOf(context).bottom),
+          padding: EdgeInsets.fromLTRB(20, 16, 20, Layout.bottomGap + MediaQuery.paddingOf(context).bottom),
           children: children,
         ),
       ),

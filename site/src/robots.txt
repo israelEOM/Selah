@@ -1,0 +1,16 @@
+# The landing pages are for search; the app's pages are drawn in the browser and add nothing.
+User-agent: *
+Allow: /
+Disallow: /today
+Disallow: /app
+Disallow: /c/
+Disallow: /login
+Disallow: /welcome
+Disallow: /join/
+Disallow: /profile
+Disallow: /churches
+Disallow: /admin
+Disallow: /requests
+Disallow: /studies/
+
+Sitemap: https://selah-226.pages.dev/sitemap.xml

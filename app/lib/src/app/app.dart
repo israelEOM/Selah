@@ -25,6 +25,7 @@ import '../features/today/today_page.dart';
 import '../features/welcome/welcome_page.dart';
 import '../l10n/locale.dart';
 import 'design/adaptive_tab_bar.dart';
+import 'design/site_frame.dart';
 import 'shell.dart';
 import 'theme.dart';
 import 'theme_mode.dart';
@@ -69,6 +70,9 @@ GoRouter createRouter({String initialLocation = '/'}) {
   return GoRouter(
       navigatorKey: rootNavigatorKey,
       initialLocation: initialLocation,
+      // Today lives at /today so the website's root can hold the landing page. Everything that still goes to `/`
+      // (the native apps' start, in-app links) lands on Today.
+      redirect: (_, state) => state.uri.path == '/' ? Uri(path: '/today', query: state.uri.query.isEmpty ? null : state.uri.query).toString() : null,
       // Hides the native glass bar while a page opens above the tabs.
       observers: [CNTabBarRouteObserver()],
       routes: [
@@ -81,7 +85,7 @@ GoRouter createRouter({String initialLocation = '/'}) {
             child: SelahShell(navigationShell: navigationShell),
           ),
           branches: [
-            StatefulShellBranch(routes: [_page(path: '/', builder: (_, _) => const TodayPage())]),
+            StatefulShellBranch(routes: [_page(path: '/today', builder: (_, _) => const TodayPage())]),
             StatefulShellBranch(
               // go_router wants a location it can open on its own. Estudios never uses it: the tab goes to a real
               // church first and never calls goBranch with initialLocation (see SelahShell), so this placeholder
@@ -108,18 +112,27 @@ GoRouter createRouter({String initialLocation = '/'}) {
         _page(
           path: '/c/:church/studies/:slug',
           parentNavigatorKey: rootNavigatorKey,
-          builder: (_, state) => _inChurch(state, (church) => StudyPage(church: church, slug: state.pathParameters['slug']!)),
+          builder: (_, state) => SiteFrame(
+            child: _inChurch(state, (church) => StudyPage(church: church, slug: state.pathParameters['slug']!)),
+          ),
         ),
         _page(
           path: '/c/:church/studies/:slug/day/:number',
           parentNavigatorKey: rootNavigatorKey,
-          builder: (_, state) => _inChurch(
-            state,
-            (church) => ReaderPage(
-              church: church,
-              slug: state.pathParameters['slug']!,
-              dayNumber: int.tryParse(state.pathParameters['number']!) ?? 0,
-              initialStudy: state.extra is PublicStudy ? state.extra as PublicStudy : null,
+          builder: (_, state) => SiteFrame(
+            child: _inChurch(
+              state,
+              (church) {
+                final entry = ReaderEntry.from(state.extra);
+                return ReaderPage(
+                  church: church,
+                  slug: state.pathParameters['slug']!,
+                  dayNumber: int.tryParse(state.pathParameters['number']!) ?? 0,
+                  initialStudy: entry?.study,
+                  fromToday: entry?.fromToday ?? false,
+                  on: entry?.on,
+                );
+              },
             ),
           ),
         ),
@@ -179,6 +192,8 @@ class SelahApp extends ConsumerWidget {
         theme: selahLightTheme(),
         darkTheme: selahDarkTheme(),
         themeMode: ref.watch(themeModeProvider),
+        // Switching theme crossfades the colours.
+        themeAnimationDuration: Motion.medium,
         routerConfig: _router,
         locale: ref.watch(appLocaleProvider),
         localizationsDelegates: AppLocalizations.localizationsDelegates,

@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -10,7 +11,10 @@ import 'package:selah/src/app/theme_mode.dart';
 import 'package:selah/src/core/models.dart';
 import 'package:selah/src/data/current_church.dart';
 import 'package:selah/src/data/providers.dart';
+import 'package:selah/src/features/home/language_menu.dart';
 import 'package:selah/src/features/profile/profile_page.dart';
+import 'package:selah/src/l10n/locale.dart';
+import 'package:selah/src/app/design/art.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const _vida = Church(id: 'A', slug: 'vida-nueva', name: 'Iglesia Vida Nueva');
@@ -22,7 +26,15 @@ Future<void> _pump(
   bool platformAdmin = false,
   List<Membership>? mine,
   ChurchRequest? request,
+  String? name,
+  Size? size,
+  TargetPlatform? platform,
 }) async {
+  if (size != null) {
+    tester.view.physicalSize = size;
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+  }
   SharedPreferences.setMockInitialValues({});
   final router = GoRouter(initialLocation: '/profile', routes: [
     GoRoute(path: '/profile', builder: (_, _) => const ProfilePage()),
@@ -35,6 +47,7 @@ Future<void> _pump(
   await tester.pumpWidget(ProviderScope(
     overrides: [
       userIdProvider.overrideWith((ref) => Stream.value(userId)),
+      userNameProvider.overrideWith((ref) => name),
       currentChurchProvider.overrideWith((ref) async => _vida),
       churchRoleProvider('A').overrideWith((ref) async => role),
       isPlatformAdminProvider.overrideWith((ref) async => platformAdmin),
@@ -42,7 +55,7 @@ Future<void> _pump(
       if (request != null) myChurchRequestProvider.overrideWith((ref) async => request),
     ],
     child: MaterialApp.router(
-      theme: selahLightTheme(),
+      theme: selahLightTheme().copyWith(platform: platform),
       routerConfig: router,
       locale: const Locale('es'),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -54,6 +67,7 @@ Future<void> _pump(
 
 Future<void> _tap(WidgetTester tester, String text) async {
   await tester.ensureVisible(find.text(text));
+  await tester.pumpAndSettle();
   await tester.tap(find.text(text));
   await tester.pumpAndSettle();
 }
@@ -165,5 +179,56 @@ void main() {
     } finally {
       debugDefaultTargetPlatformOverride = null;
     }
+  });
+
+  testWidgets('Perfil is a narrow column on desktop', (tester) async {
+    await _pump(tester, size: const Size(1280, 900), platform: TargetPlatform.android);
+    expect(tester.getSize(find.ancestor(of: find.text('Iglesia Vida Nueva'), matching: find.byType(Card)).first).width,
+        lessThanOrEqualTo(640));
+  });
+
+  testWidgets('Perfil on desktop still offers the language picker', (tester) async {
+    await _pump(tester, size: const Size(1280, 900), platform: TargetPlatform.android);
+    expect(find.byType(AdaptiveSegmented<String>), findsOneWidget);
+    expect(find.text(languageNames['pt']!), findsOneWidget);
+  });
+
+  testWidgets('switching language plays a selection haptic', (tester) async {
+    final calls = <String>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+      if (call.method == 'HapticFeedback.vibrate') calls.add(call.arguments as String);
+      return null;
+    });
+    addTearDown(() => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, null));
+    await _pump(tester);
+    await _tap(tester, 'English');
+    expect(calls, contains('HapticFeedbackType.selectionClick'));
+    final container = ProviderScope.containerOf(tester.element(find.byType(ProfilePage)));
+    expect(container.read(appLocaleProvider).languageCode, 'en');
+  });
+
+  testWidgets('switching theme plays a selection haptic', (tester) async {
+    final calls = <String>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+      if (call.method == 'HapticFeedback.vibrate') calls.add(call.arguments as String);
+      return null;
+    });
+    addTearDown(() => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, null));
+    await _pump(tester);
+    await _tap(tester, 'Oscuro');
+    expect(calls, contains('HapticFeedbackType.selectionClick'));
+  });
+
+  testWidgets('a signed-in person sees an avatar with their initial on their art', (tester) async {
+    await _pump(tester, userId: 'u', role: ChurchRole.member, name: 'Israel');
+    final avatar = find.byWidgetPredicate((w) => w is SelahArt && w.seed == 'u' && w.shape == ArtShape.circle);
+    expect(avatar, findsOneWidget);
+    expect(find.text('I'), findsOneWidget);
+    expect(find.text('Israel'), findsOneWidget);
+  });
+
+  testWidgets('the church row shows round church art', (tester) async {
+    await _pump(tester);
+    expect(find.byWidgetPredicate((w) => w is SelahArt && w.seed == 'A' && w.shape == ArtShape.circle), findsOneWidget);
   });
 }

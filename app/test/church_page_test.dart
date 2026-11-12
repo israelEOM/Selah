@@ -11,6 +11,8 @@ import 'package:selah/src/core/models.dart';
 import 'package:selah/src/data/providers.dart';
 import 'package:selah/src/data/repository.dart';
 import 'package:selah/src/features/church/church_page.dart';
+import 'package:selah/src/app/design/art.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 const _church = Church(id: 'A', slug: 'vida-nueva', name: 'Iglesia Vida Nueva');
 
@@ -29,7 +31,21 @@ class _FakeRepository implements SelahRepository {
 }
 
 Future<_FakeRepository> _pump(WidgetTester tester,
-    {String? userId, ChurchRole? role, bool failJoin = false, bool roleLoading = false, bool studiesLoading = false}) async {
+    {String? userId,
+    ChurchRole? role,
+    bool failJoin = false,
+    bool roleLoading = false,
+    bool studiesLoading = false,
+    List<StudyCard>? studies,
+    Size? size,
+    TargetPlatform? platform,
+    Map<String, Object> prefs = const {}}) async {
+  SharedPreferences.setMockInitialValues(prefs);
+  if (size != null) {
+    tester.view.physicalSize = size;
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+  }
   final fake = _FakeRepository()..failJoin = failJoin;
   final router = GoRouter(initialLocation: '/c/vida-nueva', routes: [
     GoRoute(path: '/c/vida-nueva', builder: (_, _) => const ChurchPage(church: _church)),
@@ -45,12 +61,13 @@ Future<_FakeRepository> _pump(WidgetTester tester,
       churchRoleProvider('A').overrideWith((ref) => roleLoading ? Completer<ChurchRole?>().future : Future.value(role)),
       publishedStudiesProvider('A').overrideWith((ref) => studiesLoading
           ? Completer<List<StudyCard>>().future
-          : Future.value(const [
-              StudyCard(id: '1', slug: 'retiro-espiritual', title: 'La necesidad del retiro espiritual', numberOfDays: 3),
-            ])),
+          : Future.value(studies ??
+              const [
+                StudyCard(id: '1', slug: 'retiro-espiritual', title: 'La necesidad del retiro espiritual', numberOfDays: 3),
+              ])),
     ],
     child: MaterialApp.router(
-      theme: selahLightTheme(),
+      theme: selahLightTheme().copyWith(platform: platform),
       routerConfig: router,
       locale: const Locale('es'),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -127,5 +144,110 @@ void main() {
     } finally {
       debugDefaultTargetPlatformOverride = null;
     }
+  });
+
+  const fourStudies = [
+    StudyCard(id: '1', slug: 's1', title: 'Estudio uno', numberOfDays: 3),
+    StudyCard(id: '2', slug: 's2', title: 'Estudio dos', numberOfDays: 3),
+    StudyCard(id: '3', slug: 's3', title: 'Estudio tres', numberOfDays: 3),
+    StudyCard(id: '4', slug: 's4', title: 'Estudio cuatro', numberOfDays: 3),
+  ];
+  double top(WidgetTester tester, String title) => tester.getTopLeft(find.text(title)).dy;
+
+  testWidgets('recent studies sit in a grid on desktop', (tester) async {
+    await _pump(tester, studies: fourStudies, size: const Size(1280, 900), platform: TargetPlatform.android);
+    expect(top(tester, 'Estudio tres'), top(tester, 'Estudio dos'));
+    expect(top(tester, 'Estudio cuatro'), top(tester, 'Estudio dos'));
+  });
+
+  testWidgets('one study on desktop is not stretched across the page', (tester) async {
+    await _pump(
+      tester,
+      studies: const [StudyCard(id: '1', slug: 's1', title: 'Estudio uno', numberOfDays: 3, thumbnailUrl: 'https://example.com/t.jpg')],
+      size: const Size(1280, 900),
+      platform: TargetPlatform.android,
+    );
+    final card = tester.getSize(find.ancestor(of: find.text('Estudio uno'), matching: find.byType(Pressable)).first);
+    expect(card.width, lessThanOrEqualTo(1200));
+    expect(tester.getSize(find.byType(AspectRatio).first).width, lessThanOrEqualTo(card.width * 0.55));
+  });
+
+  testWidgets('recent studies stay a list on a phone', (tester) async {
+    await _pump(tester, studies: fourStudies, size: const Size(390, 844), platform: TargetPlatform.android);
+    await tester.scrollUntilVisible(find.text('Estudio cuatro'), 200, scrollable: find.byType(Scrollable).first);
+    expect(top(tester, 'Estudio tres'), greaterThan(top(tester, 'Estudio dos')));
+  });
+
+  testWidgets('on a tablet the church intro uses the full column', (tester) async {
+    await _pump(tester, size: const Size(900, 1200), platform: TargetPlatform.android);
+    final caps = tester.widgetList<ConstrainedBox>(find.byType(ConstrainedBox))
+        .where((b) => b.constraints.maxWidth == Layout.readingMeasure);
+    expect(caps, isEmpty);
+  });
+
+  testWidgets('the featured study shows its art and day progress', (tester) async {
+    await _pump(
+      tester,
+      studies: fourStudies,
+      size: const Size(390, 844),
+      platform: TargetPlatform.android,
+      prefs: {'progress:1': '{"1":{"parts":["reading","reflection","prayer"],"doneOn":"2026-11-10"}}'},
+    );
+    final art = tester.widget<SelahArt>(find.byWidgetPredicate((w) => w is SelahArt && w.heroTag == studyArtTag('1')));
+    expect(art.height, 130);
+    expect(find.text('DEVOCIONAL DE LA SEMANA'), findsOneWidget);
+    expect(find.text('Devocional de 3 días · Día 2 de 3'), findsOneWidget);
+    final bar = tester.widget<LinearProgressIndicator>(find.byType(LinearProgressIndicator));
+    expect(bar.value, closeTo(1 / 3, 0.001));
+    await tester.tap(find.text('Continuar'));
+    await tester.pumpAndSettle();
+    expect(find.text('STUDY s1'), findsOneWidget);
+  });
+
+  testWidgets('study rows share the art hero tag with the study page', (tester) async {
+    await _pump(tester, studies: fourStudies, size: const Size(390, 844), platform: TargetPlatform.android);
+    for (final id in ['2', '3']) {
+      final art = find.byWidgetPredicate((w) => w is SelahArt && w.heroTag == studyArtTag(id));
+      await tester.scrollUntilVisible(art, 200, scrollable: find.byType(Scrollable).first);
+      expect(art, findsOneWidget);
+      expect(tester.getSize(art), const Size(52, 52));
+    }
+  });
+
+  testWidgets('the featured study arrives when the studies are already loaded', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final container = ProviderContainer(overrides: [
+      repositoryProvider.overrideWithValue(_FakeRepository()),
+      userIdProvider.overrideWith((ref) => Stream.value(null)),
+      myChurchesProvider.overrideWith((ref) async => const []),
+      churchRoleProvider('A').overrideWith((ref) async => null),
+      publishedStudiesProvider('A').overrideWith((ref) async => const [
+            StudyCard(id: '1', slug: 'retiro-espiritual', title: 'La necesidad del retiro espiritual', numberOfDays: 3),
+          ]),
+    ]);
+    addTearDown(container.dispose);
+    // Cached before the page opens, as when coming back to it.
+    final keep = container.listen(publishedStudiesProvider('A'), (_, _) {});
+    addTearDown(keep.close);
+    await container.read(publishedStudiesProvider('A').future);
+    await tester.pumpWidget(UncontrolledProviderScope(
+      container: container,
+      child: MaterialApp(
+        theme: selahLightTheme(),
+        locale: const Locale('es'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const ChurchPage(church: _church),
+      ),
+    ));
+    final title = find.text('La necesidad del retiro espiritual');
+    expect(title, findsOneWidget, reason: 'shown on the first frame, with no skeleton');
+    final entrance = find.ancestor(of: title, matching: find.byType(Entrance));
+    expect(entrance, findsOneWidget);
+    double opacity() =>
+        tester.widget<FadeTransition>(find.descendant(of: entrance, matching: find.byType(FadeTransition)).first).opacity.value;
+    expect(opacity(), lessThan(1));
+    await tester.pumpAndSettle();
+    expect(opacity(), 1);
   });
 }

@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="${lang}">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script>${redirect_script}</script>
+    <title>${title}</title>
+    <meta name="description" content="${description}">
+    <link rel="canonical" href="${canonical}">
+    <link rel="icon" href="/site/img/favicon.png" type="image/png">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Selah">
+    <meta property="og:title" content="${title}">
+    <meta property="og:description" content="${description}">
+    <meta property="og:image" content="${og_image}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:url" content="${canonical}">
+    <meta property="og:locale" content="${og_locale}">
+    <meta name="twitter:card" content="summary_large_image">
+    ${alternates}
+    <link rel="preload" href="/site/fonts/InterVariable-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="/site/styles.css">
+  </head>
+  <body>
+    <header class="top">
+      <div class="wrap top-inner">
+        <a class="wordmark" href="${home}">Selah</a>
+        <a class="pill pill-ghost pill-small" href="/today">${open_app}</a>
+      </div>
+    </header>
+
+    <main>
+      <!-- Full-bleed opening at blue hour: someone alone with the Word, the conviction and its verse set over the photo. -->
+      <section class="hero">
+        ${hero_media}
+        <div class="hero-shade" aria-hidden="true"></div>
+        <div class="wrap hero-inner">
+          <h1>${hero_heading}</h1>
+          <blockquote class="verse">
+            <p>“${verse_text}”</p>
+            <cite>${verse_cite}</cite>
+          </blockquote>
+          <p class="lede">${hero_lede}</p>
+          <p class="actions">
+            <a class="pill pill-primary" href="/churches">${cta_start}</a>
+            <a class="pill pill-ghost" href="/today">${open_app}</a>
+          </p>
+        </div>
+      </section>
+
+      <!-- How it works follows the week: three steps on graphite cards, numbered, no icons. -->
+      <section class="section how" aria-labelledby="how-heading">
+        <div class="wrap">
+          <h2 id="how-heading">${how_heading}</h2>
+          <ol class="steps">
+            <li class="card"><span class="step-number" aria-hidden="true">01</span><h3>${step1_when}</h3><p>${step1_text}</p></li>
+            <li class="card"><span class="step-number" aria-hidden="true">02</span><h3>${step2_when}</h3><p>${step2_text}</p></li>
+            <li class="card"><span class="step-number" aria-hidden="true">03</span><h3>${step3_when}</h3><p>${step3_text}</p></li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="section glimpse" aria-labelledby="glimpse-heading">
+        <div class="wrap glimpse-inner">
+          <div class="glimpse-copy">
+            <h2 id="glimpse-heading">${glimpse_heading}</h2>
+            <p>${glimpse_text}</p>
+          </div>
+          <figure class="card devices">
+            <img class="laptop" src="/site/img/laptop-today-light.webp" width="1600" height="1000" alt="${alt_laptop}" loading="lazy" decoding="async">
+            <img class="phone" src="/site/img/phone-today-dark.webp" width="438" height="950" alt="${alt_phone}" loading="lazy" decoding="async">
+          </figure>
+        </div>
+      </section>
+
+      <section class="section audiences">
+        <div class="wrap audiences-inner">
+          <div class="card audience">
+            <h2>${members_heading}</h2>
+            <p>${members_text}</p>
+            <p><a class="pill pill-ghost" href="/churches">${members_cta}</a></p>
+          </div>
+          <div class="card audience">
+            <h2>${leaders_heading}</h2>
+            <p>${leaders_text}</p>
+            <p><a class="pill pill-ghost" href="/login?next=%2Fwelcome%3Fstep%3Dleader">${leaders_cta}</a></p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <div class="wrap foot-inner">
+        <a class="wordmark" href="${home}">Selah</a>
+        <nav class="languages" aria-label="${language_label}">
+          <a href="/" hreflang="es" lang="es" onclick="try{localStorage.setItem('site.lang','es')}catch(e){}">Español</a>
+          <a href="/pt/" hreflang="pt" lang="pt" onclick="try{localStorage.setItem('site.lang','pt')}catch(e){}">Português</a>
+          <a href="/en/" hreflang="en" lang="en" onclick="try{localStorage.setItem('site.lang','en')}catch(e){}">English</a>
+        </nav>
+        <p class="foot-note">${footer_note} · <a href="/today">${open_app}</a></p>
+      </div>
+    </footer>
+  </body>
+</html>

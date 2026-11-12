@@ -4,8 +4,21 @@
     {
       "name": "selah-web",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["app/tool/serve.py", "3100"],
+      "runtimeArgs": [
+        "app/tool/serve.py",
+        "3100"
+      ],
       "port": 3100
+    },
+    {
+      "name": "selah-demo",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "app/tool/serve.py",
+        "3200",
+        "app/build/demo"
+      ],
+      "port": 3200
     }
   ]
 }

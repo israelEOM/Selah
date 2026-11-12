@@ -2,7 +2,7 @@
 import re
 from datetime import datetime, timezone
 
-from selah_worker import ai, youtube
+from selah_worker import ai, art, youtube
 from selah_worker.bible import parse_reference
 from selah_worker.db import client
 from selah_worker.grounding import fold, locate, window_end, window_start
@@ -149,6 +149,21 @@ def analysis(job: dict) -> dict:
                               "rejected_references": rejected, "dropped_quotes": dropped_quotes}
 
 
+def split_art(content: dict) -> str | None:
+    """Remove the model's art_key from the summary content and return it if it is a pickable key."""
+    return art.valid_key(content.pop("art_key", None))
+
+
+def day_row(study: dict, d, windows: list) -> dict:
+    return {
+        "study_id": study["id"], "day_number": d.day_number, "title": d.title,
+        "bible_reading": _label(d.bible_reading, study["output_language"]), "main_idea": d.main_idea,
+        "reflection": d.reflection, "application": d.application, "questions": d.questions, "prayer": d.prayer,
+        "start_seconds": window_start(windows, d.start_window), "end_seconds": window_end(windows, d.end_window),
+        "art_key": art.valid_key(d.art_key),
+    }
+
+
 def summary(job: dict) -> dict:
     sermon = _one("sermons", "id", job["sermon_id"], "Sermón no encontrado.")
     stored = _one("sermon_analyses", "sermon_id", sermon["id"], "Primero analiza el sermón.")["content"]
@@ -166,8 +181,9 @@ def summary(job: dict) -> dict:
 
     db = client()
     title = content.pop("title")
+    art_key = split_art(content)
     fields = {
-        "output_language": language, "central_message": content.pop("central_message"), "summary": content,
+        "output_language": language, "central_message": content.pop("central_message"), "summary": content, "art_key": art_key,
         "bible_version_code": payload.get("bible_version_code", "RVR1960"), "status": "generating",
     }
     existing = db.table("studies").select("id").eq("sermon_id", sermon["id"]).execute().data
@@ -195,12 +211,7 @@ def devotional(job: dict) -> dict:
     output, metrics = ai.devotional(stored, render_windows(preached or windows), days, study["output_language"])
     if sorted(d.day_number for d in output.days) != list(range(1, days + 1)):
         raise RuntimeError("La IA no devolvió todos los días solicitados. Inténtalo de nuevo.")
-    rows = [{
-        "study_id": study["id"], "day_number": d.day_number, "title": d.title,
-        "bible_reading": _label(d.bible_reading, study["output_language"]), "main_idea": d.main_idea,
-        "reflection": d.reflection, "application": d.application, "questions": d.questions, "prayer": d.prayer,
-        "start_seconds": window_start(windows, d.start_window), "end_seconds": window_end(windows, d.end_window),
-    } for d in output.days]
+    rows = [day_row(study, d, windows) for d in output.days]
     db = client()
     db.table("devotional_days").delete().eq("study_id", study["id"]).execute()
     db.table("devotional_days").insert(rows).execute()

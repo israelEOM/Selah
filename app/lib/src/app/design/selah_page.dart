@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import '../../../l10n/app_localizations.dart';
 import 'navigation.dart';
 import 'platform.dart';
+import 'responsive.dart';
+import 'skeleton.dart';
 import 'tokens.dart';
 
 /// The adaptive page scaffold: a large collapsing title (Cupertino on iOS, Material 3 elsewhere), an optional back
@@ -22,6 +24,11 @@ class SelahPage extends StatelessWidget {
     this.onRefresh,
     this.maxWidth = 760,
     this.lazy = false,
+    this.wide = false,
+    this.header,
+    this.headerHeight = 150,
+    this.slivers = const [],
+    this.arrive = true,
   });
 
   /// Null means no large title, only the slim bar (the reader).
@@ -42,8 +49,42 @@ class SelahPage extends StatelessWidget {
   /// pages keep every child laid out.
   final bool lazy;
 
+  /// In the website layout, use the full content width ([Layout.maxContent]) for a multi-column page, ignoring
+  /// [maxWidth]. Narrower screens still use [maxWidth].
+  final bool wide;
+
+  /// A picture under the bar, [headerHeight] tall, that shrinks and fades into the bar as the page scrolls. App
+  /// layout only: the website layout leaves it out.
+  final Widget? header;
+  final double headerHeight;
+
+  /// Slivers after [children] in the same centred column, for parts that need their own scrolling behaviour (pinned
+  /// group headings).
+  final List<Widget> slivers;
+
+  /// On the first build, each child rises a few pixels and fades in, one after another ([Entrance]). Pages that
+  /// stagger their own content pass false, or mark a child with [NoArrive]. A [lazy] page never arrives, so a long
+  /// list doesn't animate as it scrolls in. App layout only.
+  final bool arrive;
+
+  /// [children], each in an [Entrance] when the page arrives. Spacers are wrapped too, so every slot keeps the same
+  /// widget type and a child that comes or goes later doesn't make the ones after it arrive again, but they take no
+  /// turn in the stagger.
+  List<Widget> _arriving() {
+    if (!arrive || lazy) return children;
+    var index = 0;
+    return [
+      for (final child in children)
+        if (child is NoArrive)
+          child
+        else
+          Entrance(index: child is SizedBox && child.child == null ? index : index++, child: child),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (siteLayout(context)) return _site(context);
     final ios = uiPlatformOf(context) == UiPlatform.ios;
     final theme = Theme.of(context);
     final l = AppLocalizations.of(context)!;
@@ -105,32 +146,47 @@ class SelahPage extends StatelessWidget {
     }
 
     // The side padding centres the body at [maxWidth] on wide windows, with the gutter inside.
-    final bottom = 40 + MediaQuery.paddingOf(context).bottom;
+    final bottom = Layout.bottomGap + MediaQuery.paddingOf(context).bottom;
     final body = SliverSafeArea(
       top: false,
       bottom: false,
       sliver: SliverLayoutBuilder(
         builder: (context, constraints) {
           final side = Space.xl - 4 + max(0.0, (constraints.crossAxisExtent - maxWidth) / 2);
+          final Widget content = lazy
+              ? SliverList.list(children: children)
+              : SliverToBoxAdapter(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: _arriving()),
+                );
           return SliverPadding(
             padding: EdgeInsets.fromLTRB(side, Space.l, side, bottom),
-            sliver: lazy
-                ? SliverList.list(children: children)
-                : SliverToBoxAdapter(
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children),
-                  ),
+            sliver: slivers.isEmpty ? content : SliverMainAxisGroup(slivers: [content, ...slivers]),
           );
         },
       ),
     );
 
     final scroll = CustomScrollView(
+      key: const PageStorageKey('selah-page'),
       physics: ios
           ? const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics())
           : const AlwaysScrollableScrollPhysics(),
       slivers: [
         header,
         if (ios && onRefresh != null) CupertinoSliverRefreshControl(onRefresh: onRefresh),
+        if (this.header case final art?)
+          SliverLayoutBuilder(
+            builder: (context, constraints) => SliverPadding(
+              padding: const EdgeInsets.only(top: Space.l),
+              sliver: SliverPersistentHeader(
+                delegate: _CollapsingHeaderDelegate(
+                  extent: headerHeight,
+                  side: Space.xl - 4 + max(0.0, (constraints.crossAxisExtent - maxWidth) / 2),
+                  child: art,
+                ),
+              ),
+            ),
+          ),
         body,
       ],
     );
@@ -139,6 +195,73 @@ class SelahPage extends StatelessWidget {
       body: !ios && onRefresh != null ? RefreshIndicator(onRefresh: onRefresh!, child: scroll) : scroll,
     );
   }
+
+  /// The website layout: no app bar. The back link and title sit at the top of the centered content, and the
+  /// browser's own reload stands in for pull to refresh.
+  Widget _site(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final text = Theme.of(context).textTheme;
+    final width = wide ? Layout.maxContent : min(maxWidth, Layout.maxContent);
+    final header = <Widget>[
+      if (backTo != null) ...[
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            icon: const Icon(Icons.arrow_back),
+            label: Text(backTooltip ?? l.back),
+            onPressed: onBack ?? () => popOr(context, backTo!),
+          ),
+        ),
+        const SizedBox(height: Space.m),
+      ],
+      if (title != null || actions.isNotEmpty) ...[
+        Row(
+          children: [
+            Expanded(child: title == null ? const SizedBox() : Text(title!, style: text.headlineMedium)),
+            ...actions,
+          ],
+        ),
+        const SizedBox(height: Space.xl),
+      ],
+    ];
+    return Scaffold(
+      // The same key as the app layout's scroll view, so crossing 1024 px keeps the scroll position.
+      body: CustomScrollView(
+        key: const PageStorageKey('selah-page'),
+        slivers: [
+          SliverLayoutBuilder(
+            builder: (context, constraints) {
+              final side = max(Space.xl, (constraints.crossAxisExtent - width) / 2);
+              final Widget content = lazy
+                  ? SliverList.list(children: [...header, ...children])
+                  : SliverToBoxAdapter(
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [...header, ...children]),
+                    );
+              return SliverPadding(
+                padding: EdgeInsets.fromLTRB(
+                  side,
+                  Space.section,
+                  side,
+                  Layout.bottomGap + MediaQuery.paddingOf(context).bottom,
+                ),
+                sliver: slivers.isEmpty ? content : SliverMainAxisGroup(slivers: [content, ...slivers]),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A [SelahPage] child that keeps still while the page arrives: it has its own motion, or holds a Hero.
+class NoArrive extends StatelessWidget {
+  const NoArrive({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => child;
 }
 
 class _SlimBarDelegate extends SliverPersistentHeaderDelegate {
@@ -157,4 +280,30 @@ class _SlimBarDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   bool shouldRebuild(_SlimBarDelegate old) => extent != old.extent || bar != old.bar;
+}
+
+/// [SelahPage.header]: full height at the top, then shrinking and fading under the bar as the page scrolls.
+class _CollapsingHeaderDelegate extends SliverPersistentHeaderDelegate {
+  _CollapsingHeaderDelegate({required this.extent, required this.side, required this.child});
+
+  final double extent;
+  final double side;
+  final Widget child;
+
+  @override
+  double get minExtent => 0;
+  @override
+  double get maxExtent => extent;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    final shown = (1 - shrinkOffset / extent).clamp(0.0, 1.0);
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: side),
+      child: Opacity(opacity: shown, child: child),
+    );
+  }
+
+  @override
+  bool shouldRebuild(_CollapsingHeaderDelegate old) => extent != old.extent || side != old.side || child != old.child;
 }

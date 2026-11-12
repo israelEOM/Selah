@@ -91,9 +91,9 @@ Future<void> _pumpRouter(WidgetTester tester, String location, {TargetPlatform? 
   await tester.pumpAndSettle();
 }
 
-/// A 1000×800 window.
+/// A 1280×800 window: a desktop.
 void _wide(WidgetTester tester) {
-  tester.view.physicalSize = const Size(1000, 800);
+  tester.view.physicalSize = const Size(1280, 800);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
 }
@@ -130,6 +130,29 @@ void main() {
     });
   }
 
+  for (final platform in [TargetPlatform.iOS, TargetPlatform.android]) {
+    testWidgets('the active tab uses the done tone (${platform.name})', (tester) async {
+      await _pumpBar(tester, platform: platform);
+      await tester.pumpAndSettle();
+      final done = selahLightTheme().extension<SelahTones>()!.done;
+      Color? colorOf(IconData icon) {
+        final finder = find.byIcon(icon);
+        return tester.widget<Icon>(finder).color ?? IconTheme.of(tester.element(finder)).color;
+      }
+
+      expect(colorOf(Icons.wb_sunny), done);
+      expect(colorOf(Icons.person_outline), isNot(done));
+      if (platform == TargetPlatform.android) {
+        expect(tester.widget<NavigationBar>(find.byType(NavigationBar)).indicatorColor, done.withValues(alpha: 0.10));
+      } else {
+        final capsule = tester.widget<DecoratedBox>(find.byKey(FrostedTabBar.capsuleKey)).decoration as ShapeDecoration;
+        final tones = selahLightTheme().extension<SelahTones>()!;
+        final glass = Color.alphaBlend(Colors.white.withValues(alpha: 0.7), tones.surface);
+        expect(capsule.color, Color.alphaBlend(done.withValues(alpha: 0.10), glass), reason: 'a soft green pill');
+      }
+    });
+  }
+
   testWidgets('the selected tab is marked selected for screen readers', (tester) async {
     final semantics = tester.ensureSemantics();
     await _pumpBar(tester, platform: TargetPlatform.iOS);
@@ -161,11 +184,13 @@ void main() {
     expect((after - tester.getCenter(find.text('Perfil')).dx).abs(), lessThan(1));
   });
 
-  testWidgets('a wide Android window shows a navigation rail', (tester) async {
+  testWidgets('a desktop window shows the site header instead of a tab bar', (tester) async {
     _wide(tester);
     await _pumpRouter(tester, '/profile', platform: TargetPlatform.android);
-    expect(find.byType(NavigationRail), findsOneWidget);
+    expect(find.byKey(SiteHeader.headerKey), findsOneWidget);
+    expect(find.byType(NavigationRail), findsNothing);
     expect(find.byType(NavigationBar), findsNothing);
+    expect(find.descendant(of: find.byKey(SiteHeader.headerKey), matching: find.text('Perfil')), findsOneWidget);
   });
 
   testWidgets('a wide iPad window keeps the floating bar', (tester) async {
@@ -195,5 +220,21 @@ void main() {
     await _pumpRouter(tester, '/profile', platform: TargetPlatform.iOS);
     final list = tester.getRect(find.byType(CustomScrollView));
     expect(list.bottom, greaterThan(tester.getRect(find.byType(FrostedTabBar)).top));
+  });
+
+  // The native bar can't run in tests, so this checks the key it is built with: the plugin's native view keeps the
+  // item list it was created with, and only a new key makes it pick up an added or removed tab.
+  test('the native bar gets a new key when a tab is added or removed', () {
+    const events = SelahTab(
+      label: 'Eventos',
+      icon: Icons.event_outlined,
+      selectedIcon: Icons.event,
+      symbol: 'calendar',
+      selectedSymbol: 'calendar',
+    );
+    final withEvents = [_tabs[0], _tabs[1], events, _tabs[2]];
+    expect(nativeTabBarKey(_tabs), nativeTabBarKey(List.of(_tabs)));
+    expect(nativeTabBarKey(withEvents), isNot(nativeTabBarKey(_tabs)));
+    expect(nativeTabBarKey(_tabs.sublist(0, 2)), isNot(nativeTabBarKey(_tabs)));
   });
 }

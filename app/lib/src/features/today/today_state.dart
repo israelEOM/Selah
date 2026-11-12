@@ -45,8 +45,28 @@ TodayState todayFor({required PublicStudy? study, required StudyProgress progres
   return AllDone(passage, takeaways.isEmpty ? null : takeaways[dayOfYear % takeaways.length]);
 }
 
-/// Monday to Sunday of `now`'s week, true where a day was finished.
-List<bool> weekCircles(Set<String> doneDates, DateTime now) {
-  final monday = DateTime(now.year, now.month, now.day - (now.weekday - 1));
-  return [for (var i = 0; i < 7; i++) doneDates.contains(localDate(DateTime(monday.year, monday.month, monday.day + i)))];
+/// The newest study's day last worked on [date], or null when that date's last tick belongs elsewhere (or none was
+/// made). The caller then shows the day [todayFor] would.
+DevotionalDay? dayOnDate({required PublicStudy study, required Map<String, DateTicks> ticks, required String date}) {
+  final last = ticks[date]?.lastDay;
+  if (last == null || last.studyId != study.id) return null;
+  return study.days.where((d) => d.number == last.day).firstOrNull;
+}
+
+/// The day Today shows for the picked [date] (null for today): today's day as [todayFor] has it; for a past date, the
+/// day worked on that date, else the first unfinished day. Null when there is no such day (the study is all done).
+DevotionalDay? dayForSelection({
+  required PublicStudy study,
+  required StudyProgress progress,
+  required Map<String, DateTicks> ticks,
+  required String? date,
+  required DateTime now,
+}) {
+  if (date == null) {
+    return switch (todayFor(study: study, progress: progress, now: now)) {
+      DayToDo(:final day) || DoneForToday(:final day) => day,
+      NoStudy() || AllDone() => null,
+    };
+  }
+  return dayOnDate(study: study, ticks: ticks, date: date) ?? study.days.where((d) => !progress.isDone(d)).firstOrNull;
 }

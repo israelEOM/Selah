@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../../app/design/art.dart';
 import '../../app/theme.dart';
 import '../../core/models.dart';
 import '../../data/current_church.dart';
 import '../../data/providers.dart';
 import '../church/role_label.dart';
+import '../today/part_tick.dart';
 
 /// Every church on Selah, the person's own first. Picking one makes it the app's church.
 class ChurchPickerPage extends ConsumerWidget {
@@ -55,7 +57,7 @@ List<Widget> churchListChildren(BuildContext context, WidgetRef ref, {void Funct
       Eyebrow(l.yourChurches),
       const SizedBox(height: 12),
       for (final (i, m) in mine.indexed)
-        _ChurchTile(index: i, church: m.church, subtitle: roleLabel(l, m.role), onPick: onPick),
+        _ChurchTile(index: i, church: m.church, subtitle: roleLabel(l, m.role), onPick: onPick, following: true, hero: true),
       const SizedBox(height: 24),
     ],
     Eyebrow(l.allChurches),
@@ -82,6 +84,8 @@ List<Widget> churchListChildren(BuildContext context, WidgetRef ref, {void Funct
                   church: church,
                   onPick: onPick,
                   opensPage: mineOnly && !mine.any((m) => m.church.id == church.id),
+                  // A church the person belongs to already carries the tag in the list above.
+                  hero: !mineOnly || !mine.any((m) => m.church.id == church.id),
                 ),
             ],
     ),
@@ -89,7 +93,7 @@ List<Widget> churchListChildren(BuildContext context, WidgetRef ref, {void Funct
 }
 
 class _ChurchTile extends ConsumerWidget {
-  const _ChurchTile({required this.index, required this.church, this.subtitle, this.onPick, this.opensPage = false});
+  const _ChurchTile({required this.index, required this.church, this.subtitle, this.onPick, this.opensPage = false, this.following = false, this.hero = true});
 
   /// Position in the page, for the staggered entrance.
   final int index;
@@ -100,6 +104,12 @@ class _ChurchTile extends ConsumerWidget {
   /// Open the church's page rather than choosing it.
   final bool opensPage;
 
+  /// The person belongs to this church: shows the "Following" chip.
+  final bool following;
+
+  /// Carries the church's shared-element tag; only one row per church may.
+  final bool hero;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) => Padding(
         padding: const EdgeInsets.only(bottom: Space.m),
@@ -108,6 +118,14 @@ class _ChurchTile extends ConsumerWidget {
           child: SelahRow(
             label: church.name,
             detail: subtitle,
+            leading: SelahArt(
+              seed: church.id,
+              shape: ArtShape.circle,
+              width: 42,
+              height: 42,
+              heroTag: hero ? churchArtTag(church.id) : null,
+            ),
+            trailing: following ? _FollowingChip(label: AppLocalizations.of(context)!.followingChurch) : null,
             onOpen: onPick != null
                 ? () => onPick!(church)
                 : opensPage
@@ -119,4 +137,24 @@ class _ChurchTile extends ConsumerWidget {
           ),
         ),
       );
+}
+
+/// "✓ Following", springing in when the person's membership shows up.
+class _FollowingChip extends StatelessWidget {
+  const _FollowingChip({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final tones = context.tones;
+    return SpringIn(
+      active: true,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(color: tones.done.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(Radii.chip)),
+        child: Text('✓ $label', style: Theme.of(context).textTheme.labelMedium?.copyWith(color: tones.done)),
+      ),
+    );
+  }
 }

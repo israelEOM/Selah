@@ -3,12 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../../app/design/art.dart';
 import '../../app/theme.dart';
 import '../../core/format.dart';
 import '../../core/models.dart';
 import '../../data/providers.dart';
 import '../church/church_scope.dart';
+import '../today/part_tick.dart' show SpringIn;
 import 'admin_gate.dart';
+import 'admin_motion.dart';
+import 'art_picker.dart';
 
 const _translateTargets = {'languages': ['en', 'pt']};
 const _steps = ['transcript', 'analysis', 'summary', 'devotional'];
@@ -140,11 +144,11 @@ class _Progress extends ConsumerWidget {
           });
           final status = redoing ? 'pending' : job?.status ?? (_hasOutput(step) ? 'succeeded' : 'pending');
           final Widget icon = switch (status) {
-            'succeeded' => Icon(Icons.check_circle, color: context.tones.done, size: 22),
+            'succeeded' => const _StepDot(_Dot.done),
             'failed' => Icon(Icons.error, color: Theme.of(context).colorScheme.error, size: 22),
-            'running' => const SizedBox(width: 22, height: 22, child: Padding(padding: EdgeInsets.all(2), child: CircularProgressIndicator(strokeWidth: 2.5))),
+            'running' => const _StepDot(_Dot.running),
             'queued' => Icon(Icons.schedule, color: Theme.of(context).colorScheme.primary, size: 22),
-            _ => Icon(Icons.circle_outlined, color: context.tones.muted, size: 22),
+            _ => const _StepDot(_Dot.pending),
           };
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 6),
@@ -170,6 +174,49 @@ class _Progress extends ConsumerWidget {
         }),
       if (waiting) Padding(padding: const EdgeInsets.only(top: 6), child: Text(l.workerHint, style: text.bodyMedium)),
     ]);
+  }
+}
+
+enum _Dot { done, running, pending }
+
+/// A step's dot: green with a check when done, a slowly breathing amber while running, a plain ring while pending.
+/// One [SpringIn] stays in place across states, so a step finishing springs and a page opening already done does not.
+class _StepDot extends StatelessWidget {
+  const _StepDot(this.kind);
+
+  final _Dot kind;
+  static const _size = 22.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final Widget dot = switch (kind) {
+      _Dot.done => Container(
+          key: const ValueKey('step-done'),
+          width: _size,
+          height: _size,
+          decoration: BoxDecoration(color: context.tones.done, shape: BoxShape.circle),
+          child: const Icon(Icons.check, size: 15, color: Colors.white),
+        ),
+      _Dot.running => Breathe(
+          key: const ValueKey('breathe'),
+          child: SizedBox(
+            width: _size,
+            height: _size,
+            child: Center(
+              child: DecoratedBox(
+                decoration: BoxDecoration(color: context.partPalette.reflection.color, shape: BoxShape.circle),
+                child: const SizedBox(width: 14, height: 14),
+              ),
+            ),
+          ),
+        ),
+      _Dot.pending => Container(
+          width: _size,
+          height: _size,
+          decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: context.tones.muted, width: 1.5)),
+        ),
+    };
+    return SpringIn(active: kind == _Dot.done, child: dot);
   }
 }
 
@@ -285,7 +332,7 @@ class _StudyState extends ConsumerState<_Study> {
   late int _days = (widget.detail.study?['number_of_days'] as int?) ?? 5;
   String? _notice;
 
-  Future<void> _run(Future<void> Function() action, {String? notice}) async {
+  Future<void> _run(Future<void> Function() action, {String? notice, String? error}) async {
     final l = AppLocalizations.of(context)!;
     try {
       await action();
@@ -294,7 +341,7 @@ class _StudyState extends ConsumerState<_Study> {
       ref.invalidate(publishedStudiesProvider(widget.churchId));
       if (mounted) setState(() => _notice = notice);
     } catch (_) {
-      if (mounted) setState(() => _notice = l.jobAlreadyRunning);
+      if (mounted) setState(() => _notice = error ?? l.jobAlreadyRunning);
     }
   }
 
@@ -308,6 +355,7 @@ class _StudyState extends ConsumerState<_Study> {
       if (mounted) setState(() => _notice = l.jobAlreadyRunning);
       return;
     }
+    SelahHaptics.success();
     var notice = l.published;
     try {
       await repo.createJob('translate', _translateTargets, churchId: widget.churchId, sermonId: widget.sermonId);
@@ -318,6 +366,12 @@ class _StudyState extends ConsumerState<_Study> {
     ref.invalidate(sermonsProvider(widget.churchId));
     ref.invalidate(publishedStudiesProvider(widget.churchId));
     if (mounted) setState(() => _notice = notice);
+  }
+
+  Future<void> _changeArt(String? current, Future<void> Function(String key) save) async {
+    final key = await showArtPicker(context, current: current);
+    if (key == null || !mounted) return;
+    await _run(() => save(key), error: AppLocalizations.of(context)!.genericError);
   }
 
   @override
@@ -345,6 +399,12 @@ class _StudyState extends ConsumerState<_Study> {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text(l.studySection, style: text.headlineSmall),
       const SizedBox(height: 10),
+      SelahArt(key: const Key('study-art'), artKey: study['art_key'] as String?, seed: study['id'] as String, width: 220, height: 140),
+      TextButton(
+        onPressed: () => _changeArt(study['art_key'] as String?, (key) => repo.setStudyArt(study['id'] as String, key)),
+        child: Text(l.changeImage),
+      ),
+      const SizedBox(height: 10),
       Text(study['central_message'] as String? ?? '', style: text.bodyLarge),
       if ((summary['key_takeaways'] as List?)?.isNotEmpty ?? false) ...[
         const SizedBox(height: 14),
@@ -360,6 +420,23 @@ class _StudyState extends ConsumerState<_Study> {
             clipBehavior: Clip.antiAlias,
             child: ExpansionTile(
               shape: const Border(),
+              leading: Tooltip(
+                message: l.changeImage,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(Radii.card),
+                  onTap: () => _changeArt(
+                    day['art_key'] as String?,
+                    (key) => repo.setDayArt(study['id'] as String, day['day_number'] as int, key),
+                  ),
+                  child: SelahArt(
+                    key: Key('day-art-${day['day_number']}'),
+                    artKey: day['art_key'] as String?,
+                    seed: '${study['id']}-${day['day_number']}',
+                    width: 48,
+                    height: 48,
+                  ),
+                ),
+              ),
               title: Text('${l.dayLabel(day['day_number'] as int)} · ${day['title']}', style: text.titleLarge),
               subtitle: Text(day['bible_reading'] as String? ?? ''),
               childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),

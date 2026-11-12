@@ -58,10 +58,11 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Iniciar sesión'), findsOneWidget);
 
-    await tester.tap(find.byIcon(Icons.translate));
-    await tester.pumpAndSettle();
+    // Profile offers every language, each named in itself.
     expect(find.text('Español'), findsOneWidget);
     expect(find.text('Português'), findsOneWidget);
+    await tester.ensureVisible(find.text('English'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('English'));
     await tester.pumpAndSettle();
 

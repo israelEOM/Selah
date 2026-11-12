@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../../app/design/art.dart';
 import '../../app/theme.dart';
 import '../../core/format.dart';
 import '../../core/models.dart';
@@ -12,17 +13,39 @@ import '../../data/current_church.dart';
 import '../../data/progress.dart';
 import '../../data/providers.dart';
 import '../../l10n/locale.dart';
+import '../events/events_page.dart';
 import '../home/church_picker_page.dart';
+import '../study/reader_page.dart' show ReaderEntry;
 import '../study/translation_banner.dart';
-import 'part_tick.dart';
+import 'finish_moment.dart';
+import 'part_row.dart';
+import 'part_style.dart';
 import 'today_refresh.dart';
+import 'today_selection.dart';
 import 'today_state.dart';
+import 'week_rings.dart';
 
-/// Ticks [part] and, when that finishes the day, plays the success haptic. Hoy and the reader both tick through this.
-Future<void> tickWithFeedback(WidgetRef ref, String progressId, DevotionalDay day, DayPart part, DateTime now) async {
-  await tickPart(ref, progressId, day, part, now);
+/// Ticks [part], dated [on] (`yyyy-MM-dd`) or today. When that finishes the day it plays the success haptic, returns
+/// true and, if [announce], marks the day just finished so Today plays moment A. Today and the reader both tick
+/// through this; the phone reader announces only when its "back to Today" pill is tapped.
+Future<bool> tickWithFeedback(
+  WidgetRef ref,
+  String progressId,
+  DevotionalDay day,
+  DayPart part,
+  DateTime now, {
+  String? on,
+  bool announce = true,
+}) async {
+  final progress = await togglePart(progressId, day, part, now, on: on);
   // A toggle can only finish the day by adding its last part, so done now means it just became done.
-  if ((await loadProgress(progressId)).isDone(day)) await SelahHaptics.success();
+  final done = progress.isDone(day);
+  // Marked before the reload, so the first build that shows the finished day already knows to play moment A.
+  if (done && announce) ref.read(justFinishedProvider.notifier).set((studyId: progressId, day: day.number));
+  ref.invalidate(studyProgressProvider(progressId));
+  ref.invalidate(ticksByDateProvider);
+  if (done) await SelahHaptics.success();
+  return done;
 }
 
 /// The Hoy tab: today's part of the church's newest study, or the church list when none is chosen yet.
@@ -32,8 +55,14 @@ class TodayPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
-    return ref.watch(currentChurchProvider).when(
-          loading: () => SelahPage(title: l.tabToday, children: const [SkeletonList(hero: true, rows: 3)]),
+    // The skeleton crossfades into the day (or the church list) once the church is known.
+    return ContentSwitcher(
+      child: ref.watch(currentChurchProvider).when(
+          loading: () => SelahPage(
+            key: const ValueKey('loading'),
+            title: l.tabToday,
+            children: const [SkeletonList(hero: true, rows: 3)],
+          ),
           error: (_, _) => SelahPage(
             title: l.tabToday,
             children: [_LoadError(onRetry: () => ref.invalidate(currentChurchProvider))],
@@ -46,7 +75,8 @@ class TodayPage extends ConsumerWidget {
                   children: churchListChildren(context, ref),
                 )
               : TodayRefresher(churchId: church.id, child: _Today(church: church)),
-        );
+      ),
+    );
   }
 }
 
@@ -63,6 +93,16 @@ class _Today extends ConsumerWidget {
     ref.watch(todayRefreshProvider);
     final now = ref.watch(clockProvider)();
     final language = ref.watch(appLocaleProvider).languageCode;
+    final ticks = ref.watch(ticksByDateProvider).value ?? const <String, DateTicks>{};
+    final todayKey = localDate(now);
+    final picked = ref.watch(selectedDateProvider);
+    // A past date picked in the week; null when Today shows today.
+    final past = picked != null && picked.compareTo(todayKey) < 0 ? picked : null;
+    final title = past == null
+        ? l.tabToday
+        : past == localDate(DateTime(now.year, now.month, now.day - 1))
+            ? l.todayYesterday
+            : _capitalised(DateFormat.EEEE(l.localeName).format(DateTime.parse(past)));
     final eyebrowStyle = text.labelMedium?.copyWith(color: context.tones.muted, fontWeight: FontWeight.w600, letterSpacing: 1);
     final header = [
       Wrap(
@@ -74,21 +114,90 @@ class _Today extends ConsumerWidget {
         ],
       ),
       const SizedBox(height: Space.l),
-      _WeekRow(doneDates: ref.watch(doneDatesProvider).value ?? const {}, now: now),
+      WeekRings(
+        ticks: ticks,
+        now: now,
+        selected: past ?? todayKey,
+        onSelect: (date) => ref.read(selectedDateProvider.notifier).select(date == todayKey ? null : date),
+      ),
       const SizedBox(height: Space.xl),
     ];
-    Widget page(List<Widget> children) => SelahPage(
-          title: l.tabToday,
+    Widget page(List<Widget> children, {bool skeleton = false}) {
+      // The day's content slides to the side when another date is picked, and crossfades in from its skeleton.
+      final content = _DaySwitch(
+        date: past ?? todayKey,
+        child: Column(
+          key: ValueKey(past ?? todayKey),
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ContentSwitcher(
+              child: Column(
+                key: ValueKey(skeleton ? 'skeleton' : 'day'),
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: children,
+              ),
+            ),
+          ],
+        ),
+      );
+      if (!siteLayout(context)) {
+        return SelahPage(
+          title: title,
           onRefresh: () => refreshToday(ref, church.id),
-          children: [...header, ...children],
+          // The part rows stagger in on their own, and the hero card must sit still for its flight to the reader.
+          arrive: false,
+          children: [...header, content],
         );
-    final loading = page(const [SkeletonList(hero: true, rows: 3)]);
+      }
+      // The website layout: the day on the left; the date, the week and what's coming up on the right.
+      final events = (ref.watch(upcomingEventsProvider(church.id)).value ?? const <ChurchEvent>[])
+          .where((e) => e.endsAt.isAfter(now))
+          .take(3)
+          .toList();
+      return SelahPage(
+        title: title,
+        wide: true,
+        children: [
+          TwoColumn(
+            main: content,
+            side: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ...header,
+                if (events.isNotEmpty) ...[
+                  const SizedBox(height: Space.section - Space.xl),
+                  Eyebrow(l.eventsLater),
+                  const SizedBox(height: Space.m),
+                  for (final event in events)
+                    Padding(padding: const EdgeInsets.only(bottom: Space.s), child: EventRow(event: event)),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton(onPressed: () => context.go('/c/${church.slug}/events'), child: Text(l.tabEvents)),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+    final loading = page(const [SkeletonList(hero: true, rows: 3)], skeleton: true);
     return ref.watch(newestStudyProvider(church.id)).when(
           loading: () => loading,
           error: (_, _) => page([_LoadError(onRetry: () => ref.invalidate(newestStudyProvider(church.id)))]),
           data: (original) {
             if (original == null) {
               return page([
+                const Center(
+                  child: SelahArt(
+                    artKey: 'scene-empty-studies',
+                    fixed: true,
+                    seed: 'empty-studies',
+                    width: double.infinity,
+                    height: 180,
+                  ),
+                ),
+                const SizedBox(height: Space.l),
                 Text(l.noStudiesYetToday, style: text.bodyLarge),
                 const SizedBox(height: Space.l),
                 Align(
@@ -113,48 +222,87 @@ class _Today extends ConsumerWidget {
                         ),
                       ),
                     );
-                    return page(switch (state) {
-                      NoStudy() => const [],
-                      DayToDo(:final day) => [
-                          ..._devotional(context, ref, study, original,  day, progress, done: false),
-                          summary,
-                        ],
-                      DoneForToday(:final day, :final next) => [
-                          ..._devotional(context, ref, study, original,  day, progress, done: true),
-                          if (next != null)
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: TextButton(
-                                onPressed: () => context.push(_dayPath(study, next.number), extra: original),
-                                child: Text(l.readNext),
+                    final day = dayForSelection(study: study, progress: progress, ticks: ticks, date: past, now: now);
+                    if (day == null) {
+                      return page(switch (state) {
+                        AllDone(:final passage, :final takeaway) => [
+                            Text(l.meditateToday, style: text.headlineMedium),
+                            if (passage != null || takeaway != null) ...[
+                              const SizedBox(height: Space.l),
+                              HeroCard(
+                                eyebrow: passage == null ? null : '${l.todayMainPassage} · $passage',
+                                footer: takeaway == null
+                                    ? null
+                                    : SettleWords(
+                                        text: takeaway,
+                                        style: serifQuote(context).copyWith(color: heroForeground(context)),
+                                      ),
                               ),
-                            ),
-                          summary,
-                        ],
-                      AllDone(:final passage, :final takeaway) => [
-                          Text(l.meditateToday, style: text.headlineMedium),
-                          if (passage != null || takeaway != null) ...[
-                            const SizedBox(height: Space.l),
-                            HeroCard(eyebrow: passage == null ? null : '${l.todayMainPassage} · $passage', quote: takeaway),
+                            ],
+                            if (passage != null) ...[
+                              const SizedBox(height: Space.l),
+                              SelahRow(
+                                label: l.readPassage(passage),
+                                onOpen: () => _openBible(passage, study.bibleVersionCode),
+                              ),
+                            ],
+                            summary,
                           ],
-                          if (passage != null) ...[
-                            const SizedBox(height: Space.l),
-                            SelahRow(
-                              label: l.readPassage(passage),
-                              onOpen: () => _openBible(passage, study.bibleVersionCode),
+                        _ => const [],
+                      });
+                    }
+                    final done = progress.isDone(day);
+                    final moment = _momentA(ref, original, day, done);
+                    final next = past == null && state is DoneForToday ? state.next : null;
+                    return page([
+                      ..._devotional(context, ref, study, original, day, progress, on: past, moment: moment),
+                      if (past != null && !done) ...[
+                        const SizedBox(height: Space.s),
+                        Text(l.pastDayNotTooLate, style: text.bodyLarge?.copyWith(color: context.tones.muted)),
+                      ],
+                      if (done) ...[
+                        const SizedBox(height: Space.l),
+                        FinishLine(past: past != null, animate: moment),
+                      ],
+                      if (next != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: Space.s),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: TextButton(
+                              onPressed: () => context.push(
+                                _dayPath(study, next.number),
+                                extra: ReaderEntry(study: original, fromToday: true),
+                              ),
+                              child: Text(l.readNext),
                             ),
-                          ],
-                          summary,
-                        ],
-                    });
+                          ),
+                        ),
+                      summary,
+                    ]);
                   },
                 );
           },
         );
   }
 
+  /// Whether moment A should play for [day] now: it was just finished by a tick. Today clears the mark once the moment
+  /// has started, so it plays once; the widgets let a started moment run to its end.
+  bool _momentA(WidgetRef ref, PublicStudy original, DevotionalDay day, bool done) {
+    final just = ref.watch(justFinishedProvider);
+    final play = done && just == (studyId: original.id, day: day.number);
+    if (play) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (ref.read(justFinishedProvider) == just) ref.read(justFinishedProvider.notifier).clear();
+      });
+    }
+    return play;
+  }
+
   String _dayPath(PublicStudy study, int n) => '/c/${church.slug}/studies/${study.slug}/day/$n';
 
+  /// The day's hero card and one row per part. Ticks are dated [on] when a past date is picked; [moment] plays the
+  /// card's part of moment A.
   List<Widget> _devotional(
     BuildContext context,
     WidgetRef ref,
@@ -162,17 +310,16 @@ class _Today extends ConsumerWidget {
     PublicStudy original,
     DevotionalDay day,
     StudyProgress progress, {
-    required bool done,
+    String? on,
+    required bool moment,
   }) {
     final l = AppLocalizations.of(context)!;
     final progressId = original.id;
     final ticked = progress.days[day.number]?.parts ?? const <DayPart>{};
-    void openDay() => context.push(_dayPath(study, day.number), extra: original);
-    String label(DayPart part) => switch (part) {
-          DayPart.reading => l.bibleReading,
-          DayPart.reflection => l.reflection,
-          DayPart.prayer => l.prayer,
-        };
+    final done = progress.isDone(day);
+    // The reader is told it came from Today, and which past date was shown, so its ticks and its way back match.
+    void openDay() =>
+        context.push(_dayPath(study, day.number), extra: ReaderEntry(study: original, fromToday: true, on: on));
     final parts = partsFor(day);
     return [
       Pressable(
@@ -183,9 +330,11 @@ class _Today extends ConsumerWidget {
           tag: dayHeroTag(progressId, day.number),
           child: HeroCard(
             eyebrow: '${study.title} · ${l.dayOfTotal(day.number, study.days.length)}',
+            // Only the title: the card is the way into the day, and the reader's card adds the main idea.
             title: day.title,
-            quote: day.mainIdea,
-            badge: done ? l.doneForToday : null,
+            glow: done,
+            animateGlow: moment,
+            art: SelahArt(artKey: day.artKey, seed: '${study.id}-${day.number}', radius: 0, placeholder: false),
           ),
         ),
       ),
@@ -195,20 +344,75 @@ class _Today extends ConsumerWidget {
           padding: const EdgeInsets.only(bottom: Space.s + 2),
           child: Entrance(
             index: i,
-            child: SelahRow(
-              label: label(parts[i]),
-              detail: parts[i] == DayPart.reading ? day.bibleReading : null,
-              trailing: PartTick(
-                key: ValueKey('tick-${parts[i].name}'),
-                label: label(parts[i]),
-                ticked: ticked.contains(parts[i]),
-                onTap: () => tickWithFeedback(ref, progressId, day, parts[i], ref.read(clockProvider)()),
-              ),
+            child: PartRow(
+              part: parts[i],
+              // Today keeps its full "Bible reading" label.
+              title: parts[i] == DayPart.reading ? l.bibleReading : partLabel(l, parts[i]),
+              subtitle: parts[i] == DayPart.reading ? day.bibleReading : null,
+              ticked: ticked.contains(parts[i]),
+              onTick: () => tickWithFeedback(ref, progressId, day, parts[i], ref.read(clockProvider)(), on: on),
               onOpen: parts[i] == DayPart.reading ? () => _openBible(day.bibleReading!, study.bibleVersionCode) : openDay,
             ),
           ),
         ),
     ];
+  }
+}
+
+String _capitalised(String s) => s.isEmpty ? s : '${s[0].toUpperCase()}${s.substring(1)}';
+
+/// Swaps Today's content when another date is picked: it slides 24px the way the selection moved (later dates come in
+/// from the right) and fades, or only fades with Reduce Motion.
+class _DaySwitch extends StatefulWidget {
+  const _DaySwitch({required this.date, required this.child});
+
+  /// The date shown (`yyyy-MM-dd`); the child's key must change with it.
+  final String date;
+  final Widget child;
+
+  @override
+  State<_DaySwitch> createState() => _DaySwitchState();
+}
+
+class _DaySwitchState extends State<_DaySwitch> {
+  /// 1 when the last move went to a later date, -1 to an earlier one.
+  double _direction = 1;
+
+  @override
+  void didUpdateWidget(_DaySwitch old) {
+    super.didUpdateWidget(old);
+    if (widget.date != old.date) _direction = widget.date.compareTo(old.date) > 0 ? 1 : -1;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final reduce = reduceMotion(context);
+    return AnimatedSwitcher(
+      duration: Motion.daySwitch,
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      layoutBuilder: (current, previous) => Stack(
+        alignment: Alignment.topCenter,
+        children: [...previous, ?current],
+      ),
+      transitionBuilder: (child, animation) {
+        final incoming = child.key == widget.child.key;
+        // The outgoing copy leaves its heroes behind, so two cards never share a hero tag.
+        Widget moved = incoming ? child : HeroMode(enabled: false, child: child);
+        if (!reduce) {
+          moved = AnimatedBuilder(
+            animation: animation,
+            child: moved,
+            builder: (context, child) => Transform.translate(
+              offset: Offset((incoming ? 1 : -1) * _direction * Motion.daySwitchShift * (1 - animation.value), 0),
+              child: child,
+            ),
+          );
+        }
+        return FadeTransition(opacity: animation, child: moved);
+      },
+      child: widget.child,
+    );
   }
 }
 
@@ -231,50 +435,3 @@ class _LoadError extends StatelessWidget {
 
 void _openBible(String reference, String versionCode) =>
     launchUrl(bibleReaderUrl(reference, versionCode), mode: LaunchMode.externalApplication);
-
-/// Monday to Sunday, today ringed and finished days filled with a check that springs in.
-class _WeekRow extends StatelessWidget {
-  const _WeekRow({required this.doneDates, required this.now});
-
-  final Set<String> doneDates;
-  final DateTime now;
-
-  @override
-  Widget build(BuildContext context) {
-    final locale = AppLocalizations.of(context)!.localeName;
-    final tones = context.tones;
-    final done = weekCircles(doneDates, now);
-    final monday = DateTime(now.year, now.month, now.day - (now.weekday - 1));
-    return Row(
-      key: const ValueKey('week'),
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        for (var i = 0; i < 7; i++)
-          Column(
-            key: ValueKey('week-$i'),
-            children: [
-              Text(
-                DateFormat.E(locale).format(DateTime(monday.year, monday.month, monday.day + i)).substring(0, 1).toUpperCase(),
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(color: tones.muted),
-              ),
-              const SizedBox(height: 6),
-              SpringIn(
-                active: done[i],
-                child: AnimatedContainer(
-                  duration: reduceMotion(context) ? Duration.zero : Motion.medium,
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: done[i] ? tones.done : tones.surface,
-                    border: i == now.weekday - 1 ? Border.all(color: tones.today, width: 2) : null,
-                  ),
-                  child: done[i] ? Icon(Icons.check, size: 18, color: Theme.of(context).colorScheme.onPrimary) : null,
-                ),
-              ),
-            ],
-          ),
-      ],
-    );
-  }
-}

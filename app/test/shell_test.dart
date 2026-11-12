@@ -10,6 +10,7 @@ import 'package:selah/src/core/models.dart';
 import 'package:selah/src/data/current_church.dart';
 import 'package:selah/src/data/providers.dart';
 import 'package:selah/src/data/repository.dart';
+import 'package:selah/src/features/today/today_page.dart';
 import 'package:selah/src/features/welcome/welcome_state.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -89,10 +90,17 @@ late _FakeRepository _lastFake;
 void main() {
   test('tabIndexFor maps locations to tabs', () {
     expect(tabIndexFor('/'), 0);
+    expect(tabIndexFor('/today'), 0);
     expect(tabIndexFor('/c/x'), 1);
     expect(tabIndexFor('/c/x/studies/s/day/2'), 1);
     expect(tabIndexFor('/c/x/events'), 2);
     expect(tabIndexFor('/profile'), 3);
+  });
+
+  testWidgets('the root redirects to /today', (tester) async {
+    final router = await _pump(tester, '/');
+    expect(_path(router), '/today');
+    expect(find.byType(TodayPage), findsOneWidget);
   });
 
   testWidgets('the profile page shows Hoy, Estudios and Perfil when there are no events', (tester) async {
@@ -190,7 +198,7 @@ void main() {
     expect(_path(router), '/welcome');
     router.go('/');
     await tester.pumpAndSettle();
-    expect(_path(router), '/');
+    expect(_path(router), '/today');
     await tester.tap(find.text('Perfil'));
     await tester.pumpAndSettle();
     expect(_path(router), '/profile');
