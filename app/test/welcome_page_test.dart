@@ -7,7 +7,6 @@ import 'package:go_router/go_router.dart';
 import 'package:selah/l10n/app_localizations.dart';
 import 'package:selah/src/app/design/art.dart';
 import 'package:selah/src/app/theme.dart';
-import 'package:selah/src/data/progress.dart';
 import 'package:selah/src/features/today/part_style.dart';
 import 'package:selah/src/core/models.dart';
 import 'package:selah/src/data/providers.dart';
@@ -95,8 +94,10 @@ void main() {
     expect(_scene(), findsOneWidget);
     expect(find.text('Soy miembro de una iglesia'), findsOneWidget);
     expect(find.text('Soy pastor o líder: quiero traer mi iglesia a Selah'), findsOneWidget);
-    expect(find.byWidgetPredicate((w) => w is PartIcon && w.part == DayPart.reading), findsOneWidget);
-    expect(find.byWidgetPredicate((w) => w is PartIcon && w.part == DayPart.reflection), findsOneWidget);
+    // Part colours mark only the parts of a day, so the choices get neutral icon tiles.
+    expect(find.byType(PartIcon), findsNothing);
+    expect(find.byKey(const ValueKey('welcome-member-icon')), findsOneWidget);
+    expect(find.byKey(const ValueKey('welcome-leader-icon')), findsOneWidget);
   });
 
   testWidgets('tapping a welcome choice gives a selection haptic', (tester) async {
@@ -189,7 +190,7 @@ void main() {
       await _pump(tester);
       expect(tester.takeException(), isNull);
       expect(find.byType(FilledButton), findsNothing);
-      expect(find.byType(PartIcon), findsNWidgets(2));
+      expect(find.byKey(const ValueKey('welcome-member-icon')), findsOneWidget);
     } finally {
       debugDefaultTargetPlatformOverride = null;
     }

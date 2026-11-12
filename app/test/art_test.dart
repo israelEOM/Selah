@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:selah/l10n/app_localizations.dart';
@@ -15,6 +16,25 @@ const _lib = [
   ArtEntry(key: 'oil-lamp', tags: ['lamp'], pickable: true, alt: {'en': 'A lamp', 'es': 'Una lámpara', 'pt': 'Uma lâmpada'}),
   ArtEntry(key: 'scene-welcome', tags: [], pickable: false, alt: {'en': 'Welcome', 'es': 'Bienvenida', 'pt': 'Boas-vindas'}),
 ];
+
+/// A 1x1 PNG, served for every library picture, so a picture can really load in a test.
+final _png = base64Decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==');
+
+class _PicturesBundle extends CachingAssetBundle {
+  @override
+  Future<ByteData> load(String key) async =>
+      key.endsWith('.webp') ? ByteData.sublistView(Uint8List.fromList(_png)) : rootBundle.load(key);
+}
+
+/// Pumps [child] with the library's pictures available, and lets one decode.
+Future<void> _pumpLoaded(WidgetTester tester, Widget child, {String language = 'en'}) async {
+  await _pump(tester, DefaultAssetBundle(bundle: _PicturesBundle(), child: child), language: language);
+  await tester.pumpAndSettle();
+  for (var i = 0; i < 5 && find.byType(ArtPlaceholder).evaluate().isNotEmpty; i++) {
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+    await tester.pump();
+  }
+}
 
 Future<void> _pump(WidgetTester tester, Widget child, {String language = 'en', bool reduceMotion = false}) =>
     tester.pumpWidget(ProviderScope(
@@ -84,10 +104,17 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('SelahArt labels itself with the alt text in the app language', (tester) async {
+  testWidgets('SelahArt labels itself with the alt text in the app language once the picture shows', (tester) async {
+    await _pumpLoaded(tester, const SelahArt(artKey: 'vine-grapes', seed: 's', width: 100, height: 80), language: 'es');
+    expect(find.byType(ArtPlaceholder), findsNothing);
+    expect(find.bySemanticsLabel('Una vid'), findsOneWidget);
+  });
+
+  testWidgets('a placeholder standing in for a missing picture has no alt text', (tester) async {
     await _pump(tester, const SelahArt(artKey: 'vine-grapes', seed: 's', width: 100, height: 80), language: 'es');
     await tester.pumpAndSettle();
-    expect(find.bySemanticsLabel('Una vid'), findsOneWidget);
+    expect(find.byType(ArtPlaceholder), findsOneWidget);
+    expect(find.bySemanticsLabel('Una vid'), findsNothing);
   });
 
   testWidgets('SelahArt is a Hero only when given a tag and Reduce Motion is off', (tester) async {
@@ -103,11 +130,9 @@ void main() {
   });
 
   testWidgets('a fixed scene keeps its key instead of being swapped for a pickable one', (tester) async {
-    await _pump(tester, const SelahArt(artKey: 'scene-welcome', fixed: true, seed: 's', width: 100, height: 80), language: 'es');
-    await tester.pumpAndSettle();
+    await _pumpLoaded(tester, const SelahArt(artKey: 'scene-welcome', fixed: true, seed: 's', width: 100, height: 80), language: 'es');
     expect(find.bySemanticsLabel('Bienvenida'), findsOneWidget);
-    await _pump(tester, const SelahArt(artKey: 'scene-welcome', seed: 's', width: 100, height: 80), language: 'es');
-    await tester.pumpAndSettle();
+    await _pumpLoaded(tester, const SelahArt(artKey: 'scene-welcome', seed: 's', width: 100, height: 80), language: 'es');
     expect(find.bySemanticsLabel('Bienvenida'), findsNothing);
   });
 

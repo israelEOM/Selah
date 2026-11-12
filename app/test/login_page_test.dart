@@ -73,7 +73,8 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Iniciar sesión'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 30));
-    expect(calls, contains('HapticFeedbackType.heavyImpact'));
+    expect(calls, contains('HapticFeedbackType.mediumImpact'));
+    expect(calls, isNot(contains('HapticFeedbackType.heavyImpact')));
     expect(tester.getTopLeft(find.widgetWithText(TextFormField, 'Correo')).dx, isNot(field.dx));
     await tester.pump(const Duration(milliseconds: 500));
     expect(tester.getTopLeft(find.widgetWithText(TextFormField, 'Correo')), field);

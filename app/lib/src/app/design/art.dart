@@ -101,6 +101,10 @@ class SelahArt extends ConsumerWidget {
     final entry = library.where((e) => e.key == resolved).firstOrNull;
     final language = ref.watch(appLocaleProvider).languageCode;
     final placeholder = ArtPlaceholder(seed: seed);
+    final label = entry?.alt[language] ?? entry?.alt['en'];
+    // Only a picture that has really shown carries its alt text; the placeholder standing in for it says nothing.
+    Widget labelled(Widget picture) =>
+        label == null ? picture : Semantics(label: label, image: true, excludeSemantics: true, child: picture);
 
     Widget art = resolved.isEmpty
         ? placeholder
@@ -111,15 +115,13 @@ class SelahArt extends ConsumerWidget {
             height: height,
             excludeFromSemantics: true,
             errorBuilder: (context, error, stackTrace) => placeholder,
-            frameBuilder: (context, child, frame, sync) => frame == null && !sync ? placeholder : child,
+            frameBuilder: (context, child, frame, sync) => frame == null && !sync ? placeholder : labelled(child),
           );
     art = switch (shape) {
       ArtShape.circle => ClipOval(child: art),
       ArtShape.rounded => ClipRRect(borderRadius: BorderRadius.circular(radius), child: art),
     };
     art = SizedBox(width: width, height: height, child: art);
-    final label = entry?.alt[language] ?? entry?.alt['en'];
-    art = label == null ? ExcludeSemantics(child: art) : Semantics(label: label, image: true, excludeSemantics: true, child: art);
     if (heroTag != null && !reduceMotion(context)) art = Hero(tag: heroTag!, child: art);
     return art;
   }

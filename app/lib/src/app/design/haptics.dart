@@ -15,10 +15,10 @@ abstract final class SelahHaptics {
     await HapticFeedback.lightImpact();
   }
 
-  /// Something went wrong, gently.
+  /// Something went wrong, gently: never harder than [success].
   static Future<void> warning() async {
     if (kIsWeb) return;
-    await HapticFeedback.heavyImpact();
+    await HapticFeedback.mediumImpact();
   }
 
   /// A completed action.

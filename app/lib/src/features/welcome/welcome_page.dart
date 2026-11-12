@@ -7,9 +7,7 @@ import '../../app/theme.dart';
 import '../../core/models.dart';
 import '../../data/current_church.dart';
 import '../../app/design/art.dart';
-import '../../data/progress.dart';
 import '../../data/providers.dart';
-import '../today/part_style.dart';
 import '../home/church_picker_page.dart';
 import 'welcome_state.dart';
 
@@ -165,7 +163,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
         Entrance(
           index: 1,
           child: SelahRow(
-            leading: const PartIcon(part: DayPart.reading),
+            leading: const _ChoiceIcon(key: ValueKey('welcome-member-icon'), icon: Icons.person_outline_rounded),
             label: l.welcomeMember,
             selectionHaptic: true,
             onOpen: () => _show(_Step.member),
@@ -175,7 +173,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
         Entrance(
           index: 2,
           child: SelahRow(
-            leading: const PartIcon(part: DayPart.reflection),
+            leading: const _ChoiceIcon(key: ValueKey('welcome-leader-icon'), icon: Icons.church_outlined),
             label: l.welcomeLeader,
             selectionHaptic: true,
             onOpen: () => _show(_Step.leader),
@@ -227,4 +225,27 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
           OutlinedButton(onPressed: () => context.go('/'), child: Text(l.goToToday)),
         ]),
       ];
+}
+
+/// A welcome choice's icon on a neutral tile: part colours mark only the parts of a day. The tile is the page colour
+/// so it shows on the row's raised paper.
+class _ChoiceIcon extends StatelessWidget {
+  const _ChoiceIcon({super.key, required this.icon});
+
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    const size = 42.0;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: BorderRadius.circular(size * 0.3),
+      ),
+      alignment: Alignment.center,
+      child: Icon(icon, size: size * 0.5, color: context.tones.muted),
+    );
+  }
 }
