@@ -25,6 +25,7 @@ class ChurchPage extends ConsumerWidget {
     final roleState = ref.watch(churchRoleProvider(church.id));
     final signedIn = ref.watch(userIdProvider).value != null;
     final site = siteLayout(context);
+    Widget first(Widget block) => Entrance(index: 0, child: ContentSwitcher(child: block));
     return SelahPage(
       title: church.name,
       onRefresh: () => ref.refresh(publishedStudiesProvider(church.id).future),
@@ -66,12 +67,14 @@ class ChurchPage extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 36),
-        // The first block crossfades from the skeleton; the rows after it stay lazy and stagger in on their own.
+        // The first block crossfades from the skeleton; the rows after it stay lazy and stagger in on their own. The
+        // Entrance stays in the same slot across loading and data, so the block arrives once: it rises in with the
+        // skeleton, or with the studies when they're already loaded, and then only crossfades.
         ...studies.when(
-          loading: () => [const ContentSwitcher(child: SkeletonList(rows: 4))],
+          loading: () => [first(const SkeletonList(rows: 4))],
           error: (_, _) => [
-            ContentSwitcher(
-              child: Column(
+            first(
+              Column(
                 key: const ValueKey('error'),
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -90,8 +93,8 @@ class ChurchPage extends ConsumerWidget {
           ],
           data: (items) => items.isEmpty
               ? [
-                  ContentSwitcher(
-                    child: Column(
+                  first(
+                    Column(
                       key: const ValueKey('empty'),
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -109,8 +112,8 @@ class ChurchPage extends ConsumerWidget {
                   ),
                 ]
               : [
-                  ContentSwitcher(
-                    child: Column(
+                  first(
+                    Column(
                       key: const ValueKey('featured'),
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [

@@ -213,4 +213,41 @@ void main() {
       expect(tester.getSize(art), const Size(52, 52));
     }
   });
+
+  testWidgets('the featured study arrives when the studies are already loaded', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final container = ProviderContainer(overrides: [
+      repositoryProvider.overrideWithValue(_FakeRepository()),
+      userIdProvider.overrideWith((ref) => Stream.value(null)),
+      myChurchesProvider.overrideWith((ref) async => const []),
+      churchRoleProvider('A').overrideWith((ref) async => null),
+      publishedStudiesProvider('A').overrideWith((ref) async => const [
+            StudyCard(id: '1', slug: 'retiro-espiritual', title: 'La necesidad del retiro espiritual', numberOfDays: 3),
+          ]),
+    ]);
+    addTearDown(container.dispose);
+    // Cached before the page opens, as when coming back to it.
+    final keep = container.listen(publishedStudiesProvider('A'), (_, _) {});
+    addTearDown(keep.close);
+    await container.read(publishedStudiesProvider('A').future);
+    await tester.pumpWidget(UncontrolledProviderScope(
+      container: container,
+      child: MaterialApp(
+        theme: selahLightTheme(),
+        locale: const Locale('es'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const ChurchPage(church: _church),
+      ),
+    ));
+    final title = find.text('La necesidad del retiro espiritual');
+    expect(title, findsOneWidget, reason: 'shown on the first frame, with no skeleton');
+    final entrance = find.ancestor(of: title, matching: find.byType(Entrance));
+    expect(entrance, findsOneWidget);
+    double opacity() =>
+        tester.widget<FadeTransition>(find.descendant(of: entrance, matching: find.byType(FadeTransition)).first).opacity.value;
+    expect(opacity(), lessThan(1));
+    await tester.pumpAndSettle();
+    expect(opacity(), 1);
+  });
 }

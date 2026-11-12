@@ -78,17 +78,23 @@ class HeroCard extends StatelessWidget {
   /// An illustration, round, in the bottom-right corner.
   final Widget? art;
 
+  /// The art's visible width (100 px, 14 px of it past the edge) less the card's 22 px padding.
+  static const _artClearance = 100.0 - 14 - 22;
+
   @override
   Widget build(BuildContext context) {
     final tones = context.tones;
     final text = Theme.of(context).textTheme;
     final onHero = heroForeground(context);
+    // With art, the title and quote stop short of its visible part, so the round corner never covers them.
+    Widget clear(Widget text) =>
+        art == null ? text : Padding(padding: const EdgeInsets.only(right: _artClearance), child: text);
     final parts = <Widget>[
       if (eyebrow != null)
         Text(eyebrow!.toUpperCase(), style: text.labelSmall?.copyWith(color: onHero.withValues(alpha: 0.8))),
       ?eyebrowAccessory,
-      if (title != null) Text(title!, style: text.headlineSmall?.copyWith(color: onHero)),
-      if (quote != null) Text(quote!, style: serifQuote(context).copyWith(color: onHero)),
+      if (title != null) clear(Text(title!, style: text.headlineSmall?.copyWith(color: onHero))),
+      if (quote != null) clear(Text(quote!, style: serifQuote(context).copyWith(color: onHero))),
       ?footer,
     ];
     final content = Padding(

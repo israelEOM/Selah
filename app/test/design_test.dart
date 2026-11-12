@@ -172,6 +172,24 @@ void main() {
     expect(find.text('Hecho por hoy'), findsOneWidget);
   });
 
+  const longQuote = 'A long quote that runs the whole width of the card and wraps onto a second and a third line.';
+
+  testWidgets('HeroCard keeps its title and quote clear of the art', (tester) async {
+    await tester.pumpWidget(host(const SizedBox(
+      width: 360,
+      child: HeroCard(title: 'A title that is long enough to wrap', quote: longQuote, art: ColoredBox(color: Colors.red)),
+    )));
+    final art = tester.getRect(find.byType(ClipOval));
+    expect(tester.getRect(find.text(longQuote)).right, lessThanOrEqualTo(art.left));
+    expect(tester.getRect(find.text('A title that is long enough to wrap')).right, lessThanOrEqualTo(art.left));
+  });
+
+  testWidgets('HeroCard without art gives its text the full width', (tester) async {
+    await tester.pumpWidget(host(const SizedBox(width: 360, child: HeroCard(quote: longQuote))));
+    final card = tester.getRect(find.byType(HeroCard));
+    expect(tester.getRect(find.text(longQuote)).right, closeTo(card.right - 22, 0.5));
+  });
+
   testWidgets('Entrance shows its child immediately with Reduce Motion', (tester) async {
     await tester.pumpWidget(host(reduce: true, const Entrance(index: 3, child: Text('hi'))));
     expect(tester.widget<FadeTransition>(find.byType(FadeTransition).last).opacity.value, 1);
