@@ -67,40 +67,45 @@ class EventsPage extends ConsumerWidget {
         const SizedBox(height: Space.s),
         Text(l.eventsTitle, style: text.displaySmall),
         const SizedBox(height: Space.xl),
-        ...events.when(
-          loading: () => [const SkeletonList(rows: 3)],
-          error: (_, _) => [Text(l.loadError, style: text.bodyMedium)],
-          data: (events) => [
-            if (events.isEmpty) ...[
-              const SelahArt(
-                artKey: 'scene-empty-events',
-                fixed: true,
-                seed: 'empty-events',
-                width: double.infinity,
-                height: 180,
-              ),
-              const SizedBox(height: Space.l),
-              Text(l.eventsNone, style: text.bodyLarge),
-            ],
-            if (events.isNotEmpty)
-              Align(
-                alignment: Alignment.centerLeft,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: site ? Layout.readingMeasure : double.infinity),
-                  child: _NextEvent(event: events.first, today: now, open: open),
-                ),
-              ),
-            if (site && events.length > 1) ...[
-              const SizedBox(height: Space.xl),
-              Eyebrow(l.eventsLater),
-              const SizedBox(height: Space.m),
-              CardGrid(
-                minTileWidth: 340,
-                maxColumns: 2,
-                children: [for (final event in events.skip(1)) EventRow(event: event, open: open)],
-              ),
-            ],
-          ],
+        ContentSwitcher(
+          child: events.when(
+            loading: () => const SkeletonList(rows: 3),
+            error: (_, _) => Text(l.loadError, style: text.bodyMedium),
+            data: (events) => Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (events.isEmpty) ...[
+                  const SelahArt(
+                    artKey: 'scene-empty-events',
+                    fixed: true,
+                    seed: 'empty-events',
+                    width: double.infinity,
+                    height: 180,
+                  ),
+                  const SizedBox(height: Space.l),
+                  Text(l.eventsNone, style: text.bodyLarge),
+                ],
+                if (events.isNotEmpty)
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: site ? Layout.readingMeasure : double.infinity),
+                      child: _NextEvent(event: events.first, today: now, open: open),
+                    ),
+                  ),
+                if (site && events.length > 1) ...[
+                  const SizedBox(height: Space.xl),
+                  Eyebrow(l.eventsLater),
+                  const SizedBox(height: Space.m),
+                  CardGrid(
+                    minTileWidth: 340,
+                    maxColumns: 2,
+                    children: [for (final event in events.skip(1)) EventRow(event: event, open: open)],
+                  ),
+                ],
+              ],
+            ),
+          ),
         ),
       ],
     );

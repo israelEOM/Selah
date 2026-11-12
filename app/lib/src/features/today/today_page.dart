@@ -54,8 +54,14 @@ class TodayPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
-    return ref.watch(currentChurchProvider).when(
-          loading: () => SelahPage(title: l.tabToday, children: const [SkeletonList(hero: true, rows: 3)]),
+    // The skeleton crossfades into the day (or the church list) once the church is known.
+    return ContentSwitcher(
+      child: ref.watch(currentChurchProvider).when(
+          loading: () => SelahPage(
+            key: const ValueKey('loading'),
+            title: l.tabToday,
+            children: const [SkeletonList(hero: true, rows: 3)],
+          ),
           error: (_, _) => SelahPage(
             title: l.tabToday,
             children: [_LoadError(onRetry: () => ref.invalidate(currentChurchProvider))],
@@ -68,7 +74,8 @@ class TodayPage extends ConsumerWidget {
                   children: churchListChildren(context, ref),
                 )
               : TodayRefresher(churchId: church.id, child: _Today(church: church)),
-        );
+      ),
+    );
   }
 }
 
@@ -114,20 +121,30 @@ class _Today extends ConsumerWidget {
       ),
       const SizedBox(height: Space.xl),
     ];
-    Widget page(List<Widget> children) {
-      // The day's content slides to the side when another date is picked.
+    Widget page(List<Widget> children, {bool skeleton = false}) {
+      // The day's content slides to the side when another date is picked, and crossfades in from its skeleton.
       final content = _DaySwitch(
         date: past ?? todayKey,
         child: Column(
           key: ValueKey(past ?? todayKey),
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: children,
+          children: [
+            ContentSwitcher(
+              child: Column(
+                key: ValueKey(skeleton ? 'skeleton' : 'day'),
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: children,
+              ),
+            ),
+          ],
         ),
       );
       if (!siteLayout(context)) {
         return SelahPage(
           title: title,
           onRefresh: () => refreshToday(ref, church.id),
+          // The part rows stagger in on their own, and the hero card must sit still for its flight to the reader.
+          arrive: false,
           children: [...header, content],
         );
       }
@@ -163,7 +180,7 @@ class _Today extends ConsumerWidget {
         ],
       );
     }
-    final loading = page(const [SkeletonList(hero: true, rows: 3)]);
+    final loading = page(const [SkeletonList(hero: true, rows: 3)], skeleton: true);
     return ref.watch(newestStudyProvider(church.id)).when(
           loading: () => loading,
           error: (_, _) => page([_LoadError(onRetry: () => ref.invalidate(newestStudyProvider(church.id)))]),

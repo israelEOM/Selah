@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:selah/src/app/design/art.dart';
 import 'package:selah/src/app/theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -99,6 +100,29 @@ void main() {
     final fake = await _pump(tester, userId: 'user-1');
     expect(fake.accepted, ['t1']);
     expect(find.text('ADMIN vida-nueva'), findsOneWidget);
+  });
+
+  List<Object?> recordHaptics(WidgetTester tester) {
+    final calls = <Object?>[];
+    final messenger = tester.binding.defaultBinaryMessenger;
+    messenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+      if (call.method == 'HapticFeedback.vibrate') calls.add(call.arguments);
+      return null;
+    });
+    addTearDown(() => messenger.setMockMethodCallHandler(SystemChannels.platform, null));
+    return calls;
+  }
+
+  testWidgets('joining a church plays the success haptic', (tester) async {
+    final haptics = recordHaptics(tester);
+    await _pump(tester, userId: 'user-1');
+    expect(haptics, ['HapticFeedbackType.mediumImpact']);
+  });
+
+  testWidgets('a failed join plays no success haptic', (tester) async {
+    final haptics = recordHaptics(tester);
+    await _pump(tester, userId: 'user-1', failure: Exception('offline'));
+    expect(haptics, isNot(contains('HapticFeedbackType.mediumImpact')));
   });
 
   testWidgets('signed in lands on the church for a member invite', (tester) async {

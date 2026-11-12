@@ -27,17 +27,20 @@ class StudyPage extends ConsumerWidget {
     final text = Theme.of(context).textTheme;
     final study = ref.watch(studyProvider((churchId: church.id, slug: slug)));
     final backTo = '/c/${church.slug}';
-    SelahPage page(List<Widget> children) => SelahPage(
+    SelahPage page(List<Widget> children, {Key? key}) => SelahPage(
+          key: key,
           backTo: backTo,
           actions: const [LanguageMenu(pageAction: true), SizedBox(width: 8)],
           children: children,
         );
-    return study.when(
-      loading: () => page(const [SkeletonList(hero: true, rows: 4)]),
-      error: (_, _) => page([Text(l.loadError, style: text.bodyLarge)]),
-      data: (s) => s == null
-          ? page([Text(l.studyNotFound, style: text.bodyLarge)])
-          : _StudyBody(church: church, original: s),
+    return ContentSwitcher(
+      child: study.when(
+        loading: () => page(const [SkeletonList(hero: true, rows: 4)], key: const ValueKey('loading')),
+        error: (_, _) => page([Text(l.loadError, style: text.bodyLarge)]),
+        data: (s) => s == null
+            ? page([Text(l.studyNotFound, style: text.bodyLarge)])
+            : _StudyBody(church: church, original: s),
+      ),
     );
   }
 }
@@ -198,7 +201,8 @@ class _StudyBody extends ConsumerWidget {
         width: double.infinity,
         heroTag: studyArtTag(original.id),
       ),
-      children: [...beforePath, path, ...afterPath],
+      // The days stagger in on their own.
+      children: [...beforePath, NoArrive(child: path), ...afterPath],
     );
   }
 }

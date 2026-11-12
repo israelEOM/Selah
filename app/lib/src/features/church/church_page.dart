@@ -66,41 +66,63 @@ class ChurchPage extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 36),
+        // The first block crossfades from the skeleton; the rows after it stay lazy and stagger in on their own.
         ...studies.when(
-          loading: () => [const SkeletonList(rows: 4)],
+          loading: () => [const ContentSwitcher(child: SkeletonList(rows: 4))],
           error: (_, _) => [
-            Text(l.loadError, style: text.bodyMedium),
-            const SizedBox(height: Space.m),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: OutlinedButton(
-                onPressed: () => ref.invalidate(publishedStudiesProvider(church.id)),
-                child: Text(l.retry),
+            ContentSwitcher(
+              child: Column(
+                key: const ValueKey('error'),
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(l.loadError, style: text.bodyMedium),
+                  const SizedBox(height: Space.m),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: OutlinedButton(
+                      onPressed: () => ref.invalidate(publishedStudiesProvider(church.id)),
+                      child: Text(l.retry),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
           data: (items) => items.isEmpty
               ? [
-                  const SelahArt(
-                    artKey: 'scene-empty-studies',
-                    fixed: true,
-                    seed: 'empty-studies',
-                    width: double.infinity,
-                    height: 180,
+                  ContentSwitcher(
+                    child: Column(
+                      key: const ValueKey('empty'),
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const SelahArt(
+                          artKey: 'scene-empty-studies',
+                          fixed: true,
+                          seed: 'empty-studies',
+                          width: double.infinity,
+                          height: 180,
+                        ),
+                        const SizedBox(height: Space.l),
+                        Text(l.noStudiesYet, style: text.bodyMedium),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: Space.l),
-                  Text(l.noStudiesYet, style: text.bodyMedium),
                 ]
               : [
-                  if (site) ...[
-                    Eyebrow(l.devotionalOfTheWeek),
-                    const SizedBox(height: Space.m),
-                    Entrance(
-                      index: 0,
-                      child: _StudyTile(church, items.first.localizedTo(language), featured: true, horizontal: true),
+                  ContentSwitcher(
+                    child: Column(
+                      key: const ValueKey('featured'),
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (site) ...[
+                          Eyebrow(l.devotionalOfTheWeek),
+                          const SizedBox(height: Space.m),
+                          _StudyTile(church, items.first.localizedTo(language), featured: true, horizontal: true),
+                        ] else
+                          _FeaturedStudy(church, items.first.localizedTo(language)),
+                      ],
                     ),
-                  ] else
-                    Entrance(index: 0, child: _FeaturedStudy(church, items.first.localizedTo(language))),
+                  ),
                   if (items.length > 1) ...[
                     const SizedBox(height: 36),
                     Eyebrow(l.recentStudies),

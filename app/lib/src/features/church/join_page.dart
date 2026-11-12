@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -34,6 +36,7 @@ class _JoinPageState extends ConsumerState<JoinPage> {
     try {
       final slug = await ref.read(repositoryProvider).acceptInvite(widget.token);
       ref.invalidate(myChurchesProvider);
+      unawaited(SelahHaptics.success());
       if (mounted) context.go(info.role.canEdit ? '/c/$slug/admin' : '/c/$slug');
     } catch (e) {
       if (mounted) {

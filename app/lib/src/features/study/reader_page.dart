@@ -54,21 +54,28 @@ class ReaderPage extends ConsumerWidget {
 
     // While the fetch runs, the study the opener passed in stands in, so the hero header is on screen for the flight.
     final seed = initialStudy?.slug == slug ? initialStudy : null;
-    if (!study.hasValue && !study.hasError && seed != null) return loaded(seed);
-    return study.when(
-      loading: () => SelahPage(
-        backTo: backTo,
-        actions: const [LanguageMenu(pageAction: true), SizedBox(width: 8)],
-        maxWidth: 680,
-        children: const [SkeletonList(hero: true, rows: 5)],
-      ),
-      error: (_, _) => SelahPage(
-        backTo: backTo,
-        actions: const [LanguageMenu(pageAction: true), SizedBox(width: 8)],
-        children: [Text(l.loadError, style: text.bodyLarge)],
-      ),
-      data: loaded,
-    );
+    // One switcher for both ways in, so the stand-in and the fetched study are the same `_Day` and nothing fades.
+    final Widget page;
+    if (!study.hasValue && !study.hasError && seed != null) {
+      page = loaded(seed);
+    } else {
+      page = study.when(
+        loading: () => SelahPage(
+          key: const ValueKey('loading'),
+          backTo: backTo,
+          actions: const [LanguageMenu(pageAction: true), SizedBox(width: 8)],
+          maxWidth: 680,
+          children: const [SkeletonList(hero: true, rows: 5)],
+        ),
+        error: (_, _) => SelahPage(
+          backTo: backTo,
+          actions: const [LanguageMenu(pageAction: true), SizedBox(width: 8)],
+          children: [Text(l.loadError, style: text.bodyLarge)],
+        ),
+        data: loaded,
+      );
+    }
+    return ContentSwitcher(child: page);
   }
 }
 
@@ -187,24 +194,27 @@ class _DayState extends ConsumerState<_Day> {
     final onHero = heroForeground(context);
     final content = <Widget>[
       TranslationBanner(shown: study, original: original, language: language),
-      DayHero(
-        tag: dayHeroTag(original.id, day.number),
-        child: HeroCard(
-          // The eyebrow with the day's ring beside it.
-          eyebrowAccessory: Row(
-            children: [
-              Flexible(
-                child: Text(
-                  l.dayOfTotal(day.number, total).toUpperCase(),
-                  style: text.labelSmall?.copyWith(color: onHero.withValues(alpha: 0.8)),
+      // Still while the page arrives, so the card from Today lands where it belongs.
+      NoArrive(
+        child: DayHero(
+          tag: dayHeroTag(original.id, day.number),
+          child: HeroCard(
+            // The eyebrow with the day's ring beside it.
+            eyebrowAccessory: Row(
+              children: [
+                Flexible(
+                  child: Text(
+                    l.dayOfTotal(day.number, total).toUpperCase(),
+                    style: text.labelSmall?.copyWith(color: onHero.withValues(alpha: 0.8)),
+                  ),
                 ),
-              ),
-              const SizedBox(width: Space.s),
-              PartRing(parts: ticked, complete: progress?.isDone(day) ?? false, size: 22),
-            ],
+                const SizedBox(width: Space.s),
+                PartRing(parts: ticked, complete: progress?.isDone(day) ?? false, size: 22),
+              ],
+            ),
+            title: day.title,
+            quote: day.mainIdea,
           ),
-          title: day.title,
-          quote: day.mainIdea,
         ),
       ),
       const SizedBox(height: Space.l),

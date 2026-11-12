@@ -130,6 +130,29 @@ void main() {
     });
   }
 
+  for (final platform in [TargetPlatform.iOS, TargetPlatform.android]) {
+    testWidgets('the active tab uses the done tone (${platform.name})', (tester) async {
+      await _pumpBar(tester, platform: platform);
+      await tester.pumpAndSettle();
+      final done = selahLightTheme().extension<SelahTones>()!.done;
+      Color? colorOf(IconData icon) {
+        final finder = find.byIcon(icon);
+        return tester.widget<Icon>(finder).color ?? IconTheme.of(tester.element(finder)).color;
+      }
+
+      expect(colorOf(Icons.wb_sunny), done);
+      expect(colorOf(Icons.person_outline), isNot(done));
+      if (platform == TargetPlatform.android) {
+        expect(tester.widget<NavigationBar>(find.byType(NavigationBar)).indicatorColor, done.withValues(alpha: 0.10));
+      } else {
+        final capsule = tester.widget<DecoratedBox>(find.byKey(FrostedTabBar.capsuleKey)).decoration as ShapeDecoration;
+        final tones = selahLightTheme().extension<SelahTones>()!;
+        final glass = Color.alphaBlend(Colors.white.withValues(alpha: 0.7), tones.surface);
+        expect(capsule.color, Color.alphaBlend(done.withValues(alpha: 0.10), glass), reason: 'a soft green pill');
+      }
+    });
+  }
+
   testWidgets('the selected tab is marked selected for screen readers', (tester) async {
     final semantics = tester.ensureSemantics();
     await _pumpBar(tester, platform: TargetPlatform.iOS);

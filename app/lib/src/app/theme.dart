@@ -6,6 +6,7 @@ import 'design/transitions.dart';
 
 export 'design/adaptive_controls.dart';
 export 'design/breakpoints.dart';
+export 'design/content_switcher.dart';
 export 'design/haptics.dart';
 export 'design/hero_card.dart';
 export 'design/navigation.dart';

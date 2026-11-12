@@ -7,6 +7,7 @@ import '../../../l10n/app_localizations.dart';
 import 'navigation.dart';
 import 'platform.dart';
 import 'responsive.dart';
+import 'skeleton.dart';
 import 'tokens.dart';
 
 /// The adaptive page scaffold: a large collapsing title (Cupertino on iOS, Material 3 elsewhere), an optional back
@@ -27,6 +28,7 @@ class SelahPage extends StatelessWidget {
     this.header,
     this.headerHeight = 150,
     this.slivers = const [],
+    this.arrive = true,
   });
 
   /// Null means no large title, only the slim bar (the reader).
@@ -59,6 +61,26 @@ class SelahPage extends StatelessWidget {
   /// Slivers after [children] in the same centred column, for parts that need their own scrolling behaviour (pinned
   /// group headings).
   final List<Widget> slivers;
+
+  /// On the first build, each child rises a few pixels and fades in, one after another ([Entrance]). Pages that
+  /// stagger their own content pass false, or mark a child with [NoArrive]. A [lazy] page never arrives, so a long
+  /// list doesn't animate as it scrolls in. App layout only.
+  final bool arrive;
+
+  /// [children], each in an [Entrance] when the page arrives. Spacers are wrapped too, so every slot keeps the same
+  /// widget type and a child that comes or goes later doesn't make the ones after it arrive again, but they take no
+  /// turn in the stagger.
+  List<Widget> _arriving() {
+    if (!arrive || lazy) return children;
+    var index = 0;
+    return [
+      for (final child in children)
+        if (child is NoArrive)
+          child
+        else
+          Entrance(index: child is SizedBox && child.child == null ? index : index++, child: child),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -134,7 +156,7 @@ class SelahPage extends StatelessWidget {
           final Widget content = lazy
               ? SliverList.list(children: children)
               : SliverToBoxAdapter(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: _arriving()),
                 );
           return SliverPadding(
             padding: EdgeInsets.fromLTRB(side, Space.l, side, bottom),
@@ -230,6 +252,16 @@ class SelahPage extends StatelessWidget {
       ),
     );
   }
+}
+
+/// A [SelahPage] child that keeps still while the page arrives: it has its own motion, or holds a Hero.
+class NoArrive extends StatelessWidget {
+  const NoArrive({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => child;
 }
 
 class _SlimBarDelegate extends SliverPersistentHeaderDelegate {

@@ -24,7 +24,11 @@ class SelahTab {
   final String symbol, selectedSymbol;
 }
 
+/// How strongly the active tab's soft pill is tinted with the done tone.
+const _activePillAlpha = 0.10;
+
 /// The bottom tab bar: native Liquid Glass on iOS 26, a frosted pill elsewhere on iOS, Material on Android and web.
+/// The active tab takes the done tone, over a soft done-tinted pill where the bar draws one.
 class AdaptiveTabBar extends StatelessWidget {
   const AdaptiveTabBar({super.key, required this.tabs, required this.currentIndex, required this.onTap});
 
@@ -45,7 +49,8 @@ class AdaptiveTabBar extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: CNTabBar(
-            tint: Theme.of(context).colorScheme.primary,
+            // The native bar exposes only its tint; its glass and selection stay the system's.
+            tint: context.tones.done,
             items: [
               for (final tab in tabs)
                 CNTabBarItem(label: tab.label, icon: CNSymbol(tab.symbol), activeIcon: CNSymbol(tab.selectedSymbol)),
@@ -59,13 +64,27 @@ class AdaptiveTabBar extends StatelessWidget {
     if (uiPlatformOf(context) == UiPlatform.ios) {
       return FrostedTabBar(tabs: tabs, currentIndex: currentIndex, onTap: _tap);
     }
-    return NavigationBar(
-      selectedIndex: currentIndex,
-      onDestinationSelected: _tap,
-      destinations: [
-        for (final tab in tabs)
-          NavigationDestination(icon: Icon(tab.icon), selectedIcon: Icon(tab.selectedIcon), label: tab.label),
-      ],
+    final done = context.tones.done;
+    final bar = NavigationBarTheme.of(context);
+    return NavigationBarTheme(
+      data: bar.copyWith(
+        iconTheme: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected)
+            ? IconThemeData(color: done)
+            : bar.iconTheme?.resolve(states) ?? IconThemeData(color: context.tones.muted)),
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          final base = bar.labelTextStyle?.resolve(states) ?? Theme.of(context).textTheme.labelMedium;
+          return states.contains(WidgetState.selected) ? base?.copyWith(color: done) : base;
+        }),
+      ),
+      child: NavigationBar(
+        selectedIndex: currentIndex,
+        onDestinationSelected: _tap,
+        indicatorColor: done.withValues(alpha: _activePillAlpha),
+        destinations: [
+          for (final tab in tabs)
+            NavigationDestination(icon: Icon(tab.icon), selectedIcon: Icon(tab.selectedIcon), label: tab.label),
+        ],
+      ),
     );
   }
 }
@@ -85,7 +104,8 @@ class FrostedTabBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final tones = context.tones;
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final capsule = Color.alphaBlend(Colors.white.withValues(alpha: dark ? 0.12 : 0.7), tones.surface);
+    final glass = Color.alphaBlend(Colors.white.withValues(alpha: dark ? 0.12 : 0.7), tones.surface);
+    final capsule = Color.alphaBlend(tones.done.withValues(alpha: _activePillAlpha), glass);
     final x = tabs.length < 2 ? 0.0 : -1 + 2 * currentIndex / (tabs.length - 1);
     return SafeArea(
       top: false,
@@ -145,7 +165,7 @@ class _FrostedTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = selected ? Theme.of(context).colorScheme.primary : context.tones.muted;
+    final color = selected ? context.tones.done : context.tones.muted;
     return Expanded(
       child: Semantics(
         container: true,

@@ -136,6 +136,8 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
         // Inside the member or leader part, back returns to the choice, unless the page opened straight into it.
         onBack: _step == _Step.choice || widget.step != null ? null : () => _show(_Step.choice),
         maxWidth: 560,
+        // Each step brings in its own scene and rows.
+        arrive: false,
         children: [
           ...children,
           if (_error != null) ...[
