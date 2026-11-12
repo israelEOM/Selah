@@ -12,7 +12,7 @@ colors:
   charcoal-dark: "#1E1C1A"
   charcoal-raised-dark: "#272421"
   ink-dark: "#EDE8E1"
-  ink-muted-dark: "#9C948A"
+  ink-muted-dark: "#A39B91"
   sage-dark: "#A9CDB8"
   hero-green-dark: "#26332C"
   hero-green-deep-dark: "#1F2A24"
@@ -183,7 +183,7 @@ On the green hero card (the reader's header ring, `PartRing(onHero: true)`) the 
 - **Paper** (`#FAF7F2`; dark **charcoal** `#1E1C1A`): the page background.
 - **Raised paper** (`#F1EBE1`; dark `#272421`): cards, rows, inputs and the tab bar. In dark mode, surfaces get lighter as they rise.
 - **Ink** (`#262320`; dark `#EDE8E1`): text.
-- **Muted ink** (`#6F655A`; dark `#9C948A`): secondary text, dates and captions.
+- **Muted ink** (`#6F655A`; dark `#A39B91`): secondary text, dates and captions.
 - **Text on the hero card:** paper `#FAF7F2` in light mode, ink `#EDE8E1` in dark mode (`onPrimary` / `onSurface`).
 
 **Contrast:** every text pair above meets WCAG AA (4.5:1) on both the page and raised surfaces, in both themes; borders (`outline`, muted ink) meet 3:1. `app/test/contrast_test.dart` enforces it, so run it whenever a color changes.
@@ -285,7 +285,7 @@ All components live in `app/lib/src/app/design/` and read only tokens.
 - **Site header** (`SiteHeader`, `SiteFrame`): the desktop top bar, 64 px tall, on paper with an `outlineVariant` hairline. Links are text buttons, so they can take keyboard focus.
 - **Two columns** (`TwoColumn`): a main column and a fixed side column, `Space.xxl` apart. Use it only in the website layout.
 - **Card grid** (`CardGrid`): as many columns as fit (default 280 px minimum, three at most). Tiles in a row share a top edge and keep their width when a row isn't full.
-- **Hero card** (`HeroCard`): today's study. It has a green gradient (`heroStart` → `heroEnd`), paper-colored text in light mode (ink in dark mode), `Radii.card` and 22 padding. It holds an eyebrow, a serif title and a serif italic quote. It's the one large green surface per screen. A finished day's card holds a soft light (`glow`): a pale radial highlight from the bottom centre. Optional `art` fills the right 60% of the card behind the text, fading from transparent at its left edge to 50% at the right, so the title and quote run the full width and stay legible. Today's card shows only the eyebrow and the title; the reader's card adds the quote. Both show the day's art, and until its file exists the card is plain green, with no placeholder.
+- **Hero card** (`HeroCard`): today's study. It has a green gradient (`heroStart` → `heroEnd`), paper-colored text in light mode (ink in dark mode), `Radii.card` and 22 padding. It holds an eyebrow, a serif title and a serif italic quote. It's the one large green surface per screen. A finished day's card holds a soft light (`glow`): a pale radial highlight from the bottom centre. Optional `art` fills the right 60% of the card behind the text, fading from transparent at its left edge to 35% at the right, so the title and quote run the full width and stay legible: across the whole library the title keeps at least 3.8:1 in light mode and 4.5:1 in dark. Today's card shows only the eyebrow and the title; the reader's card adds the quote. Both show the day's art, and until its file exists the card is plain green, with no placeholder.
 - **Row** (`SelahRow`): raised paper, `Radii.row`, ink title, muted subtitle. Presses spring (`Pressable`).
 - **Tab bar** (`AdaptiveTabBar`): native glass on iOS 26, a frosted pill elsewhere on iOS, and a Material `NavigationBar` on raised paper on Android and web. The selected tab takes the done green (`tones.done`) over a soft pill of the same green at 10%; the native glass bar takes only the tint, and keeps its own glass and selection.
 - **Buttons:** primary is a filled green stadium with paper-colored text. Secondary is an outlined stadium with green text and a green border.

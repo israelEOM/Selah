@@ -80,7 +80,7 @@ class HeroCard extends StatelessWidget {
   final Widget? art;
 
   static const _artWidth = 0.6;
-  static const _artStrength = 0.5;
+  static const _artStrength = 0.35;
 
   @override
   Widget build(BuildContext context) {

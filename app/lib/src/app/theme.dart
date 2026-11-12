@@ -205,7 +205,7 @@ const _dark = _Palette(
   onPrimary: Color(0xFF1E1C1A),
   tones: SelahTones(
     surface: Color(0xFF272421),
-    muted: Color(0xFF9C948A),
+    muted: Color(0xFFA39B91),
     accent: Color(0xFFE0906E),
     done: Color(0xFFA9CDB8),
     today: Color(0xFFE0906E),

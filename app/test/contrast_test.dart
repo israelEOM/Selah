@@ -44,6 +44,9 @@ void main() {
         // Small labels in the part's colour (section eyebrows, the tick bar's chip name) are text: 4.5:1.
         expect(contrast(tone.text, theme.scaffoldBackgroundColor), greaterThanOrEqualTo(4.5), reason: '$part text on paper');
         expect(contrast(tone.text, tone.tint), greaterThanOrEqualTo(4.5), reason: '$part text on its tint');
+        // The tick bar's "Tap to tick" is muted text on the part's tint.
+        final muted = theme.extension<SelahTones>()!.muted;
+        expect(contrast(muted, tone.tint), greaterThanOrEqualTo(4.5), reason: 'muted text on the $part tint');
       }
     });
 
