@@ -94,6 +94,14 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('decorative SelahArt shows nothing, not a placeholder, until its file exists', (tester) async {
+    await _pump(tester, const SelahArt(artKey: 'vine-grapes', seed: 's', width: 100, height: 80, placeholder: false));
+    await tester.pumpAndSettle();
+    expect(find.byType(ArtPlaceholder), findsNothing);
+    expect(find.byType(RawImage), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('SelahArt falls back for an unknown key and a null key', (tester) async {
     await _pump(tester, const Column(children: [
       SelahArt(artKey: 'nope', seed: 's', width: 50, height: 50),

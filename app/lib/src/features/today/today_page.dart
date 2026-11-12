@@ -334,7 +334,7 @@ class _Today extends ConsumerWidget {
             title: day.title,
             glow: done,
             animateGlow: moment,
-            art: SelahArt(artKey: day.artKey, seed: '${study.id}-${day.number}', radius: 0),
+            art: SelahArt(artKey: day.artKey, seed: '${study.id}-${day.number}', radius: 0, placeholder: false),
           ),
         ),
       ),

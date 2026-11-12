@@ -1,6 +1,6 @@
 # Selah illustration library
 
-The app bundles one illustration per key listed in `manifest.json`. The worker reads the same manifest to pick an image for each study and day, and an admin can swap it later. **Until a file exists the app shows a calm generated placeholder**, so images can be dropped in one at a time with no code change.
+The app bundles one illustration per key listed in `manifest.json`. The worker reads the same manifest to pick an image for each study and day, and an admin can swap it later. **Until a file exists the app shows a calm generated placeholder**, except behind the green day cards on Today and in the reader, which stay plain green, so images can be dropped in one at a time with no code change.
 
 ## Style (use for every image)
 

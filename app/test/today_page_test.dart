@@ -153,6 +153,7 @@ void main() {
     final art = find.descendant(of: find.byType(HeroCard), matching: find.byType(SelahArt));
     expect(art, findsOneWidget);
     expect(tester.widget<SelahArt>(art).artKey, 'vine-grapes');
+    expect(tester.widget<SelahArt>(art).placeholder, isFalse);
   });
 
   testWidgets('a day without prayer has no prayer row', (tester) async {

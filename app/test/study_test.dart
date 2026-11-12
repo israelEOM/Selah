@@ -160,12 +160,13 @@ void main() {
     expect(find.text('Reflexión 2'), findsOneWidget);
   });
 
-  testWidgets('the reader shows a 120-tall illustration for the day under its header', (tester) async {
+  testWidgets("the reader's card carries the day's art, with no placeholder while it has no file", (tester) async {
     await _pump(tester, '/c/vida-nueva/studies/retiro-espiritual/day/2');
-    final art = find.byType(SelahArt);
+    final art = find.descendant(of: find.byType(HeroCard), matching: find.byType(SelahArt));
     expect(art, findsOneWidget);
-    expect(tester.getSize(art).height, 120);
-    expect(find.byType(ArtPlaceholder), findsOneWidget);
+    expect(find.byType(SelahArt), findsOneWidget);
+    expect(tester.widget<SelahArt>(art).placeholder, isFalse);
+    expect(find.byType(ArtPlaceholder), findsNothing);
   });
 
   testWidgets('the reader shows the day on iOS', (tester) async {

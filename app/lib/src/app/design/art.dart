@@ -64,7 +64,8 @@ Object churchArtTag(String churchId) => 'church-art-$churchId';
 enum ArtShape { rounded, circle }
 
 /// An illustration from the library. Shows [artKey], or a pick from [seed] when the key is missing or unknown, and a
-/// calm generated placeholder while the picture is loading or when its file has not been added yet.
+/// calm generated placeholder while the picture is loading or when its file has not been added yet. Decorative art
+/// ([placeholder] false, such as a card's background) shows nothing in those cases instead.
 class SelahArt extends ConsumerWidget {
   const SelahArt({
     super.key,
@@ -76,6 +77,7 @@ class SelahArt extends ConsumerWidget {
     this.heroTag,
     this.fixed = false,
     this.radius = Radii.card,
+    this.placeholder = true,
   });
 
   final String? artKey;
@@ -94,13 +96,16 @@ class SelahArt extends ConsumerWidget {
   /// The corner radius of a [ArtShape.rounded] picture.
   final double radius;
 
+  /// Whether to stand in with the generated placeholder while there is no picture to show.
+  final bool placeholder;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final library = ref.watch(artLibraryProvider).value ?? const <ArtEntry>[];
     final resolved = fixed ? (artKey ?? '') : resolveArtKey(artKey, seed, library);
     final entry = library.where((e) => e.key == resolved).firstOrNull;
     final language = ref.watch(appLocaleProvider).languageCode;
-    final placeholder = ArtPlaceholder(seed: seed);
+    final Widget placeholder = this.placeholder ? ArtPlaceholder(seed: seed) : const SizedBox.shrink();
     final label = entry?.alt[language] ?? entry?.alt['en'];
     // Only a picture that has really shown carries its alt text; the placeholder standing in for it says nothing.
     Widget labelled(Widget picture) =>

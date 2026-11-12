@@ -271,11 +271,10 @@ class _DayState extends ConsumerState<_Day> {
             ),
             title: day.title,
             quote: day.mainIdea,
+            art: SelahArt(artKey: day.artKey, seed: '${original.id}-${day.number}', radius: 0, placeholder: false),
           ),
         ),
       ),
-      const SizedBox(height: Space.l),
-      SelahArt(artKey: day.artKey, seed: '${original.id}-${day.number}', height: 120),
       if (day.bibleReading != null) ...[
         const SizedBox(height: Space.l),
         Column(
