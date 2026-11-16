@@ -321,5 +321,8 @@
   "tapToTick": "Tap to tick",
   "dayCompleteBackToToday": "Day complete · back to Today",
   "dayNumber": "Day {number}",
-  "continueStudy": "Continue"
+  "continueStudy": "Continue",
+  "newStudyAvailable": "New study available",
+  "dismissNotice": "Dismiss",
+  "startStudy": "Start"
 }

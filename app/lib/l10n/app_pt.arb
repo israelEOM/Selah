@@ -321,5 +321,8 @@
   "tapToTick": "Toque para marcar",
   "dayCompleteBackToToday": "Dia completo · voltar para Hoje",
   "dayNumber": "Dia {number}",
-  "continueStudy": "Continuar"
+  "continueStudy": "Continuar",
+  "newStudyAvailable": "Novo estudo disponível",
+  "dismissNotice": "Fechar",
+  "startStudy": "Começar"
 }

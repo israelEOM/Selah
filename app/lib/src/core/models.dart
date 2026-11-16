@@ -223,6 +223,7 @@ class StudyCard {
     this.preacher,
     this.sermonDate,
     this.artKey,
+    this.createdAt,
     this.translatedTitles = const {},
     this.translatedMessages = const {},
   });
@@ -240,6 +241,7 @@ class StudyCard {
       preacher: (sermon['preacher'] ?? sermon['channel']) as String?,
       sermonDate: DateTime.tryParse(sermon['sermon_date'] as String? ?? ''),
       artKey: json['art_key'] as String?,
+      createdAt: DateTime.tryParse(json['created_at'] as String? ?? ''),
       translatedTitles: {
         for (final t in (json['study_translations'] as List? ?? const []).cast<Map<String, dynamic>>())
           t['language'] as String: t['title'] as String,
@@ -262,6 +264,9 @@ class StudyCard {
   final DateTime? sermonDate;
   final String? artKey;
 
+  /// When the study was generated; studies are read in this order.
+  final DateTime? createdAt;
+
   /// Titles of the visible translations, by language code.
   final Map<String, String> translatedTitles;
 
@@ -283,6 +288,7 @@ class StudyCard {
       preacher: preacher,
       sermonDate: sermonDate,
       artKey: artKey,
+      createdAt: createdAt,
       translatedTitles: translatedTitles,
       translatedMessages: translatedMessages,
     );

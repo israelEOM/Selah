@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../data/active_study.dart';
 import '../../data/progress.dart';
 import '../../data/providers.dart';
 
@@ -16,14 +17,17 @@ class TodayRefresh extends Notifier<int> {
   void bump() => state++;
 }
 
-/// Reloads Today: the church's newest study, the progress on it and the week's done days, with a fresh `now`.
+/// Reloads Today: the church's studies (so new ones are found), the progress on them and the week's done days, with a
+/// fresh `now`.
 Future<void> refreshToday(WidgetRef ref, String churchId) async {
-  ref.invalidate(newestStudyProvider(churchId));
+  ref.invalidate(publishedStudiesProvider(churchId));
+  ref.invalidate(chosenStudyProvider(churchId));
+  ref.invalidate(activeStudyProvider(churchId));
   ref.invalidate(studyProgressProvider);
   ref.invalidate(ticksByDateProvider);
   ref.read(todayRefreshProvider.notifier).bump();
   try {
-    await ref.read(newestStudyProvider(churchId).future);
+    await ref.read(activeStudyProvider(churchId).future);
   } catch (_) {
     // The page shows the error with its own retry.
   }

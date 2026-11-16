@@ -381,5 +381,8 @@
       }
     }
   },
-  "continueStudy": "Continuar"
+  "continueStudy": "Continuar",
+  "newStudyAvailable": "Nuevo estudio disponible",
+  "dismissNotice": "Cerrar",
+  "startStudy": "Empezar"
 }

@@ -6,11 +6,12 @@ import '../../../l10n/app_localizations.dart';
 import '../../app/design/art.dart';
 import '../../app/theme.dart';
 import '../../core/models.dart';
+import '../../data/active_study.dart';
 import '../../data/progress.dart';
 import '../../data/providers.dart';
 import '../../l10n/locale.dart';
 
-/// A church's front page: its published studies, newest first.
+/// A church's front page: the study someone is reading, then the rest, newest Sunday first.
 class ChurchPage extends ConsumerWidget {
   const ChurchPage({super.key, required this.church});
 
@@ -21,6 +22,11 @@ class ChurchPage extends ConsumerWidget {
     final l = AppLocalizations.of(context)!;
     final text = Theme.of(context).textTheme;
     final studies = ref.watch(publishedStudiesProvider(church.id));
+    final ordered = inReadingOrder(studies.value ?? const []);
+    // The study Today follows; the first in order until that's known (it's cached once Today has loaded).
+    final activeId = ref.watch(activeStudyIdProvider(church.id)).value;
+    final featured = ordered.where((s) => s.id == activeId).firstOrNull ?? ordered.firstOrNull;
+    final rest = [for (final s in ordered) if (s.id != featured?.id) s];
     final language = ref.watch(appLocaleProvider).languageCode;
     final roleState = ref.watch(churchRoleProvider(church.id));
     final signedIn = ref.watch(userIdProvider).value != null;
@@ -120,13 +126,13 @@ class ChurchPage extends ConsumerWidget {
                         if (site) ...[
                           Eyebrow(l.devotionalOfTheWeek),
                           const SizedBox(height: Space.m),
-                          _StudyTile(church, items.first.localizedTo(language), featured: true, horizontal: true),
+                          _StudyTile(church, featured!.localizedTo(language), featured: true, horizontal: true),
                         ] else
-                          _FeaturedStudy(church, items.first.localizedTo(language)),
+                          _FeaturedStudy(church, featured!.localizedTo(language)),
                       ],
                     ),
                   ),
-                  if (items.length > 1) ...[
+                  if (rest.isNotEmpty) ...[
                     const SizedBox(height: 36),
                     Eyebrow(l.recentStudies),
                     const SizedBox(height: Space.m),
@@ -134,12 +140,12 @@ class ChurchPage extends ConsumerWidget {
                       CardGrid(
                         minTileWidth: 300,
                         children: [
-                          for (final (i, study) in items.skip(1).indexed)
+                          for (final (i, study) in rest.indexed)
                             Entrance(index: i + 1, child: _StudyTile(church, study.localizedTo(language))),
                         ],
                       )
                     else
-                      for (final (i, study) in items.skip(1).indexed)
+                      for (final (i, study) in rest.indexed)
                         Padding(
                           padding: const EdgeInsets.only(bottom: Space.m),
                           child: Entrance(index: i + 1, child: _StudyRow(church, study.localizedTo(language))),
@@ -152,20 +158,7 @@ class ChurchPage extends ConsumerWidget {
   }
 }
 
-/// How far through a study someone is, from their saved progress. A day counts as done once it has a finish date,
-/// or all three parts (old `read:` marks have no date).
-({int done, int current}) studyStanding(StudyProgress? progress, int numberOfDays) {
-  bool isDone(int n) {
-    final day = progress?.days[n];
-    return day != null && (day.doneOn != null || day.parts.containsAll(DayPart.values));
-  }
-
-  final done = [for (var n = 1; n <= numberOfDays; n++) if (isDone(n)) n];
-  final current = [for (var n = 1; n <= numberOfDays; n++) n].where((n) => !isDone(n)).firstOrNull ?? numberOfDays;
-  return (done: done.length, current: current);
-}
-
-/// The newest study in the app layout: its art, the day someone is on, a progress line and Continue.
+/// The study someone is reading, in the app layout: its art, the day they're on, a progress line and Start or Continue.
 class _FeaturedStudy extends ConsumerWidget {
   const _FeaturedStudy(this.church, this.study);
 
@@ -212,7 +205,7 @@ class _FeaturedStudy extends ConsumerWidget {
                     const SizedBox(height: Space.m),
                     _FillingLine(value: fraction),
                     const SizedBox(height: Space.l),
-                    FilledButton(onPressed: open, child: Text(l.continueStudy)),
+                    _StudyAction(church, study),
                   ],
                 ),
               ),
@@ -269,6 +262,7 @@ class _StudyRow extends StatelessWidget {
       label: study.title,
       detail: [if (study.preacher != null) study.preacher!, l.daysCount(study.numberOfDays)].join(' · '),
       onOpen: () => context.push('/c/${church.slug}/studies/${study.slug}'),
+      trailing: _StudyAction(church, study, compact: true),
     );
   }
 }
@@ -313,6 +307,8 @@ class _StudyTile extends StatelessWidget {
             const SizedBox(height: 10),
             Text(study.centralMessage!, style: text.bodyMedium, maxLines: 3, overflow: TextOverflow.ellipsis),
           ],
+          SizedBox(height: featured ? Space.l : Space.s),
+          _StudyAction(church, study, compact: !featured),
         ],
       ),
     );
@@ -330,5 +326,27 @@ class _StudyTile extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// Continue for a study someone has started, Start for one they haven't. Either makes it the study Today follows and
+/// opens Today. [compact] is a text button for rows and small tiles.
+class _StudyAction extends ConsumerWidget {
+  const _StudyAction(this.church, this.study, {this.compact = false});
+
+  final Church church;
+  final StudyCard study;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
+    final label = Text(studyStarted(ref.watch(studyProgressProvider(study.id)).value) ? l.continueStudy : l.startStudy);
+    Future<void> go() async {
+      await chooseStudy(ref, church.id, study.id);
+      if (context.mounted) context.go('/today');
+    }
+
+    return compact ? TextButton(onPressed: go, child: label) : FilledButton(onPressed: go, child: label);
   }
 }

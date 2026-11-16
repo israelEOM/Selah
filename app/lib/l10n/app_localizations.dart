@@ -1539,6 +1539,24 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Continuar'**
   String get continueStudy;
+
+  /// No description provided for @newStudyAvailable.
+  ///
+  /// In es, this message translates to:
+  /// **'Nuevo estudio disponible'**
+  String get newStudyAvailable;
+
+  /// No description provided for @dismissNotice.
+  ///
+  /// In es, this message translates to:
+  /// **'Cerrar'**
+  String get dismissNotice;
+
+  /// No description provided for @startStudy.
+  ///
+  /// In es, this message translates to:
+  /// **'Empezar'**
+  String get startStudy;
 }
 
 class _AppLocalizationsDelegate
