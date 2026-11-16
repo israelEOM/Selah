@@ -810,4 +810,13 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get continueStudy => 'Continuar';
+
+  @override
+  String get newStudyAvailable => 'Nuevo estudio disponible';
+
+  @override
+  String get dismissNotice => 'Cerrar';
+
+  @override
+  String get startStudy => 'Empezar';
 }

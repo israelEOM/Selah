@@ -113,9 +113,6 @@ class _DemoRepository implements SelahRepository {
   }
 
   @override
-  Future<PublicStudy?> newestStudy(String churchId) async => PublicStudy.fromJson(_studies.first);
-
-  @override
   Future<List<ChurchEvent>> upcomingEvents(String churchId) async => [
         _event('Estudio bíblico en casas', DateTime(2026, 11, 11, 19), 2, 'Varias casas'),
         _event('Culto de oración', DateTime(2026, 11, 13, 20), 1, 'Templo'),

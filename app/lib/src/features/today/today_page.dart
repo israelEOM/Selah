@@ -9,6 +9,7 @@ import '../../app/design/art.dart';
 import '../../app/theme.dart';
 import '../../core/format.dart';
 import '../../core/models.dart';
+import '../../data/active_study.dart';
 import '../../data/current_church.dart';
 import '../../data/progress.dart';
 import '../../data/providers.dart';
@@ -134,6 +135,7 @@ class _Today extends ConsumerWidget {
           key: ValueKey(past ?? todayKey),
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            if (past == null && !skeleton) _NewStudyNotice(church: church),
             ContentSwitcher(
               child: Column(
                 key: ValueKey(skeleton ? 'skeleton' : 'day'),
@@ -187,9 +189,9 @@ class _Today extends ConsumerWidget {
       );
     }
     final loading = page(const [SkeletonList(hero: true, rows: 3)], skeleton: true);
-    return ref.watch(newestStudyProvider(church.id)).when(
+    return ref.watch(activeStudyProvider(church.id)).when(
           loading: () => loading,
-          error: (_, _) => page([_LoadError(onRetry: () => ref.invalidate(newestStudyProvider(church.id)))]),
+          error: (_, _) => page([_LoadError(onRetry: () => ref.invalidate(activeStudyProvider(church.id)))]),
           data: (original) {
             if (original == null) {
               return page([
@@ -440,3 +442,33 @@ class _LoadError extends StatelessWidget {
 
 void _openBible(String reference, String versionCode) =>
     launchUrl(bibleReaderUrl(reference, versionCode), mode: LaunchMode.externalApplication);
+
+/// Points out a study from a newer Sunday while someone is still on an older one. Today keeps the study in progress;
+/// tapping opens the new one, and the close button hides the notice for that study for good.
+class _NewStudyNotice extends ConsumerWidget {
+  const _NewStudyNotice({required this.church});
+
+  final Church church;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final newer = ref.watch(newStudyNoticeProvider(church.id)).value;
+    if (newer == null) return const SizedBox.shrink();
+    final l = AppLocalizations.of(context)!;
+    final study = newer.localizedTo(ref.watch(appLocaleProvider).languageCode);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: Space.l),
+      child: SelahRow(
+        leading: SelahArt(artKey: study.artKey, seed: study.id, width: 44, height: 44, radius: Radii.control),
+        label: study.title,
+        detail: l.newStudyAvailable,
+        onOpen: () => context.push('/c/${church.slug}/studies/${study.slug}'),
+        trailing: IconButton(
+          tooltip: l.dismissNotice,
+          icon: Icon(Icons.close, color: context.tones.muted),
+          onPressed: () => dismissNewStudy(ref, church.id, study.id),
+        ),
+      ),
+    );
+  }
+}

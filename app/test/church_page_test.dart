@@ -51,6 +51,7 @@ Future<_FakeRepository> _pump(WidgetTester tester,
     GoRoute(path: '/c/vida-nueva', builder: (_, _) => const ChurchPage(church: _church)),
     GoRoute(path: '/c/vida-nueva/studies/:slug', builder: (_, s) => Text('STUDY ${s.pathParameters['slug']}')),
     GoRoute(path: '/c/vida-nueva/admin', builder: (_, _) => const Text('ADMIN')),
+    GoRoute(path: '/today', builder: (_, _) => const Text('TODAY')),
     GoRoute(path: '/login', builder: (_, s) => Text('LOGIN ${s.uri.queryParameters['next']}')),
   ]);
   await tester.pumpWidget(ProviderScope(
@@ -201,7 +202,78 @@ void main() {
     expect(bar.value, closeTo(1 / 3, 0.001));
     await tester.tap(find.text('Continuar'));
     await tester.pumpAndSettle();
-    expect(find.text('STUDY s1'), findsOneWidget);
+    expect(find.text('TODAY'), findsOneWidget);
+  });
+
+  const phone = Size(390, 844);
+  const started = '{"1":{"parts":["reading"],"partsOn":{"reading":"2026-11-10"}}}';
+  Finder button(String studyTitle, String label) => find.descendant(
+        of: find.ancestor(of: find.text(studyTitle), matching: find.byType(Pressable)).first,
+        matching: find.text(label),
+      );
+
+  testWidgets('features the study in progress rather than the newest', (tester) async {
+    await _pump(tester, studies: fourStudies, size: phone, platform: TargetPlatform.android, prefs: {'progress:3': started});
+    final art = tester.widget<SelahArt>(find.byWidgetPredicate((w) => w is SelahArt && w.heroTag == studyArtTag('3')));
+    expect(art.height, 130);
+    expect(button('Estudio tres', 'Continuar'), findsOneWidget);
+  });
+
+  testWidgets('a study not started yet offers Empezar', (tester) async {
+    await _pump(tester, studies: fourStudies, size: phone, platform: TargetPlatform.android);
+    expect(button('Estudio uno', 'Empezar'), findsOneWidget);
+    expect(find.text('Continuar'), findsNothing);
+  });
+
+  testWidgets('recent studies say Continuar once started and Empezar otherwise', (tester) async {
+    await _pump(
+      tester,
+      studies: fourStudies,
+      size: phone,
+      platform: TargetPlatform.android,
+      prefs: {'active-study:A': '1', 'progress:2': started},
+    );
+    await tester.scrollUntilVisible(find.text('Estudio cuatro'), 200, scrollable: find.byType(Scrollable).first);
+    expect(button('Estudio dos', 'Continuar'), findsOneWidget);
+    expect(button('Estudio tres', 'Empezar'), findsOneWidget);
+    expect(button('Estudio cuatro', 'Empezar'), findsOneWidget);
+  });
+
+  testWidgets('Empezar makes the study the one Today follows and opens Today', (tester) async {
+    await _pump(tester, studies: fourStudies, size: phone, platform: TargetPlatform.android);
+    await tester.scrollUntilVisible(find.text('Estudio cuatro'), 200, scrollable: find.byType(Scrollable).first);
+    await tester.tap(button('Estudio tres', 'Empezar'));
+    await tester.pumpAndSettle();
+    expect(find.text('TODAY'), findsOneWidget);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString('active-study:A'), '3');
+  });
+
+  testWidgets('lists each Sunday in the order its studies were generated', (tester) async {
+    StudyCard study(String id, String title, String sunday, int hour) => StudyCard(
+          id: id,
+          slug: id,
+          title: title,
+          numberOfDays: 3,
+          sermonDate: DateTime.parse(sunday),
+          createdAt: DateTime.parse(sunday).add(Duration(days: 1, hours: hour)),
+        );
+    await _pump(
+      tester,
+      // Newest published first, as the repository returns them: the evening study was published last.
+      studies: [
+        study('evening', 'Culto de la tarde', '2026-11-15', 11),
+        study('morning', 'Culto de la mañana', '2026-11-15', 9),
+        study('last-week', 'Semana pasada', '2026-11-08', 9),
+      ],
+      size: phone,
+      platform: TargetPlatform.android,
+      prefs: {'progress:last-week': started},
+    );
+    // Last week's study is in progress, so it is featured; Sunday's follow, morning first.
+    expect(button('Semana pasada', 'Continuar'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Culto de la tarde'), 200, scrollable: find.byType(Scrollable).first);
+    expect(top(tester, 'Culto de la mañana'), lessThan(top(tester, 'Culto de la tarde')));
   });
 
   testWidgets('study rows share the art hero tag with the study page', (tester) async {

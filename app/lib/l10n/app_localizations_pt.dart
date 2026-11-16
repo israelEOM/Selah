@@ -809,4 +809,13 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get continueStudy => 'Continuar';
+
+  @override
+  String get newStudyAvailable => 'Novo estudo disponível';
+
+  @override
+  String get dismissNotice => 'Fechar';
+
+  @override
+  String get startStudy => 'Começar';
 }

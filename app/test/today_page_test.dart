@@ -11,6 +11,7 @@ import 'package:selah/src/app/design/art.dart';
 import 'package:selah/src/app/theme.dart';
 import 'package:selah/src/core/models.dart';
 import 'package:selah/src/data/current_church.dart';
+import 'package:selah/src/data/active_study.dart';
 import 'package:selah/src/data/progress.dart';
 import 'package:selah/src/data/providers.dart';
 import 'package:selah/src/features/study/reader_page.dart';
@@ -66,6 +67,7 @@ Future<void> _pump(
   String language = 'es',
   DateTime Function()? clock,
   Future<PublicStudy?> Function()? newest,
+  StudyCard? newer,
   bool settle = true,
   double textScale = 1,
   Widget Function(GoRouterState)? reader,
@@ -93,8 +95,13 @@ Future<void> _pump(
     overrides: [
       savedLanguageProvider.overrideWithValue(language),
       currentChurchProvider.overrideWith((ref) async => _church),
-      newestStudyProvider.overrideWith(
+      activeStudyProvider.overrideWith(
           (ref, churchId) async => newest != null ? newest() : noStudy ? null : PublicStudy.fromJson(study ?? _json())),
+      // Like the real provider, a dismissed study is not pointed out again.
+      newStudyNoticeProvider.overrideWith((ref, churchId) async {
+        final prefs = await SharedPreferences.getInstance();
+        return newer != null && (prefs.getStringList('new-study-dismissed') ?? const []).contains(newer.id) ? null : newer;
+      }),
       clockProvider.overrideWithValue(clock ?? () => _now),
       ...overrides,
     ],
@@ -129,6 +136,39 @@ void main() {
   testWidgets('the empty studies page shows its scene', (tester) async {
     await _pump(tester, noStudy: true);
     expect(find.byWidgetPredicate((w) => w is SelahArt && w.artKey == 'scene-empty-studies'), findsOneWidget);
+  });
+
+  group('new study notice', () {
+    const newer = StudyCard(id: 'study-2', slug: 'nuevo', title: 'Caminar en fe', numberOfDays: 5);
+
+    testWidgets('points out a newer study while keeping the one in progress', (tester) async {
+      await _pump(tester, newer: newer);
+      expect(find.text('Nuevo estudio disponible'), findsOneWidget);
+      expect(find.text('Caminar en fe'), findsOneWidget);
+      // Today still shows the study in progress.
+      expect(find.text('Día 1 del camino'), findsOneWidget);
+    });
+
+    testWidgets('opens the newer study when tapped', (tester) async {
+      await _pump(tester, newer: newer);
+      await tester.tap(find.text('Caminar en fe'));
+      await tester.pumpAndSettle();
+      expect(find.text('STUDY nuevo'), findsOneWidget);
+    });
+
+    testWidgets('is not shown without a newer study', (tester) async {
+      await _pump(tester);
+      expect(find.text('Nuevo estudio disponible'), findsNothing);
+    });
+
+    testWidgets('can be dismissed for good', (tester) async {
+      await _pump(tester, newer: newer);
+      await tester.tap(find.byTooltip('Cerrar'));
+      await tester.pumpAndSettle();
+      expect(find.text('Nuevo estudio disponible'), findsNothing);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getStringList('new-study-dismissed'), ['study-2']);
+    });
   });
 
   testWidgets('shows day 1 of a fresh study', (tester) async {

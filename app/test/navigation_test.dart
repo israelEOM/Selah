@@ -10,6 +10,7 @@ import 'package:selah/src/app/design/adaptive_tab_bar.dart';
 import 'package:selah/src/app/theme.dart';
 import 'package:selah/src/core/models.dart';
 import 'package:selah/src/data/current_church.dart';
+import 'package:selah/src/data/active_study.dart';
 import 'package:selah/src/data/providers.dart';
 import 'package:selah/src/data/repository.dart';
 import 'package:selah/src/features/welcome/welcome_state.dart';
@@ -74,7 +75,7 @@ Future<GoRouter> _pump(WidgetTester tester, String location) async {
       isPlatformAdminProvider.overrideWith((ref) async => false),
       currentChurchProvider.overrideWith((ref) async => _vida),
       needsWelcomeProvider.overrideWith((ref) async => false),
-      newestStudyProvider.overrideWith((ref, churchId) async => PublicStudy.fromJson(_json())),
+      activeStudyProvider.overrideWith((ref, churchId) async => PublicStudy.fromJson(_json())),
       studyProvider.overrideWith((ref, key) async => key.slug == 'seguir' ? PublicStudy.fromJson(_json()) : null),
       clockProvider.overrideWithValue(() => DateTime(2026, 10, 27, 9)),
     ],
