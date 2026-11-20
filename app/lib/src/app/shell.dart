@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -126,6 +128,9 @@ class _SelahShellState extends ConsumerState<SelahShell> {
 
   late final AppLifecycleListener _lifecycle;
 
+  /// Churches whose studies were saved for offline reading in this run.
+  final _savedChurches = <String>{};
+
   @override
   void initState() {
     super.initState();
@@ -133,6 +138,16 @@ class _SelahShellState extends ConsumerState<SelahShell> {
     _lifecycle = AppLifecycleListener(onResume: () {
       final church = ref.read(currentChurchProvider).value;
       if (church != null) ref.invalidate(upcomingEventsProvider(church.id));
+    });
+    // Save every study of the church shown, so any of them opens with no connection.
+    ref.listenManual(currentChurchProvider, fireImmediately: true, (_, church) {
+      final id = church.value?.id;
+      if (id == null || !_savedChurches.add(id)) return;
+      try {
+        unawaited(ref.read(repositoryProvider).saveStudiesForOffline(id).catchError((_) {}));
+      } catch (_) {
+        // A repository without offline saving (previews, tests).
+      }
     });
     // A new account that arrives here without passing the sign-in page (the return from Google, an email
     // confirmation link, a restored session) gets the welcome question once per app session.

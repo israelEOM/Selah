@@ -149,6 +149,21 @@ void main() {
     await expectLater(failing.publishedStudies('A'), throwsA(isA<PostgrestException>()));
   });
 
+  test('saves only missing studies', () async {
+    tables['studies'] = (url) => url.queryParameters['slug'] == null
+        ? [_card('s1', 'one'), _card('s2', 'two')]
+        : [_study(url.queryParameters['slug']!.substring('eq.'.length))];
+    await store.write('study:A:one', _study('one'));
+    await repo.saveStudiesForOffline('A');
+    expect([for (final u in requests) u.queryParameters['slug']].whereType<String>(), ['eq.two']);
+    expect(await store.has('study:A:two'), isTrue);
+  });
+
+  test('saving offline does nothing and does not throw', () async {
+    online = false;
+    await repo.saveStudiesForOffline('A');
+  });
+
   test('signOut clears saved reads', () async {
     tables['studies'] = (_) => [_card('s1', 'seguir')];
     await repo.publishedStudies('A');

@@ -32,6 +32,10 @@ class _FakeRepository implements SelahRepository {
 
   final List<ChurchEvent> events;
   int eventReads = 0;
+  final savedForOffline = <String>[];
+
+  @override
+  Future<void> saveStudiesForOffline(String churchId) async => savedForOffline.add(churchId);
 
   @override
   Future<List<ChurchEvent>> upcomingEvents(String churchId) async {
@@ -95,6 +99,15 @@ void main() {
     expect(tabIndexFor('/c/x/studies/s/day/2'), 1);
     expect(tabIndexFor('/c/x/events'), 2);
     expect(tabIndexFor('/profile'), 3);
+  });
+
+  testWidgets('saves the current church once', (tester) async {
+    await _pump(tester, '/');
+    await tester.tap(find.text('Perfil'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Hoy'));
+    await tester.pumpAndSettle();
+    expect(_lastFake.savedForOffline, ['A']);
   });
 
   testWidgets('the root redirects to /today', (tester) async {

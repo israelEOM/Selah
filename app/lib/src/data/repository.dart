@@ -36,6 +36,20 @@ class SelahRepository {
     return _rows(rows).map(StudyCard.fromJson).toList();
   }
 
+  /// Saves each of a church's published studies that isn't saved yet, so it opens with no connection. Does nothing
+  /// while offline, and never throws.
+  Future<void> saveStudiesForOffline(String churchId) async {
+    if (_status.offline) return;
+    try {
+      for (final card in await publishedStudies(churchId)) {
+        if (_status.offline) return;
+        if (!await _store.has('study:$churchId:${card.slug}')) await studyBySlug(churchId, card.slug);
+      }
+    } catch (_) {
+      // Tried again next time the app starts.
+    }
+  }
+
   /// A published study with its sermon and days, or null when there is none to show.
   Future<PublicStudy?> studyBySlug(String churchId, String slug) async {
     final row = await _read('study:$churchId:$slug', () => _client
