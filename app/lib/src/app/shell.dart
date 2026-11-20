@@ -12,6 +12,7 @@ import '../features/welcome/welcome_state.dart';
 import '../features/church/church_switcher.dart';
 import '../features/home/language_menu.dart';
 import 'design/adaptive_tab_bar.dart';
+import 'offline_note.dart';
 import 'theme.dart';
 
 /// Which branch a location belongs to: Hoy (0, at /today), Estudios (1), Eventos (2) or Perfil (3).
@@ -240,7 +241,17 @@ class _SelahShellState extends ConsumerState<SelahShell> {
             )
           else
             const SizedBox.shrink(),
-          Expanded(child: widget.navigationShell),
+          const OfflineNote(),
+          // In the app layout the note takes the status-bar inset, so pages under it don't add it again.
+          Expanded(
+            child: OfflineAware(
+              builder: (context, offline) => MediaQuery.removePadding(
+                context: context,
+                removeTop: offline && !site,
+                child: widget.navigationShell,
+              ),
+            ),
+          ),
         ],
       ),
       bottomNavigationBar: site ? null : AdaptiveTabBar(tabs: tabs, currentIndex: selected, onTap: select),

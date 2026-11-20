@@ -48,6 +48,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'We couldn\'t load the content. Check your connection.';
 
   @override
+  String get offlineNote => 'Offline. Showing your saved copy.';
+
+  @override
   String get retry => 'Try again';
 
   @override

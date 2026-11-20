@@ -16,6 +16,7 @@
     }
   },
   "loadError": "We couldn't load the content. Check your connection.",
+  "offlineNote": "Offline. Showing your saved copy.",
   "retry": "Try again",
   "signIn": "Sign in",
   "signOut": "Sign out",

@@ -154,6 +154,12 @@ abstract class AppLocalizations {
   /// **'No fue posible cargar el contenido. Revisa tu conexión.'**
   String get loadError;
 
+  /// One quiet line at the top while the app shows data saved on the device because it can't reach the server.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin conexión. Estás viendo tu copia guardada.'**
+  String get offlineNote;
+
   /// No description provided for @retry.
   ///
   /// In es, this message translates to:
