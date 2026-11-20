@@ -2,37 +2,52 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/models.dart';
+import 'offline.dart';
 
 /// All data access goes through here. Row-level security decides what each caller may see.
 class SelahRepository {
-  SelahRepository(this._client);
+  SelahRepository(this._client, {OfflineStore? store, OfflineStatus? status})
+      : _store = store ?? OfflineStore(),
+        _status = status ?? OfflineStatus();
 
   final SupabaseClient _client;
+  final OfflineStore _store;
+  final OfflineStatus _status;
+
+  /// Fetches with [fetch], saving the result under [key]; with no connection, the saved copy (see [readThrough]).
+  /// Each fetch turns off postgrest's retries (`retry(enabled: false)`), which would hold the saved copy back for
+  /// seconds; the client-wide option doesn't reach `from()` in supabase 2.16.
+  Future<Object?> _read(String key, Future<Object?> Function() fetch) =>
+      readThrough(store: _store, status: _status, key: key, fetch: fetch);
+
+  static List<Map<String, dynamic>> _rows(Object? json) => List<Map<String, dynamic>>.from(json as List);
 
   /// A church's published studies, newest first. The church page reorders them with `inReadingOrder`.
   Future<List<StudyCard>> publishedStudies(String churchId) async {
-    final rows = await _client
+    final rows = await _read('studies:$churchId', () => _client
         .from('studies')
         .select('id, slug, title, number_of_days, central_message, published_at, created_at, art_key, '
             'sermons!studies_sermon_id_fkey(thumbnail_url, preacher, channel, sermon_date), '
             'study_translations(language, title, central_message)')
         .eq('church_id', churchId)
         .eq('status', 'published')
-        .order('published_at', ascending: false);
-    return rows.map(StudyCard.fromJson).toList();
+        .order('published_at', ascending: false)
+        .retry(enabled: false));
+    return _rows(rows).map(StudyCard.fromJson).toList();
   }
 
   /// A published study with its sermon and days, or null when there is none to show.
   Future<PublicStudy?> studyBySlug(String churchId, String slug) async {
-    final row = await _client
+    final row = await _read('study:$churchId:$slug', () => _client
         .from('studies')
         .select('id, slug, title, number_of_days, bible_version_code, output_language, summary, central_message, published_at, art_key, '
             'sermons!studies_sermon_id_fkey(youtube_video_id, title, preacher, channel, thumbnail_url, sermon_date), devotional_days(*), study_translations(*)')
         .eq('church_id', churchId)
         .eq('slug', slug)
         .eq('status', 'published')
-        .maybeSingle();
-    return row == null ? null : PublicStudy.fromJson(row);
+        .maybeSingle()
+        .retry(enabled: false));
+    return row == null ? null : PublicStudy.fromJson(row as Map<String, dynamic>);
   }
 
   /// The slug of the church that owns the oldest study with [slug], for links made before churches existed.
@@ -49,8 +64,9 @@ class SelahRepository {
   }
 
   Future<bool> isPlatformAdmin(String userId) async {
-    final row = await _client.from('profiles').select('is_platform_admin').eq('id', userId).maybeSingle();
-    return row?['is_platform_admin'] == true;
+    final row = await _read('platform-admin:$userId',
+        () => _client.from('profiles').select('is_platform_admin').eq('id', userId).maybeSingle().retry(enabled: false));
+    return (row as Map<String, dynamic>?)?['is_platform_admin'] == true;
   }
 
   Future<List<SermonRow>> sermons(String churchId) async {
@@ -172,35 +188,40 @@ class SelahRepository {
   // Churches ------------------------------------------------------------------
 
   Future<Church?> churchBySlug(String slug) async {
-    final row = await _client.from('churches').select().eq('slug', slug).maybeSingle();
-    return row == null ? null : Church.fromJson(row);
+    final row = await _read('church:$slug', () => _client.from('churches').select().eq('slug', slug).maybeSingle().retry(enabled: false));
+    return row == null ? null : Church.fromJson(row as Map<String, dynamic>);
   }
 
   /// Churches the signed-in user belongs to.
   Future<List<Membership>> myChurches() async {
     final userId = _client.auth.currentUser?.id;
     if (userId == null) return const [];
-    final rows = await _client.from('church_members').select('role, churches(*)').eq('user_id', userId);
-    return rows.map(Membership.fromJson).toList();
+    final rows = await _read(
+        'my-churches:$userId', () => _client.from('church_members').select('role, churches(*)').eq('user_id', userId).retry(enabled: false));
+    return _rows(rows).map(Membership.fromJson).toList();
   }
 
   /// Churches with at least one published study, by name.
   Future<List<Church>> publicChurches() async {
-    final rows = await _client
-        .from('churches')
-        .select('*, studies!inner(id)')
-        .eq('studies.status', 'published')
-        .order('name', ascending: true);
+    final rows = await _read(
+        'public-churches',
+        () => _client
+            .from('churches')
+            .select('*, studies!inner(id)')
+            .eq('studies.status', 'published')
+            .order('name', ascending: true)
+            .retry(enabled: false));
     final seen = <String>{};
     return [
-      for (final row in rows)
+      for (final row in _rows(rows))
         if (seen.add(row['id'] as String)) Church.fromJson(row),
     ];
   }
 
   Future<ChurchRole?> roleIn(String churchId) async {
-    if (_client.auth.currentUser == null) return null;
-    final role = await _client.rpc('church_role_of', params: {'p_church': churchId});
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return null;
+    final role = await _read('role:$userId:$churchId', () => _client.rpc('church_role_of', params: {'p_church': churchId}).retry(enabled: false));
     return ChurchRole.parse(role as String?);
   }
 
@@ -244,16 +265,21 @@ class SelahRepository {
 
   // Church calendars -------------------------------------------------------------
 
-  /// A church's events that haven't ended, earliest first.
+  /// A church's events that haven't ended, earliest first. A saved copy can hold events that ended since; those are
+  /// dropped here too.
   Future<List<ChurchEvent>> upcomingEvents(String churchId) async {
-    final rows = await _client
-        .from('church_events')
-        .select()
-        .eq('church_id', churchId)
-        .gt('ends_at', DateTime.now().toUtc().toIso8601String())
-        .order('starts_at', ascending: true)
-        .limit(20);
-    return rows.map(ChurchEvent.fromJson).toList();
+    final rows = await _read(
+        'events:$churchId',
+        () => _client
+            .from('church_events')
+            .select()
+            .eq('church_id', churchId)
+            .gt('ends_at', DateTime.now().toUtc().toIso8601String())
+            .order('starts_at', ascending: true)
+            .limit(20)
+            .retry(enabled: false));
+    final now = DateTime.now();
+    return _rows(rows).map(ChurchEvent.fromJson).where((e) => e.endsAt.isAfter(now)).toList();
   }
 
   /// Reads the church's calendar now (owners only) and stores what it found.
@@ -331,5 +357,12 @@ class SelahRepository {
         authScreenLaunchMode: kIsWeb ? LaunchMode.platformDefault : LaunchMode.externalApplication,
       );
 
-  Future<void> signOut() => _client.auth.signOut();
+  /// Signs out and forgets every saved response, so the next person on this device doesn't see this one's churches.
+  Future<void> signOut() async {
+    try {
+      await _client.auth.signOut();
+    } finally {
+      await _store.clear();
+    }
+  }
 }
