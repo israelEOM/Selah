@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show AuthRetryableFetchException;
 
 const _prefix = 'cache:';
 
@@ -59,8 +60,12 @@ class OfflineStatus extends ChangeNotifier {
   }
 }
 
-/// A failure to reach the server, as opposed to an answer from it. `ClientException` covers socket errors too.
-bool isOfflineError(Object e) => e is http.ClientException || e is TimeoutException;
+/// A failure to reach the server, as opposed to an answer from it. `ClientException` covers socket errors too; a
+/// session refresh that couldn't reach the server (no status code) fails every read before it is sent.
+bool isOfflineError(Object e) =>
+    e is http.ClientException ||
+    e is TimeoutException ||
+    (e is AuthRetryableFetchException && e.statusCode == null);
 
 /// Runs [fetch] and saves its result under [key]. When the server can't be reached, returns the saved copy instead,
 /// or rethrows when there is none.
@@ -73,8 +78,12 @@ Future<Object?> readThrough({
 }) async {
   try {
     final result = await fetch().timeout(timeout);
-    await store.write(key, result);
     status.reached();
+    try {
+      await store.write(key, result);
+    } catch (_) {
+      // A full store mustn't turn the server's answer into an error.
+    }
     return result;
   } catch (e) {
     if (!isOfflineError(e)) rethrow;

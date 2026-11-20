@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:selah/src/data/offline.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
+import 'package:supabase_flutter/supabase_flutter.dart' show AuthRetryableFetchException, PostgrestException;
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
@@ -95,5 +95,17 @@ void main() {
     expect(isOfflineError(http.ClientException('x')), isTrue);
     expect(isOfflineError(TimeoutException('t')), isTrue);
     expect(isOfflineError(const PostgrestException(message: 'm')), isFalse);
+  });
+
+  test('a token refresh that cannot reach the server is offline', () {
+    expect(isOfflineError(AuthRetryableFetchException(message: 'ClientException')), isTrue);
+    expect(isOfflineError(AuthRetryableFetchException(message: 'down', statusCode: '503')), isFalse);
+  });
+
+  test('a failed save still returns what the server sent', () async {
+    final status = OfflineStatus();
+    // A value jsonEncode rejects stands in for a full store.
+    final result = await readThrough(store: store, status: status, key: 'k', fetch: () async => [Object()]);
+    expect(result, hasLength(1));
   });
 }
