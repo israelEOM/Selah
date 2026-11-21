@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,6 +12,7 @@ import '../features/welcome/welcome_state.dart';
 import '../features/church/church_switcher.dart';
 import '../features/home/language_menu.dart';
 import 'design/adaptive_tab_bar.dart';
+import 'offline_note.dart';
 import 'theme.dart';
 
 /// Which branch a location belongs to: Hoy (0, at /today), Estudios (1), Eventos (2) or Perfil (3).
@@ -126,6 +129,9 @@ class _SelahShellState extends ConsumerState<SelahShell> {
 
   late final AppLifecycleListener _lifecycle;
 
+  /// Churches whose studies were saved for offline reading in this run.
+  final _savedChurches = <String>{};
+
   @override
   void initState() {
     super.initState();
@@ -133,6 +139,16 @@ class _SelahShellState extends ConsumerState<SelahShell> {
     _lifecycle = AppLifecycleListener(onResume: () {
       final church = ref.read(currentChurchProvider).value;
       if (church != null) ref.invalidate(upcomingEventsProvider(church.id));
+    });
+    // Save every study of the church shown, so any of them opens with no connection.
+    ref.listenManual(currentChurchProvider, fireImmediately: true, (_, church) {
+      final id = church.value?.id;
+      if (id == null || !_savedChurches.add(id)) return;
+      try {
+        unawaited(ref.read(repositoryProvider).saveStudiesForOffline(id).catchError((_) {}));
+      } catch (_) {
+        // A repository without offline saving (previews, tests).
+      }
     });
     // A new account that arrives here without passing the sign-in page (the return from Google, an email
     // confirmation link, a restored session) gets the welcome question once per app session.
@@ -225,7 +241,17 @@ class _SelahShellState extends ConsumerState<SelahShell> {
             )
           else
             const SizedBox.shrink(),
-          Expanded(child: widget.navigationShell),
+          const OfflineNote(),
+          // In the app layout the note takes the status-bar inset, so pages under it don't add it again.
+          Expanded(
+            child: OfflineAware(
+              builder: (context, offline) => MediaQuery.removePadding(
+                context: context,
+                removeTop: offline && !site,
+                child: widget.navigationShell,
+              ),
+            ),
+          ),
         ],
       ),
       bottomNavigationBar: site ? null : AdaptiveTabBar(tabs: tabs, currentIndex: selected, onTap: select),

@@ -47,6 +47,9 @@ class AppLocalizationsPt extends AppLocalizations {
       'Não foi possível carregar o conteúdo. Verifique sua conexão.';
 
   @override
+  String get offlineNote => 'Sem conexão. Você está vendo sua cópia salva.';
+
+  @override
   String get retry => 'Tentar novamente';
 
   @override

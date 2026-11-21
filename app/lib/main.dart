@@ -7,6 +7,7 @@ import 'src/app/app.dart';
 import 'src/app/theme_mode.dart';
 import 'src/core/config.dart';
 import 'src/data/current_church.dart';
+import 'src/data/offline.dart';
 import 'src/data/providers.dart';
 import 'src/data/repository.dart';
 import 'src/l10n/locale.dart';
@@ -22,11 +23,15 @@ Future<void> main() async {
   final savedLanguage = await loadSavedLanguage();
   final savedTheme = await loadSavedThemeMode();
   final savedChurch = await loadSavedChurch();
+  final offlineStatus = OfflineStatus();
   runApp(ProviderScope(
     overrides: [
       savedLanguageProvider.overrideWithValue(savedLanguage),
       savedThemeModeProvider.overrideWithValue(savedTheme),
-      savedChurchProvider.overrideWithValue(savedChurch),repositoryProvider.overrideWithValue(SelahRepository(Supabase.instance.client))],
+      savedChurchProvider.overrideWithValue(savedChurch),
+      offlineStatusProvider.overrideWithValue(offlineStatus),
+      repositoryProvider.overrideWithValue(SelahRepository(Supabase.instance.client, status: offlineStatus)),
+    ],
     child: const SelahApp(),
   ));
 }

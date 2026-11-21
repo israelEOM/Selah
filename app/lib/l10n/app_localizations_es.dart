@@ -47,6 +47,9 @@ class AppLocalizationsEs extends AppLocalizations {
       'No fue posible cargar el contenido. Revisa tu conexión.';
 
   @override
+  String get offlineNote => 'Sin conexión. Estás viendo tu copia guardada.';
+
+  @override
   String get retry => 'Reintentar';
 
   @override

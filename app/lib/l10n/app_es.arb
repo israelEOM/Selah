@@ -16,6 +16,8 @@
     }
   },
   "loadError": "No fue posible cargar el contenido. Revisa tu conexión.",
+  "offlineNote": "Sin conexión. Estás viendo tu copia guardada.",
+  "@offlineNote": {"description": "One quiet line at the top while the app shows data saved on the device because it can't reach the server."},
   "retry": "Reintentar",
   "signIn": "Iniciar sesión",
   "signOut": "Cerrar sesión",

@@ -16,6 +16,7 @@
     }
   },
   "loadError": "Não foi possível carregar o conteúdo. Verifique sua conexão.",
+  "offlineNote": "Sem conexão. Você está vendo sua cópia salva.",
   "retry": "Tentar novamente",
   "signIn": "Entrar",
   "signOut": "Sair",

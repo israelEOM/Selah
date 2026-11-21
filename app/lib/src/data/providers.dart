@@ -2,9 +2,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/models.dart';
+import 'offline.dart';
 import 'repository.dart';
 
 final repositoryProvider = Provider<SelahRepository>((_) => throw UnimplementedError());
+
+/// Whether reads are showing saved copies; `main` overrides it with the instance the repository reports to.
+final offlineStatusProvider = Provider<OfflineStatus>((_) => OfflineStatus());
 
 /// The signed-in user's id, or null. Account-scoped providers watch it so state resets on sign-out.
 final userIdProvider = StreamProvider<String?>((ref) {
