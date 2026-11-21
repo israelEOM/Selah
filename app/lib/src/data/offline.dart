@@ -30,6 +30,12 @@ class OfflineStore {
     }
   }
 
+  /// Saved keys starting with [prefix], without the store's own prefix.
+  Future<List<String>> keys(String prefix) async => [
+        for (final k in (await SharedPreferences.getInstance()).getKeys())
+          if (k.startsWith('$_prefix$prefix')) k.substring(_prefix.length),
+      ];
+
   Future<bool> has(String key) async => (await SharedPreferences.getInstance()).containsKey('$_prefix$key');
 
   /// Forgets every saved response, leaving progress and settings alone.

@@ -32,6 +32,13 @@ void main() {
     expect(await store.read('a'), isNull);
   });
 
+  test('keys lists saved keys under a prefix', () async {
+    await store.write('study:A:one', 1);
+    await store.write('study:B:two', 2);
+    await store.write('studies:A', 3);
+    expect(await store.keys('study:A:'), ['study:A:one']);
+  });
+
   test('clear keeps progress', () async {
     SharedPreferences.setMockInitialValues({'cache:a': '[1]', 'progress:s1': '{}', 'church': 'vida'});
     await store.clear();

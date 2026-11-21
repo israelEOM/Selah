@@ -164,6 +164,44 @@ void main() {
     await repo.saveStudiesForOffline('A');
   });
 
+  test('the website saves nothing ahead', () async {
+    tables['studies'] = (_) => [_card('s1', 'one')];
+    final web = SelahRepository(
+      SupabaseClient('https://x.supabase.co', 'key',
+          httpClient: MockClient((request) async {
+            requests.add(request.url);
+            return http.Response(jsonEncode(tables['studies']!(request.url)), 200,
+                headers: {'content-type': 'application/json'}, request: request);
+          }),
+          authOptions: const AuthClientOptions(autoRefreshToken: false)),
+      store: store,
+      status: status,
+      saveAhead: false,
+    );
+    await web.saveStudiesForOffline('A');
+    expect(requests, isEmpty);
+  });
+
+  test('an unpublished study is no longer kept', () async {
+    await store.write('study:A:gone', _study('gone'));
+    await store.write('study:A:kept', _study('kept'));
+    await store.write('study:B:other', _study('other'));
+    tables['studies'] = (_) => [_card('s1', 'kept')];
+    await repo.publishedStudies('A');
+    expect(await store.has('study:A:gone'), isFalse);
+    expect(await store.has('study:A:kept'), isTrue);
+    expect(await store.has('study:B:other'), isTrue);
+  });
+
+  test('the offline study list keeps every saved study', () async {
+    tables['studies'] = (_) => [_card('s1', 'kept')];
+    await repo.publishedStudies('A');
+    await store.write('study:A:kept', _study('kept'));
+    online = false;
+    await repo.publishedStudies('A');
+    expect(await store.has('study:A:kept'), isTrue);
+  });
+
   test('signOut clears saved reads', () async {
     tables['studies'] = (_) => [_card('s1', 'seguir')];
     await repo.publishedStudies('A');

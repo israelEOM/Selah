@@ -6,9 +6,13 @@ import 'offline.dart';
 
 /// All data access goes through here. Row-level security decides what each caller may see.
 class SelahRepository {
-  SelahRepository(this._client, {OfflineStore? store, OfflineStatus? status})
+  /// [saveAhead] lets [saveStudiesForOffline] download studies before they're opened; off on the web, where the page
+  /// can't open offline anyway.
+  SelahRepository(this._client, {OfflineStore? store, OfflineStatus? status, this.saveAhead = !kIsWeb})
       : _store = store ?? OfflineStore(),
         _status = status ?? OfflineStatus();
+
+  final bool saveAhead;
 
   final SupabaseClient _client;
   final OfflineStore _store;
@@ -24,22 +28,34 @@ class SelahRepository {
 
   /// A church's published studies, newest first. The church page reorders them with `inReadingOrder`.
   Future<List<StudyCard>> publishedStudies(String churchId) async {
-    final rows = await _read('studies:$churchId', () => _client
-        .from('studies')
-        .select('id, slug, title, number_of_days, central_message, published_at, created_at, art_key, '
-            'sermons!studies_sermon_id_fkey(thumbnail_url, preacher, channel, sermon_date), '
-            'study_translations(language, title, central_message)')
-        .eq('church_id', churchId)
-        .eq('status', 'published')
-        .order('published_at', ascending: false)
-        .retry(enabled: false));
+    final rows = await _read('studies:$churchId', () async {
+      final rows = await _client
+          .from('studies')
+          .select('id, slug, title, number_of_days, central_message, published_at, created_at, art_key, '
+              'sermons!studies_sermon_id_fkey(thumbnail_url, preacher, channel, sermon_date), '
+              'study_translations(language, title, central_message)')
+          .eq('church_id', churchId)
+          .eq('status', 'published')
+          .order('published_at', ascending: false)
+          .retry(enabled: false);
+      await _forgetUnpublished(churchId, {for (final r in rows) r['slug'] as String});
+      return rows;
+    });
     return _rows(rows).map(StudyCard.fromJson).toList();
+  }
+
+  /// Drops saved studies of [churchId] that the server no longer lists, so they can't open offline or pile up.
+  Future<void> _forgetUnpublished(String churchId, Set<String> published) async {
+    final prefix = 'study:$churchId:';
+    for (final key in await _store.keys(prefix)) {
+      if (!published.contains(key.substring(prefix.length))) await _store.write(key, null);
+    }
   }
 
   /// Saves each of a church's published studies that isn't saved yet, so it opens with no connection. Does nothing
   /// while offline, and never throws.
   Future<void> saveStudiesForOffline(String churchId) async {
-    if (_status.offline) return;
+    if (!saveAhead || _status.offline) return;
     try {
       for (final card in await publishedStudies(churchId)) {
         if (_status.offline) return;
